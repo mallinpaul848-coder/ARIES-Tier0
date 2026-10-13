@@ -12,12 +12,12 @@ The Render blueprint creates a free web service named `aries-tier0-api` from thi
 
 In the Render service's **Environment** settings, configure:
 
-- `ARIES_UPSTREAM_BASE_URL`: base URL of a real, authorized OpenAI-compatible inference API (do not include `/v1/chat/completions`).
-- `ARIES_MODEL_ID`: exact model identifier accepted by that backend.
+- `ARIES_UPSTREAM_BASE_URL`: base URL of a real, authorized OpenAI-compatible inference API. It may end with `/v1`; do not include `/chat/completions` or the full `/v1/chat/completions` path. ARIES now handles either base-URL style.
+- `ARIES_MODEL_ID`: exact model identifier accepted by that backend. This is required.
 - `ARIES_UPSTREAM_API_KEY`: secret key for that backend, if required. Keep it in Render's secret environment settings; never commit it to GitHub.
 - `ARIES_UPSTREAM_TIMEOUT_SECONDS`: defaults to `90`.
 
-The repository does not contain model weights or a configured inference provider. Without a working upstream backend and model ID, health checks may pass but chat inference will not work. Do not advertise the API as inference-ready until a real chat response is verified.
+The repository does not contain model weights or a configured inference provider. Without a working upstream backend, model ID, and any required credential, health checks may pass but chat inference will not work. Do not advertise the API as inference-ready until a real chat response is verified.
 
 ## Run public endpoint checks
 
@@ -31,9 +31,11 @@ The workflow checks health, readiness, the model list, and a real chat-completio
 
 ## Current verification
 
-- GitHub API contract tests: passing on the latest checked run.
-- RTL external smoke workflow: passing on the latest checked run.
+- GitHub API contract tests: check the latest run linked below.
+- RTL external smoke workflow: check the latest run linked below.
 - Live public endpoint and actual model inference: not yet verified.
 - External AI benchmark/leaderboard submission: not completed.
+
+[View API test workflow runs](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/api-tests.yml)
 
 Only publish measured performance after repeatable tests against a live, working model endpoint.

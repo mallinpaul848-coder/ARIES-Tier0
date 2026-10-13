@@ -23,6 +23,6 @@ jobs:
       - name: Compile RTL and testbench
         run: |
           mkdir -p build
-          iverilog -g2012 -Wall -s tb_aries_sub_ns_core -o build/aries_rtl_test src/aries_sub_ns_core.v sim/tb_aries_sub_ns_core.v
+          iverilog -g2012 -Wall -s tb_aries_sub_ns_core -o build/aries_rtl_test sim/tb_aries_sub_ns_core.v
       - name: Run smoke tests
         run: vvp build/aries_rtl_test

@@ -1,4 +1,17 @@
 `timescale 1ns/1ps
+// ARIES Tier 0 RTL smoke-test core.
+// Digital simulation model only; not evidence of verified 4 GHz silicon timing.
+module aries_sub_ns_core (
+ input wire clk_4ghz, input wire rst_n, input wire [63:0] raw_stream,
+ input wire trigger_valid, output reg [63:0] resolved_out, output reg sub_ns_lock
+);
+ always @(posedge clk_4ghz or negedge rst_n) begin
+  if (!rst_n) begin resolved_out <= 64'd0; sub_ns_lock <= 1'b0; end
+  else if (trigger_valid) begin resolved_out <= raw_stream; sub_ns_lock <= 1'b1; end
+  else sub_ns_lock <= 1'b0;
+ end
+endmodule
+
 module tb_aries_sub_ns_core;
   reg clk_4ghz = 0;
   reg rst_n = 0;
@@ -7,15 +20,9 @@ module tb_aries_sub_ns_core;
   wire [63:0] resolved_out;
   wire sub_ns_lock;
   integer failures = 0;
-
   always #0.125 clk_4ghz = ~clk_4ghz;
-
-  aries_sub_ns_core dut (
-    .clk_4ghz(clk_4ghz), .rst_n(rst_n), .raw_stream(raw_stream),
-    .trigger_valid(trigger_valid), .resolved_out(resolved_out),
-    .sub_ns_lock(sub_ns_lock)
-  );
-
+  aries_sub_ns_core dut (.clk_4ghz(clk_4ghz), .rst_n(rst_n), .raw_stream(raw_stream),
+    .trigger_valid(trigger_valid), .resolved_out(resolved_out), .sub_ns_lock(sub_ns_lock));
   initial begin
     #0.5;
     if (resolved_out !== 64'd0 || sub_ns_lock !== 1'b0) begin

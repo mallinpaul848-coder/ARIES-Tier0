@@ -1,0 +1,87 @@
+name: ARIES Public Endpoint Smoke Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      public_api_url:
+        description: "Deployed HTTPS API base URL (example: https://your-service.onrender.com)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  public-smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate public HTTPS endpoint
+        env:
+          API_BASE: ${{ inputs.public_api_url }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os
+          from urllib.parse import urlparse
+          url = os.environ["API_BASE"].strip().rstrip("/")
+          parsed = urlparse(url)
+          if parsed.scheme != "https" or not parsed.netloc:
+              raise SystemExit("FAIL: provide a valid public HTTPS base URL.")
+          print("Testing:", url)
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write(f"API_BASE={url}\n")
+          PY
+      - name: Test health and readiness
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 30 "$API_BASE/health" -o health.json
+          cat health.json
+          python - <<'PY'
+          import json
+          d=json.load(open("health.json"))
+          assert d.get("status") == "ok", f"Unexpected health payload: {d}"
+          print("\nPASS: public health endpoint")
+          PY
+          curl --fail --silent --show-error --max-time 30 "$API_BASE/" -o root.json
+          cat root.json
+          python - <<'PY'
+          import json
+          d=json.load(open("root.json"))
+          assert d.get("service") == "ARIES AI API", f"Unexpected service: {d}"
+          assert d.get("inference_ready") is True, f"API has no configured inference backend: {d}"
+          print("\nPASS: API reports inference backend configured")
+          PY
+          curl --fail --silent --show-error --max-time 30 "$API_BASE/v1/models" -o models.json
+          cat models.json
+          python - <<'PY'
+          import json
+          d=json.load(open("models.json"))
+          assert d.get("inference_ready") is True, f"Model endpoint not ready: {d}"
+          assert d.get("data"), f"No model advertised: {d}"
+          print("\nPASS: model listed")
+          PY
+      - name: Run real inference request and record latency
+        run: |
+          set -euo pipefail
+          start=$(date +%s%3N)
+          code=$(curl --silent --show-error --max-time 120 -w "%{http_code}" -o chat.json \
+            -H "Content-Type: application/json" \
+            -d '{"model":"aries","messages":[{"role":"user","content":"Reply with exactly: ARIES_EXTERNAL_TEST_OK"}],"max_tokens":32,"temperature":0}' \
+            "$API_BASE/v1/chat/completions")
+          end=$(date +%s%3N)
+          latency=$((end-start))
+          echo "HTTP status: $code"
+          echo "End-to-end latency: ${latency} ms"
+          cat chat.json
+          test "$code" = "200" || { echo "FAIL: inference returned HTTP $code"; exit 1; }
+          python - <<'PY'
+          import json
+          d=json.load(open("chat.json"))
+          choices=d.get("choices") or []
+          assert choices, f"No completion choices returned: {d}"
+          msg=choices[0].get("message",{}).get("content","")
+          assert msg.strip(), f"Empty model response: {d}"
+          print("\nPASS: real model response received")
+          PY
+          echo "Measured public end-to-end latency: ${latency} ms" >> "$GITHUB_STEP_SUMMARY"
+          echo "This is a single smoke-test measurement, not a benchmark or leaderboard result." >> "$GITHUB_STEP_SUMMARY"

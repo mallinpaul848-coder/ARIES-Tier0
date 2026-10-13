@@ -3,7 +3,7 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="ARIES AI API", version="1.0.2")
+app = FastAPI(title="ARIES AI API", version="1.0.3")
 MODEL_ID = os.getenv("ARIES_MODEL_ID", "").strip()
 UPSTREAM_BASE_URL = os.getenv("ARIES_UPSTREAM_BASE_URL", "").rstrip("/")
 UPSTREAM_API_KEY = os.getenv("ARIES_UPSTREAM_API_KEY", "").strip()
@@ -49,6 +49,27 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "aries-ai-api"}
+
+
+@app.get("/diagnostics")
+def diagnostics():
+    """Expose configuration presence only; never reveal secret values."""
+    return {
+        "service": "ARIES AI API",
+        "api_version": app.version,
+        "checks": {
+            "upstream_base_url_configured": bool(UPSTREAM_BASE_URL),
+            "model_id_configured": bool(MODEL_ID),
+            "api_key_configured": bool(UPSTREAM_API_KEY),
+            "api_key_required_by_all_providers": False,
+        },
+        "inference_configured": bool(UPSTREAM_BASE_URL and MODEL_ID),
+        "next_step": (
+            "Run a real chat completion to verify inference."
+            if UPSTREAM_BASE_URL and MODEL_ID
+            else "Add ARIES_UPSTREAM_BASE_URL and ARIES_MODEL_ID in Render Environment; add ARIES_UPSTREAM_API_KEY if the provider requires authentication."
+        ),
+    }
 
 
 @app.get("/v1/models")

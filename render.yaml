@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: aries-tier0-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ARIES_UPSTREAM_BASE_URL
+        sync: false
+      - key: ARIES_MODEL_ID
+        sync: false
+      - key: ARIES_UPSTREAM_API_KEY
+        sync: false
+      - key: ARIES_UPSTREAM_TIMEOUT_SECONDS
+        value: "90"

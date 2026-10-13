@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       public_api_url:
-        description: "Deployed HTTPS API base URL (example: https://your-service.onrender.com)"
+        description: "ARIES deployed HTTPS API base URL"
         required: true
         type: string
+        default: "https://aries-tier0-api-6qjh.onrender.com"
 
 permissions:
   contents: read

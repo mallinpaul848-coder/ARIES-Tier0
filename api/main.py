@@ -3,11 +3,19 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="ARIES AI API", version="1.0.1")
+app = FastAPI(title="ARIES AI API", version="1.0.2")
 MODEL_ID = os.getenv("ARIES_MODEL_ID", "").strip()
 UPSTREAM_BASE_URL = os.getenv("ARIES_UPSTREAM_BASE_URL", "").rstrip("/")
 UPSTREAM_API_KEY = os.getenv("ARIES_UPSTREAM_API_KEY", "").strip()
 UPSTREAM_TIMEOUT_SECONDS = float(os.getenv("ARIES_UPSTREAM_TIMEOUT_SECONDS", "90"))
+
+
+def chat_completions_url(base_url: str) -> str:
+    """Build the chat endpoint for providers whose base URL may already end in /v1."""
+    normalized = base_url.rstrip("/")
+    if normalized.endswith("/v1"):
+        return f"{normalized}/chat/completions"
+    return f"{normalized}/v1/chat/completions"
 
 
 class Message(BaseModel):
@@ -24,16 +32,16 @@ class ChatRequest(BaseModel):
 
 @app.get("/")
 def root():
-    ready = bool(UPSTREAM_BASE_URL)
+    ready = bool(UPSTREAM_BASE_URL and MODEL_ID)
     return {
         "service": "ARIES AI API",
-        "api_version": "1.0.1",
+        "api_version": "1.0.2",
         "status": "configured" if ready else "needs_backend",
         "inference_ready": ready,
         "note": (
-            "A real OpenAI-compatible inference backend is configured."
+            "Backend URL and model ID are configured; run a real chat request to verify inference."
             if ready else
-            "Configure ARIES_UPSTREAM_BASE_URL and, if required, ARIES_UPSTREAM_API_KEY."
+            "Set ARIES_UPSTREAM_BASE_URL and ARIES_MODEL_ID; set ARIES_UPSTREAM_API_KEY if the provider requires it."
         ),
     }
 
@@ -49,8 +57,8 @@ def models():
         return {
             "object": "list",
             "data": [],
-            "inference_ready": bool(UPSTREAM_BASE_URL),
-            "note": "Set ARIES_MODEL_ID to the model name accepted by the configured backend.",
+            "inference_ready": False,
+            "note": "Set ARIES_MODEL_ID to the exact model name accepted by the configured backend.",
         }
     return {
         "object": "list",
@@ -61,15 +69,14 @@ def models():
 
 @app.post("/v1/chat/completions")
 async def chat_completions(request: ChatRequest):
-    if not UPSTREAM_BASE_URL:
+    if not UPSTREAM_BASE_URL or not MODEL_ID:
         raise HTTPException(
             status_code=503,
-            detail="Inference backend is not configured. Set ARIES_UPSTREAM_BASE_URL to a real, authorized OpenAI-compatible model API.",
+            detail="Inference backend is not fully configured. Set ARIES_UPSTREAM_BASE_URL and ARIES_MODEL_ID to a real, authorized OpenAI-compatible model API and its exact model ID.",
         )
 
     payload = request.model_dump()
-    if MODEL_ID:
-        payload["model"] = MODEL_ID
+    payload["model"] = MODEL_ID
     headers = {"Content-Type": "application/json"}
     if UPSTREAM_API_KEY:
         headers["Authorization"] = f"Bearer {UPSTREAM_API_KEY}"
@@ -77,7 +84,7 @@ async def chat_completions(request: ChatRequest):
     try:
         async with httpx.AsyncClient(timeout=UPSTREAM_TIMEOUT_SECONDS) as client:
             response = await client.post(
-                f"{UPSTREAM_BASE_URL}/v1/chat/completions",
+                chat_completions_url(UPSTREAM_BASE_URL),
                 json=payload,
                 headers=headers,
             )

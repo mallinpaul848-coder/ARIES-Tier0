@@ -35,7 +35,7 @@ def root():
     ready = bool(UPSTREAM_BASE_URL and MODEL_ID)
     return {
         "service": "ARIES AI API",
-        "api_version": "1.0.2",
+        "api_version": app.version,
         "status": "configured" if ready else "needs_backend",
         "inference_ready": ready,
         "note": (

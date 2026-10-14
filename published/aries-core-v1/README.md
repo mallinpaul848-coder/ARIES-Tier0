@@ -25,8 +25,8 @@ An experimental, small GPT-2-style causal language model trained from randomly i
 - Tokenizer vocabulary: 8000
 - Training steps: 1000
 - Random seed: 369
-- Corpus file name: training.txt (the corpus itself is not uploaded by this script)
-- Declared corpus provenance: Salesforce/wikitext wikitext-2-raw-v1 fallback; see dataset card and license. If a custom corpus path is supplied, uploader is responsible for its provenance and rights.
+- Corpus file name: training_with_math_curriculum.txt (the corpus itself is not uploaded by this script)
+- Declared corpus provenance: Base corpus: data/training.txt (10,916,753 characters; verify its license and attribution). Supplement: 7 short ARIES-authored educational math notes. These notes are training examples, not proofs of Millennium Prize problems.
 
 ## Intended use and limitations
 
@@ -34,7 +34,7 @@ This is an experimental baseline. No claim is made that it matches modern founda
 
 ## Training data and rights
 
-Declared provenance: Salesforce/wikitext wikitext-2-raw-v1 fallback; see dataset card and license. If a custom corpus path is supplied, uploader is responsible for its provenance and rights.
+Declared provenance: Base corpus: data/training.txt (10,916,753 characters; verify its license and attribution). Supplement: 7 short ARIES-authored educational math notes. These notes are training examples, not proofs of Millennium Prize problems.
 
 The uploader is responsible for checking the dataset card, license, attribution, and whether the corpus and resulting model may lawfully be used and redistributed. Do not publish an inaccurate license claim.
 

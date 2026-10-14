@@ -16,6 +16,14 @@
 
 These are deployment and regression checks, not independent certification of broad language-model capability. The endpoint currently serves ARIES's native character n-gram baseline and narrow task engine; it is not the experimental Transformer checkpoint described below.
 
+
+## Newly automated checks
+
+- **Public live endpoint workflow:** [aries-public-live-check.yml](../.github/workflows/aries-public-live-check.yml) checks the Render service health/root/diagnostics/model-list routes and sends a real chat-completions request. It records response times and generated-text presence, and uploads a JSON artifact even when a check fails. It runs on relevant pushes, on a six-hour schedule, and by manual dispatch.
+- **Checkpoint evaluation workflow:** [aries-model-evaluation.yml](../.github/workflows/aries-model-evaluation.yml) attempts to load the checked-in experimental checkpoint and tokenizer through Transformers, performs a deterministic generation smoke test, and then runs a capped 25-example HellaSwag evaluation if loading succeeds. It uploads results even on failure.
+- These workflows are reproducibility and packaging checks. The 25-example evaluation is explicitly a smoke test, not a full benchmark and not an official leaderboard score. A workflow file being committed does not prove its run passed; check the linked GitHub Actions run and download the artifact.
+- **GitHub release:** [ARIES Core v1 — Experimental Checkpoint](https://github.com/mallinpaul848-coder/ARIES-Tier0/releases/tag/aries-core-v1-latest) is a public experimental release with weights and config/tokenizer assets. A GitHub release is not the same as a Hugging Face model repository or an official leaderboard submission.
+
 ## Experimental Transformer checkpoint
 
 - **Training/export workflow:** [Run 38511413963](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38511413963) completed successfully.

@@ -1,8 +1,10 @@
 FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY api ./api
-EXPOSE 8000
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# ARIES-owned standard-library native inference; no external model API or secret required.
+COPY software/ ./software/
+COPY software/deployment_corpus.txt ./data/training.txt
+RUN python software/native_runtime.py train --corpus ./data/training.txt --model ./models/aries-native-ngram.json
+ENV ARIES_NATIVE_MODEL=/app/models/aries-native-ngram.json
+EXPOSE 10000
+CMD ["python", "software/public_native_server.py"]

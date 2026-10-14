@@ -2,8 +2,8 @@
 
 ## Latest public validation
 
-- **Latest strict public inference benchmark:** PASS — [GitHub Actions run](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503058912), commit `1ceb637af99894a9ef64a1a94de5ed53edf53bff`.
-- **Latest strict benchmark report:** [Download JSON evidence](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503058912/artifacts/11865749543) (retained for 30 days).
+- **Latest strict public inference benchmark:** PASS — [GitHub Actions run](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503195895), commit `80e9773a34136826e5a9c7b8ee0b2d55602043e3`.
+- **Latest strict benchmark report:** [Download JSON evidence](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503195895/artifacts/11865794630) (retained for 30 days).
 - **Live endpoint checks:** 4/4 returned HTTP 200: `/health`, `/`, `/diagnostics`, and `/v1/models`.
 - **Live chat quality checks:** 3/3 returned non-empty responses and passed their assertions: exact-output control, 17 × 19 = 323, and the API-health-check explanation.
 - **Measured live chat latency from a GitHub-hosted runner:** minimum 276.36 ms; median 279.09 ms; maximum 358.10 ms. These are end-to-end HTTP measurements and include network/service overhead.
@@ -33,6 +33,17 @@ The strict public benchmark runs automatically on changes to benchmark or native
 The [Hugging Face Open LLM Leaderboard submission instructions](https://huggingface.co/docs/leaderboards/en/open_llm_leaderboard/submitting) require a public model that loads through supported Transformers AutoClasses, compatible public weights (the instructions specify Safetensors), a model card, and compliance with the leaderboard's supported evaluation setup. See also the [official FAQ](https://huggingface.co/docs/leaderboards/en/open_llm_leaderboard/faq).
 
 The deployed ARIES character n-gram baseline is not a Transformers foundation model and is not eligible as a normal Open LLM Leaderboard entry. A third-party GGUF used by the optional local launcher must not be relabeled as ARIES-trained weights. The current GitHub integration has no verified public model-hub upload or leaderboard submission confirmation, so an accepted entry cannot be claimed.
+
+## Model repository loading check
+
+A reusable loader smoke test has been added at [`benchmarks/verify_hf_model.py`](./verify_hf_model.py). Once the actual public Hugging Face model repository exists, run:
+
+```bash
+python -m pip install -U transformers torch safetensors
+python benchmarks/verify_hf_model.py YOUR_HF_ORG/aries-v1 --revision MODEL_COMMIT_SHA
+```
+
+The script attempts to load `AutoConfig`, `AutoTokenizer`, and `AutoModelForCausalLM`, then reports the detected architecture and parameter count. It is a packaging check only; it does not train weights, prove ownership, measure benchmark quality, or submit a leaderboard request. No concrete Hugging Face model repository ID or uploaded ARIES weights have been verified in this repository yet.
 
 ## Remaining requirements for an official model leaderboard entry
 

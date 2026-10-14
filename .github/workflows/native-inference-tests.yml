@@ -1,0 +1,61 @@
+name: ARIES Native Inference Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Dockerfile"
+      - "software/**"
+      - ".github/workflows/native-inference-tests.yml"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test-native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build ARIES-owned inference image
+        run: docker build --tag aries-native:test .
+      - name: Start native API and verify endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --detach --rm --name aries-native-test --publish 18080:10000 aries-native:test
+          trap 'docker stop aries-native-test >/dev/null 2>&1 || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:18080/health >/tmp/health.json; then break; fi
+            sleep 2
+          done
+          python - <<'PY'
+          import json, urllib.request
+          base = "http://127.0.0.1:18080"
+          def get(path):
+              with urllib.request.urlopen(base+path, timeout=10) as r:
+                  return r.status, json.loads(r.read().decode())
+          status, health = get("/health")
+          assert status == 200 and health.get("status") == "ok", health
+          status, root = get("/")
+          assert status == 200 and root.get("backend") == "aries-native-char-ngram", root
+          status, diag = get("/diagnostics")
+          assert status == 200 and diag.get("inference_configured") is True, diag
+          status, models = get("/v1/models")
+          assert status == 200 and models.get("data"), models
+          model_id = models["data"][0]["id"]
+          payload = json.dumps({"model":model_id,"messages":[{"role":"user","content":"Give a brief greeting."}],"max_tokens":80,"temperature":0.2}).encode()
+          req = urllib.request.Request(base+"/v1/chat/completions", data=payload,
+              headers={"Content-Type":"application/json"}, method="POST")
+          with urllib.request.urlopen(req, timeout=30) as r:
+              code, chat = r.status, json.loads(r.read().decode())
+          choices = chat.get("choices", [])
+          answer = choices[0].get("message",{}).get("content","") if choices else ""
+          assert code == 200 and answer.strip(), chat
+          print(json.dumps({"health":health,"readiness":root,"diagnostics":diag,
+              "model":model_id,"nonempty_completion":True,"response_preview":answer[:160]},indent=2))
+          print("PASS: container build, native model load, and HTTP inference. This is not a model-quality certification.")
+          PY

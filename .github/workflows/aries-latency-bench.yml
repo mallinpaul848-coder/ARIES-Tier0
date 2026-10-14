@@ -1,0 +1,44 @@
+name: ARIES Latency Engine Tests and Microbenchmark
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "software/latency_engine.py"
+      - "software/native_reasoner.py"
+      - "tools/aries_latency_bench.py"
+      - "tests/test_latency_engine.py"
+      - ".github/workflows/aries-latency-bench.yml"
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Iterations per benchmark case (100–2000000)"
+        required: false
+        default: "20000"
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test runner
+        run: python -m pip install pytest
+      - name: Test deterministic fast path and latency metrics
+        run: python -m pytest -q tests/test_latency_engine.py tests/test_native_reasoner.py
+      - name: Measure this GitHub-hosted runner
+        run: |
+          mkdir -p reports
+          python tools/aries_latency_bench.py --iterations "${{ inputs.iterations || '20000' }}" --output reports/aries-latency-benchmark.json
+      - name: Upload machine-measured report
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-latency-microbenchmark
+          path: reports/aries-latency-benchmark.json
+          retention-days: 90

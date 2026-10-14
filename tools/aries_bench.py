@@ -101,9 +101,11 @@ def main():
         print(json.dumps(item, ensure_ascii=False))
     completed = [x for x in report["results"] if "passed_exact_match" in x]
     passes = sum(1 for x in completed if x["passed_exact_match"])
+    nonempty = sum(1 for x in completed if str(x.get("actual", "")).strip())
     report["summary"] = {
         "cases_requested": len(cases),
         "cases_with_model_response": len(completed),
+        "nonempty_responses": nonempty,
         "exact_match_passes": passes,
         "exact_match_accuracy_percent": round(100 * passes / len(completed), 2) if completed else None,
         "latency_samples": len(latencies),
@@ -119,6 +121,8 @@ def main():
     print("Saved report:", args.output)
     if not completed:
         raise SystemExit("No valid model responses. Check endpoint configuration and credentials.")
+    if nonempty == 0:
+        raise SystemExit("Endpoint returned HTTP responses but every model completion was empty.")
 
 if __name__ == "__main__":
     main()

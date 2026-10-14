@@ -39,15 +39,15 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200, {"status":"ok","service":"aries-ai-api"})
         if path == "/":
             return self.send_json(200, {
-                "service":"ARIES AI API","api_version":"1.0.5",
+                "service":"ARIES AI API","api_version":"1.0.6",
                 "status":"configured","inference_ready":ready,
                 "backend":"aries-native-char-ngram",
-                "model_id":MODEL_ID,
+                "model_id":MODEL_ID,"native_reasoner_enabled":True,
                 "note":"Standalone ARIES-owned character n-gram baseline. Functional inference is available; this is not a modern LLM."
             })
         if path == "/diagnostics":
             return self.send_json(200, {
-                "service":"ARIES AI API","api_version":"1.0.5",
+                "service":"ARIES AI API","api_version":"1.0.6",
                 "checks":{"upstream_base_url_configured":False,"model_id_configured":True,
                           "api_key_configured":False,"native_model_loaded":True,"deterministic_reasoner_loaded":True},
                 "inference_configured":True,"backend":"native",

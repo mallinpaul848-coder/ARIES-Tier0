@@ -1,0 +1,41 @@
+name: ARIES Cycle-Level Benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "benchmarks/cycle-level/**"
+      - ".github/workflows/aries-cycle-benchmark.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-smoke-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++
+      - name: Configure
+        run: cmake -S benchmarks/cycle-level -B build/cycle-benchmark -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build/cycle-benchmark --parallel 2
+      - name: Run bounded smoke benchmark
+        run: ./build/cycle-benchmark/aries_benchmark --warmup 10000 --iterations 10000 | tee cycle-benchmark-smoke.txt
+      - name: Validate report fields
+        run: |
+          grep -q "Raw timestamp-window distribution" cycle-benchmark-smoke.txt
+          grep -q "P50:" cycle-benchmark-smoke.txt
+          grep -q "P99:" cycle-benchmark-smoke.txt
+          grep -q "does NOT establish sub-nanosecond" cycle-benchmark-smoke.txt
+      - name: Upload smoke report
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-cycle-benchmark-smoke
+          path: cycle-benchmark-smoke.txt
+          if-no-files-found: error

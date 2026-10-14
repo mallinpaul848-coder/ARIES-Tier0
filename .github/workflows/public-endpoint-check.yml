@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - uses: actions/checkout@v4
       - name: Wait for Render deployment and validate real native inference
         env:
           ARIES_PUBLIC_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
@@ -78,3 +79,22 @@ jobs:
           assert status == 200 and answer.strip(), "Native inference did not return a non-empty completion."
           print("PASS: public native API is responding. This verifies service functionality, not LLM quality.")
           PY
+
+      - name: Run 10-case external diagnostic benchmark
+        env:
+          ARIES_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
+          ARIES_MODEL_ID: aries-native-ngram
+        run: |
+          mkdir -p reports
+          python tools/aries_bench.py --base-url "$ARIES_BASE_URL" --model "$ARIES_MODEL_ID" --limit 10 --output reports/public-benchmark.json
+          {
+            echo "### ARIES external diagnostic benchmark"
+            echo "The attached JSON contains measured request latency and exact-match results for 10 authored diagnostic cases."
+            echo "This is not an official leaderboard result or an independent model-quality certification."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload measured benchmark report
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-public-diagnostic-benchmark
+          path: reports/public-benchmark.json
+          if-no-files-found: error

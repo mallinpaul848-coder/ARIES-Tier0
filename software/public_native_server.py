@@ -2,11 +2,13 @@
 """ARIES-owned public HTTP gateway for its native character n-gram baseline."""
 import json
 import os
+import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 from native_runtime import NativeModel
 from native_reasoner import solve
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aries_math.prise_unified import (ARIESExecutionEngine, PRISEProblem, exact_sat_bruteforce)
 
 MATH_ENGINE = ARIESExecutionEngine()

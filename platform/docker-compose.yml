@@ -1,0 +1,35 @@
+services:
+  aries-api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: aries-api
+    restart: unless-stopped
+    environment:
+      ARIES_UPSTREAM_BASE_URL: ${ARIES_UPSTREAM_BASE_URL:-}
+      ARIES_MODEL_ID: ${ARIES_MODEL_ID:-}
+      ARIES_UPSTREAM_API_KEY: ${ARIES_UPSTREAM_API_KEY:-}
+      ARIES_UPSTREAM_TIMEOUT_SECONDS: ${ARIES_UPSTREAM_TIMEOUT_SECONDS:-90}
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+  aries-launchpad:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aries-launchpad
+    restart: unless-stopped
+    environment:
+      ARIES_API_BASE_URL: http://aries-api:8000
+      ARIES_PUBLIC_API_URL: ${ARIES_PUBLIC_API_URL:-}
+      ARIES_LAUNCHPAD_PORT: "8090"
+    ports:
+      - "${ARIES_LAUNCHPAD_PORT:-8090}:8090"
+    depends_on:
+      aries-api:
+        condition: service_healthy

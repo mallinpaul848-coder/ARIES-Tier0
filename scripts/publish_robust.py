@@ -38,9 +38,6 @@ def main() -> int:
     repo_id = os.getenv("HF_TARGET_REPO", "PaulMallin/aries-core-v1").strip()
     token = os.getenv("HF_TOKEN", "").strip()
 
-    if not token:
-        print("ERROR: HF_TOKEN is missing. Add it as a GitHub Actions repository secret; never paste it into source code or chat.", file=sys.stderr)
-        return 2
     if not repo_id or repo_id.count("/") != 1:
         print("ERROR: HF_TARGET_REPO must be namespace/name.", file=sys.stderr)
         return 2
@@ -106,6 +103,11 @@ def main() -> int:
         if missing:
             print(f"ERROR: staged export is missing required files: {missing}", file=sys.stderr)
             return 4
+
+        if not token:
+            print("[3/4] Local checkpoint validation and allowlisted export passed.", flush=True)
+            print("BLOCKED: HF_TOKEN is missing, so no Hugging Face upload was attempted. Add it as a GitHub Actions repository secret; never paste it into source code or chat.", file=sys.stderr)
+            return 6
 
         print(f"[3/4] Creating/confirming public model repository: {repo_id}", flush=True)
         try:

@@ -66,3 +66,13 @@ The public endpoint workflow must pass against the live service before claiming 
 - `platform/` — self-hosted Launchpad dashboard
 
 The native deployment is a working software baseline, not a full cloud platform. It cannot create DNS/TLS, guarantee always-on free hosting, or create a capable pretrained model from a tiny demonstration corpus.
+
+
+## Public diagnostic scorecard
+
+ARIES has a repeatable public endpoint diagnostic workflow that measures exact-match results and end-to-end HTTP latency, then generates HTML, JSON, and CSV reports:
+
+- [Run history and latest scorecard artifacts](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/aries-scorecard.yml)
+- [Leaderboard readiness and limitations](https://github.com/mallinpaul848-coder/ARIES-Tier0/blob/main/benchmarks/LEADERBOARD_READINESS.md)
+
+The latest recorded run returned 10/10 exact matches on the 10-case ARIES-authored diagnostic set (100%), with 127.793 ms median and 180.602 ms mean end-to-end HTTP latency from a GitHub-hosted runner. This is a small internal diagnostic result only, not an official benchmark score or accepted leaderboard ranking. The official model leaderboard entry remains not submitted because the currently deployed native character n-gram baseline is not a supported Transformers foundation model.

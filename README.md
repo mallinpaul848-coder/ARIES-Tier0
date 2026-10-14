@@ -75,3 +75,16 @@ The latest strict public inference run **passed**: [GitHub Actions run](https://
 On the same commit, [API tests](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503059069), [end-to-end API integration](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503058967), and [RTL external smoke tests](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503059087) also passed. The [10-case diagnostic scorecard](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38502634925) previously reported 10/10 exact matches on its small ARIES-authored prompt set.
 
 **Leaderboard status: NOT SUBMITTED.** These checks validate API availability and a few narrow responses, not broad model quality or official leaderboard ranking. The deployed ARIES-owned character n-gram baseline is not a supported Transformers foundation model for the normal Open LLM Leaderboard submission path. Official submission still requires a suitable public model repository with supported weights/config/tokenizer, AutoClass loading verification, standard evaluation, and an actual submission/queue confirmation. See the [leaderboard readiness checklist](https://github.com/mallinpaul848-coder/ARIES-Tier0/blob/main/benchmarks/LEADERBOARD_READINESS.md) and the [official submission guide](https://huggingface.co/docs/leaderboards/en/open_llm_leaderboard/submitting).
+
+
+## Unified PRISE mathematics (research module)
+
+Added `aries_math/prise_unified.py` with digital-root/3-6-9 features, torus geometry, Helixo spiral coordinates, sample-signal diagnostics, Euler characteristic and finite Euler-product helpers, PRISE weighted scoring, and a small-instance exhaustive SAT baseline. See [module documentation](aries_math/README.md) and [automated tests](tests/test_prise_unified_math.py).
+
+Run the focused test suite from the repository root:
+
+```powershell
+python -m unittest tests.test_prise_unified_math -v
+```
+
+Scientific scope: this is an additive research module, not yet connected to the public API request path. It does not prove P = NP or P != NP. The SAT baseline is exponential by design, and no sub-nanosecond latency claim is made. The sample signal routines are diagnostics, not a rigorous general Helmholtz-Hodge decomposition. See the module documentation for limitations.

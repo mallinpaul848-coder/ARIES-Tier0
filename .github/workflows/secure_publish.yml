@@ -13,6 +13,11 @@ on:
         required: true
         default: "published/aries-core-v1"
         type: string
+  push:
+    branches: ["main"]
+    paths:
+      - "scripts/publish_robust.py"
+      - ".github/workflows/secure_publish.yml"
 
 permissions:
   contents: read
@@ -38,6 +43,6 @@ jobs:
       - name: Validate existing checkpoint and publish allowlisted files
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_TARGET_REPO: ${{ inputs.hf_repo_id }}
-          ARIES_MODEL_DIR: ${{ inputs.model_dir }}
+          HF_TARGET_REPO: ${{ inputs.hf_repo_id || 'PaulMallin/aries-core-v1' }}
+          ARIES_MODEL_DIR: ${{ inputs.model_dir || 'published/aries-core-v1' }}
         run: python scripts/publish_robust.py

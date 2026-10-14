@@ -59,12 +59,16 @@ jobs:
               raise SystemExit("FAIL: Render native deployment did not become ready within 12 minutes. Last result: " + last_error)
 
           report = {"target":base, "backend":root.get("backend"), "model_id":root.get("model_id"), "checks":[]}
-          for path in ("/health", "/", "/diagnostics", "/v1/models"):
+          for path in ("/health", "/", "/diagnostics", "/v1/models", "/performance"):
               status, body = request(path)
               report["checks"].append({"path":path,"http_status":status,"body":body})
               assert status == 200, f"{path} returned HTTP {status}: {body}"
           diag = request("/diagnostics")[1]
           models = request("/v1/models")[1]
+          performance = request("/performance")[1]
+          assert isinstance(performance.get("fast_path_cache"), dict), f"Fast-path cache telemetry missing: {performance}"
+          assert isinstance(performance.get("latency", {}).get("measurements"), dict), f"Latency telemetry missing: {performance}"
+          assert performance.get("latency", {}).get("sub_nanosecond_latency_verified") is False, "Measurement report must not claim unverified sub-nanosecond latency."
           assert diag.get("inference_configured") is True and diag.get("checks",{}).get("deterministic_reasoner_loaded") is True and diag.get("native_reasoner_version") == "0.2", f"Native reasoner/model not ready: {diag}"
           assert models.get("data"), f"No model advertised: {models}"
           model_id = models["data"][0]["id"]
@@ -75,10 +79,14 @@ jobs:
           }, timeout=60)
           choices = chat.get("choices",[])
           answer = choices[0].get("message",{}).get("content","") if choices else ""
+          aries_metrics = chat.get("aries_native", {}) if isinstance(chat, dict) else {}
           report["checks"].append({"path":"/v1/chat/completions","http_status":status,
-                                   "nonempty_response":bool(answer.strip()),"response_preview":answer[:180]})
+                                   "nonempty_response":bool(answer.strip()),"response_preview":answer[:180],
+                                   "inference_ns":aries_metrics.get("inference_ns"),
+                                   "fast_path_cache_hit":aries_metrics.get("fast_path_cache_hit")})
           print(json.dumps(report,indent=2))
           assert status == 200 and answer.strip(), "Native inference did not return a non-empty completion."
+          assert isinstance(aries_metrics.get("inference_ns"), int) and aries_metrics.get("inference_ns") > 0, f"Missing measured inference_ns field: {aries_metrics}"
           print("PASS: public native API is responding. This verifies service functionality, not LLM quality.")
           PY
 

@@ -1,0 +1,114 @@
+name: ARIES Public Live Endpoint Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/aries-public-live-check.yml"
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-endpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test public endpoint and write measured JSON report
+        env:
+          ARIES_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
+        run: |
+          python - <<'PY'
+          import json, os, time, urllib.request, urllib.error
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          base = os.environ["ARIES_BASE_URL"].rstrip("/")
+          checks = []
+          def request(path, method="GET", payload=None):
+              url = base + path
+              data = None if payload is None else json.dumps(payload).encode()
+              headers = {"Accept": "application/json", "User-Agent": "ARIES-Public-Live-Check/1.0"}
+              if data is not None:
+                  headers["Content-Type"] = "application/json"
+              started = time.perf_counter()
+              try:
+                  req = urllib.request.Request(url, data=data, headers=headers, method=method)
+                  with urllib.request.urlopen(req, timeout=35) as response:
+                      body = response.read(1_000_000).decode("utf-8", "replace")
+                      elapsed = round((time.perf_counter() - started) * 1000, 2)
+                      try:
+                          parsed = json.loads(body)
+                      except Exception:
+                          parsed = None
+                      item = {"path": path, "method": method, "http_status": response.status,
+                              "latency_ms": elapsed, "ok": 200 <= response.status < 300}
+                      if isinstance(parsed, dict):
+                          for key in ("status", "model", "model_id", "backend", "detail"):
+                              if key in parsed:
+                                  item[key] = parsed[key]
+                      checks.append(item)
+                      return item, parsed, body
+              except Exception as exc:
+                  item = {"path": path, "method": method,
+                          "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+                          "ok": False, "error": str(exc)[:500]}
+                  checks.append(item)
+                  return item, None, ""
+
+          for path in ("/health", "/", "/diagnostics", "/v1/models"):
+              request(path)
+
+          # Exercise inference using the OpenAI-compatible route; distinguish HTTP reachability from
+          # whether the response actually contains generated text.
+          chat_item, chat_json, _ = request("/v1/chat/completions", "POST", {
+              "model": "aries-native-ngram",
+              "messages": [{"role": "user", "content": "Reply with exactly: ARIES live check"}],
+              "max_tokens": 24,
+              "temperature": 0
+          })
+          generated = ""
+          if isinstance(chat_json, dict):
+              choices = chat_json.get("choices") or []
+              if choices and isinstance(choices[0], dict):
+                  message = choices[0].get("message") or {}
+                  generated = str(message.get("content") or choices[0].get("text") or "")
+          chat_item["generated_text_present"] = bool(generated.strip())
+          if generated.strip():
+              chat_item["generated_text_sample"] = generated[:160]
+
+          report = {
+              "project": "ARIES Tier 0",
+              "kind": "public_endpoint_smoke_test_not_official_leaderboard",
+              "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+              "base_url": base,
+              "checks": checks,
+              "http_checks_passed": sum(1 for c in checks if c.get("ok")),
+              "http_checks_total": len(checks),
+              "inference_http_ok": bool(chat_item.get("ok")),
+              "inference_returned_text": bool(generated.strip()),
+              "note": "Endpoint smoke checks only. Not a model quality benchmark or official leaderboard result."
+          }
+          out = Path("public-live-report.json")
+          out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps(report, indent=2))
+          if not all(c.get("ok") for c in checks):
+              raise SystemExit("One or more public endpoint HTTP checks failed; report retained as workflow artifact.")
+          if not generated.strip():
+              raise SystemExit("Chat endpoint returned no generated text; report retained as workflow artifact.")
+          PY
+
+      - name: Upload measured report even when a test fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-public-live-report
+          path: public-live-report.json
+          if-no-files-found: warn
+          retention-days: 30

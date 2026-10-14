@@ -18,12 +18,8 @@ Without a configured model backend, the dashboard runs but explicitly reports in
 
 To expose this platform outside your computer, deploy the Compose stack on a server you control and configure a domain and TLS reverse proxy. This stack does not automatically deploy to Render or make a local computer public.
 
-## Local smoke test
+## External verification
 
-Run these from PowerShell after startup:
-- Invoke-RestMethod http://localhost:8090/health
-- Invoke-RestMethod http://localhost:8090/api/status
-- Invoke-RestMethod http://localhost:8000/health
-- Invoke-RestMethod http://localhost:8000/diagnostics
+GitHub Actions workflow: .github/workflows/aries-launchpad-tests.yml. It syntax-checks the dashboard and exercises its HTTP health, HTML, and status endpoints using a deliberately unavailable mock backend. This verifies the platform control panel, not the public ARIES model inference.
 
 A real external inference test passes only when POST /v1/chat/completions returns HTTP 200 and a non-empty assistant message. Use repeated samples and record hardware/model details before publishing performance claims.

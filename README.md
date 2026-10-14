@@ -149,3 +149,8 @@ python tools/aries_latency_bench.py --iterations 20000 --output reports/aries-la
 The [ARIES Latency Engine Tests and Microbenchmark workflow](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/aries-latency-bench.yml) runs the tests and uploads the measured JSON report for its specific GitHub-hosted runner.
 
 **Latency measurement boundary:** times are represented in nanoseconds using Python's `perf_counter_ns()`; this does not guarantee nanosecond timer resolution, much less sub-nanosecond inference. The microbenchmark measures a deterministic rule/cache path—not generative model inference, external API latency, or CPU cycles. The current character n-gram model remains a small baseline, not a modern LLM. Do not market the report as proof of sub-nanosecond AI inference.
+
+
+## Latest validation and comparison report
+
+See [ARIES external validation and model comparison — 2026-10-14](benchmarks/ARIES_VALIDATION_COMPARISON_2026-10-14.md) for the latest passing GitHub Actions checks, measured cache/rule-engine timing, public endpoint diagnostic results, comparison to a current leading public model index, and the remaining official leaderboard publication steps.

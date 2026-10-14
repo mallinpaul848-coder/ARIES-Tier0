@@ -1,0 +1,60 @@
+name: ARIES Public Diagnostic Scorecard
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 9 * * 1"
+  push:
+    branches: [main]
+    paths:
+      - "tools/aries_bench.py"
+      - "tools/aries_scorecard.py"
+      - ".github/workflows/aries-scorecard.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  scorecard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run measured public endpoint benchmark
+        env:
+          ARIES_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
+          ARIES_MODEL_ID: aries-native-ngram
+        run: |
+          mkdir -p reports
+          python tools/aries_bench.py --base-url "$ARIES_BASE_URL" --model "$ARIES_MODEL_ID" --limit 10 --output reports/aries-scorecard.json
+      - name: Build HTML and CSV scorecard
+        run: python tools/aries_scorecard.py --input reports/aries-scorecard.json --html reports/aries-scorecard.html --csv reports/aries-scorecard.csv
+      - name: Publish metrics in workflow summary
+        run: |
+          python - <<'PY'
+          import json, os
+          with open("reports/aries-scorecard.json", encoding="utf-8") as src:
+              report=json.load(src)
+          s=report.get("summary", {})
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+              f.write("# ARIES public diagnostic scorecard\n\n")
+              f.write("- Endpoint: " + str(report.get("base_url")) + "\n")
+              f.write("- Model: " + str(report.get("requested_model")) + "\n")
+              f.write("- Exact-match diagnostic: **" + str(s.get("exact_match_passes", 0)) + "/" + str(s.get("cases_with_model_response", 0)) + "** (" + str(s.get("exact_match_accuracy_percent", "N/A")) + "%)\n")
+              f.write("- Non-empty responses: **" + str(s.get("nonempty_responses", 0)) + "/" + str(s.get("cases_requested", 0)) + "**\n")
+              f.write("- Median latency: **" + str(s.get("latency_median_ms", "N/A")) + " ms**; mean: **" + str(s.get("latency_mean_ms", "N/A")) + " ms**\n\n")
+              f.write("> Small ARIES-authored diagnostic only; not an official benchmark score or accepted leaderboard ranking.\n")
+          PY
+      - name: Upload portable scorecard files
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-public-scorecard
+          path: |
+            reports/aries-scorecard.json
+            reports/aries-scorecard.html
+            reports/aries-scorecard.csv
+          if-no-files-found: error
+          retention-days: 90

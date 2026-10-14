@@ -2,6 +2,8 @@ name: ARIES Full Model Validation
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "17 9 * * 1"
   push:
     branches: [main]
     paths:
@@ -10,6 +12,8 @@ on:
       - "software/**"
       - "tools/aries_bench.py"
       - "tools/aries_latency_bench.py"
+      - "validation/aries_model_validation.py"
+      - "validation/README.md"
       - ".github/workflows/aries-full-model-validation.yml"
 
 permissions:

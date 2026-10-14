@@ -116,10 +116,10 @@ jobs:
           TRAINING_STEPS: ${{ github.event.inputs.training_steps || '1000' }}
           TRAINING_DATA_PROVENANCE: "Salesforce/wikitext wikitext-2-raw-v1 fallback; see dataset card and license. If a custom corpus path is supplied, uploader is responsible for its provenance and rights."
         run: |
-          python scripts/train_and_publish_enhanced.py \\
-            --corpus "$CORPUS_PATH" \\
-            --repo-id "$HF_TARGET_REPO" \\
-            --output-dir artifacts/aries-core-v1 \\
+          python scripts/train_and_publish_enhanced.py \
+            --corpus "$CORPUS_PATH" \
+            --repo-id "$HF_TARGET_REPO" \
+            --output-dir artifacts/aries-core-v1 \
             --steps "$TRAINING_STEPS"
 
       - name: Publish validated model files to this public GitHub repository

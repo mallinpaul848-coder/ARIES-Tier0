@@ -1,0 +1,73 @@
+name: ARIES Train and Publish Model
+on:
+  workflow_dispatch:
+    inputs:
+      hf_repo_id:
+        description: "Your Hugging Face model repo ID (namespace/name)"
+        required: true
+        type: string
+      corpus_path:
+        description: "Path to a licensed UTF-8 training text file already in this repository"
+        required: true
+        default: "data/training.txt"
+        type: string
+      training_steps:
+        description: "Training steps (start modestly; more steps do not guarantee quality)"
+        required: true
+        default: "1000"
+        type: string
+permissions:
+  contents: read
+jobs:
+  train-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Check required secret and licensed corpus
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          CORPUS_PATH: ${{ inputs.corpus_path }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          token = os.environ.get("HF_TOKEN", "")
+          if not token:
+              raise SystemExit("HF_TOKEN secret is missing. In GitHub: Settings > Secrets and variables > Actions > New repository secret. Name it HF_TOKEN; never put the token in a file or workflow input.")
+          p = Path(os.environ["CORPUS_PATH"])
+          if not p.is_file():
+              raise SystemExit(f"Training corpus not found: {p}. Add a UTF-8 text file you own or are licensed to use, then rerun.")
+          s = p.read_text(encoding="utf-8-sig").strip()
+          if len(s) < 1000:
+              raise SystemExit(f"Corpus has only {len(s)} characters; at least 1000 are required by the training script. A substantially larger, diverse corpus is recommended.")
+          print(f"Corpus found: {p}; {len(s)} characters. Check license/provenance before publication.")
+          PY
+      - name: Install CPU training dependencies
+        run: |
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.2,<2.7"
+          python -m pip install "transformers>=4.45,<5" "tokenizers>=0.20" "huggingface_hub>=0.26" "safetensors>=0.4" "accelerate>=0.26"
+      - name: Train ARIES model and publish to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python software/train_and_publish_aries_lm.py \
+            --corpus "${{ inputs.corpus_path }}" \
+            --repo-id "${{ inputs.hf_repo_id }}" \
+            --output-dir artifacts/aries-published \
+            --steps "${{ inputs.training_steps }}" \
+            --model-name "ARIES Experimental Causal LM"
+      - name: Upload reproducibility package
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-training-and-publish-logs
+          path: |
+            artifacts/aries-published/README.md
+            artifacts/aries-published/config.json
+          if-no-files-found: ignore
+          retention-days: 14

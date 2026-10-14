@@ -23,6 +23,7 @@ The scorecard workflow runs on pushes affecting its benchmark software, can be r
 - **Report artifact:** [Download strict benchmark JSON](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38502970352/artifacts/11866463431).
 - **Fix committed:** the ARIES native deterministic engine now includes an explicit health-check explanation and supports the phrase “multiplied by”; regression tests were added. A new public benchmark is triggered by future native inference code changes to verify whether the deployed service has picked up the fix.
 - **Official leaderboard:** still **not submitted**. A passing small diagnostic is not an official leaderboard score.
+- **Retest after code fixes:** still FAIL — [GitHub Actions run](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503014878) also scored 2/3. The deployed public service continued returning an unrelated n-gram continuation for the health-check explanation, so the committed deterministic fix has not been verified on the public deployment yet. API, end-to-end, native runtime, and RTL workflows passed on commit `986e021e`; only strict public response-quality validation remains red.
 
 ## What has been exercised
 

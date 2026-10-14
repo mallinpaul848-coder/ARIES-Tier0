@@ -69,7 +69,7 @@ def vortex_transform(
         cmath.rect(r, cmath.phase(z) + angle + swirl * math.log1p(r)).imag
 
 
-def phase8_cycle(start: int = 1) -> tuple[int, ...]:
+def phase8_cycle(start: int = 0) -> tuple[int, ...]:
     """Return eight equally spaced phase indices, normalized to [0, 2π)."""
     if not isinstance(start, int) or isinstance(start, bool):
         raise TypeError("start must be an integer")

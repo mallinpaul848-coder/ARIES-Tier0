@@ -73,6 +73,9 @@ def solve(prompt):
         return WEEKDAYS[(start + days) % 7]
 
     # Small, explicit fact table. Expand only with verified entries.
+    if "api health check" in lower and ("what" in lower or "explain" in lower):
+        return "An API health check verifies that the service is reachable and responding; it does not prove that every feature or model answer is correct."
+
     if re.search(r"chemical formula for water", lower):
         return "H2O"
 

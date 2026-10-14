@@ -31,7 +31,7 @@ jobs:
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
           python - <<'PY'
-          import json, time, urllib.request
+          import json, time, urllib.request, urllib.error
           base = "http://127.0.0.1:18090"
           for attempt in range(30):
               try:
@@ -51,6 +51,9 @@ jobs:
               assert r.status == 200
               assert payload["platform"] == "ARIES Launchpad"
               assert payload["services"][0]["inference_ready"] is False
-          with urllib.request.urlopen(base + "/missing", timeout=2) as r:
+          try:
+              urllib.request.urlopen(base + "/missing", timeout=2)
               raise SystemExit("Unknown route unexpectedly returned success")
+          except urllib.error.HTTPError as e:
+              assert e.code == 404
           PY

@@ -64,3 +64,8 @@ The workflow checks health, readiness, the model list, and a real chat-completio
 [View API test workflow runs](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/api-tests.yml)
 
 Only publish measured performance after repeatable tests against a live, working model endpoint.
+
+
+## ARIES Launchpad — self-hosted deployment dashboard
+
+A small self-hosted control panel and Docker Compose stack is available in [platform/](platform/README.md). It monitors ARIES API readiness and shows live service diagnostics. Start it on a machine with Docker Desktop using the instructions in that guide. This is an owned dashboard and service configuration, not a full cloud provider: it cannot provision compute, DNS, TLS, or model weights on its own. The public Render endpoint remains a separate deployment and still requires a working inference backend before external model testing can pass.

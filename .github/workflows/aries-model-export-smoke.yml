@@ -1,0 +1,60 @@
+name: ARIES Model Export Smoke Test
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "software/train_and_publish_aries_lm.py"
+      - "software/deployment_corpus.txt"
+      - ".github/workflows/aries-model-export-smoke.yml"
+permissions:
+  contents: read
+jobs:
+  train-export-load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install model export dependencies
+        run: python -m pip install "torch>=2.2" "transformers>=4.45,<5" "tokenizers>=0.20" "huggingface_hub>=0.26" "safetensors>=0.4"
+      - name: Train tiny disposable test model and export files
+        run: >-
+          python software/train_and_publish_aries_lm.py
+          --corpus software/deployment_corpus.txt
+          --repo-id aries-smoke-test/aries-smoke-test
+          --output-dir artifacts/aries-smoke
+          --vocab-size 300
+          --block-size 32
+          --layers 1
+          --heads 4
+          --hidden-size 32
+          --steps 2
+          --batch-size 1
+          --skip-upload
+      - name: Verify expected export files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          p = Path("artifacts/aries-smoke")
+          required = ["model.safetensors", "config.json", "tokenizer.json", "tokenizer_config.json", "README.md"]
+          missing = [name for name in required if not (p / name).is_file()]
+          if missing:
+              raise SystemExit(f"Missing expected model artifacts: {missing}")
+          cfg = json.loads((p / "config.json").read_text())
+          if cfg.get("model_type") != "gpt2":
+              raise SystemExit(f"Unexpected model type: {cfg.get('model_type')}")
+          print("PASS: Safetensors, config, tokenizer artifacts, and model card are present.")
+          PY
+      - name: Upload smoke-test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-model-export-smoke
+          path: artifacts/aries-smoke/
+          if-no-files-found: warn
+          retention-days: 7

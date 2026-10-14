@@ -36,9 +36,13 @@ def train(corpus_path, model_path, order=ORDER):
     text = text.replace("\r\n", "\n")
     counts = collections.defaultdict(collections.Counter)
     padded = ("\u0002" * order) + text + "\u0003"
+    # Record every suffix length, including the empty context. At inference time,
+    # an unseen prompt can then fall back to shorter contexts instead of emitting
+    # an empty completion. This is still a small n-gram baseline, not an LLM.
     for i in range(order, len(padded)):
-        context = padded[i-order:i]
-        counts[context][padded[i]] += 1
+        for n in range(order + 1):
+            context = padded[i-n:i] if n else ""
+            counts[context][padded[i]] += 1
     serial = {ctx: dict(counter) for ctx, counter in counts.items()}
     payload = {
         "format": "aries-native-char-ngram-v1",

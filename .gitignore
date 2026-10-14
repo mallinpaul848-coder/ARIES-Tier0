@@ -1,0 +1,13 @@
+# Never commit secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+hf_token*
+# Proprietary/local-only material: keep these outside the public repository
+core_private/
+private_corpus/
+private_notes/
+private_proofs/
+local_training_data/

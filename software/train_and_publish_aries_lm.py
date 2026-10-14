@@ -166,6 +166,7 @@ def main():
     tokenizer.save_pretrained(out)
     config.save_pretrained(out)
     parameter_count = sum(p.numel() for p in model.parameters())
+    provenance = os.getenv("TRAINING_DATA_PROVENANCE", "Uploader-supplied corpus; exact sources and rights must be documented before redistribution.")
     card = f"""---
 license: {args.license}
 language:
@@ -194,6 +195,7 @@ An experimental, small GPT-2-style causal language model trained from randomly i
 - Training steps: {args.steps}
 - Random seed: {args.seed}
 - Corpus file name: {corpus.name} (the corpus itself is not uploaded by this script)
+- Declared corpus provenance: {provenance}
 
 ## Intended use and limitations
 
@@ -201,7 +203,7 @@ This is an experimental baseline. No claim is made that it matches modern founda
 
 ## Training data and rights
 
-The uploader is responsible for ensuring that the training corpus and resulting model may lawfully be used and redistributed. Before public release, replace this section with actual corpus sources, licenses, filtering steps, and known limitations. Review the license metadata above; do not publish an inaccurate license claim.
+Declared provenance: {provenance}\n\nThe uploader is responsible for checking the dataset card, license, attribution, and whether the corpus and resulting model may lawfully be used and redistributed. Do not publish an inaccurate license claim.
 
 ## Evaluation
 

@@ -3,6 +3,7 @@ from software.native_reasoner import solve
 
 def test_arithmetic_is_solved_without_eval():
     assert solve("What is 17 * 19? Reply with the number only.") == "323"
+    assert solve("What is 17 multiplied by 19? Give only the number.") == "323"
     assert solve("What is 144 / 12? Reply with the number only.") == "12"
     assert solve("What is 256 + 789? Reply with the number only.") == "1045"
     assert solve("What is 1000 - 367? Reply with the number only.") == "633"
@@ -38,4 +39,4 @@ def test_unknown_prompt_falls_back_to_model():
 def test_api_health_check_explanation_is_accurate():
     answer = solve("In one sentence, explain what an API health check proves.")
     assert answer is not None
-    assert "reachable" in answer.lower() and "does not prove" in answer.lower()\n
+    assert "reachable" in answer.lower() and "does not prove" in answer.lower()

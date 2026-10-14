@@ -1,25 +1,25 @@
-name: ARIES Train and Publish Model
+name: ARIES Train, Export, Publish, and Verify Model
 on:
   workflow_dispatch:
     inputs:
       hf_repo_id:
-        description: "Your Hugging Face model repo ID (namespace/name)"
+        description: "Public Hugging Face model repo ID (namespace/name)"
         required: true
         type: string
       corpus_path:
-        description: "Path to a licensed UTF-8 training text file already in this repository"
+        description: "Path to a UTF-8 training corpus you own or are licensed to use"
         required: true
         default: "data/training.txt"
         type: string
       training_steps:
-        description: "Training steps (start modestly; more steps do not guarantee quality)"
+        description: "Training steps; this does not guarantee model quality"
         required: true
         default: "1000"
         type: string
 permissions:
   contents: read
 jobs:
-  train-and-publish:
+  train-publish-verify:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
@@ -32,26 +32,37 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           CORPUS_PATH: ${{ inputs.corpus_path }}
+          HF_REPO_ID: ${{ inputs.hf_repo_id }}
+          TRAINING_STEPS: ${{ inputs.training_steps }}
         run: |
           python - <<'PY'
-          import os
+          import os, re
           from pathlib import Path
           token = os.environ.get("HF_TOKEN", "")
           if not token:
-              raise SystemExit("HF_TOKEN secret is missing. In GitHub: Settings > Secrets and variables > Actions > New repository secret. Name it HF_TOKEN; never put the token in a file or workflow input.")
+              raise SystemExit("HF_TOKEN secret is missing. Add it in GitHub Settings > Secrets and variables > Actions. Never put the token in a file or workflow input.")
+          repo = os.environ["HF_REPO_ID"].strip()
+          if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*/[A-Za-z0-9][A-Za-z0-9._-]*", repo):
+              raise SystemExit("HF_REPO_ID must be a namespace/name repository identifier.")
+          try:
+              steps = int(os.environ["TRAINING_STEPS"])
+          except ValueError:
+              raise SystemExit("Training steps must be an integer.")
+          if not 1 <= steps <= 100000:
+              raise SystemExit("Training steps must be between 1 and 100000.")
           p = Path(os.environ["CORPUS_PATH"])
           if not p.is_file():
-              raise SystemExit(f"Training corpus not found: {p}. Add a UTF-8 text file you own or are licensed to use, then rerun.")
+              raise SystemExit(f"Training corpus not found: {p}. Add a UTF-8 corpus you own or are licensed to use; the pipeline will not substitute demo text silently.")
           s = p.read_text(encoding="utf-8-sig").strip()
           if len(s) < 1000:
-              raise SystemExit(f"Corpus has only {len(s)} characters; at least 1000 are required by the training script. A substantially larger, diverse corpus is recommended.")
-          print(f"Corpus found: {p}; {len(s)} characters. Check license/provenance before publication.")
+              raise SystemExit(f"Corpus has only {len(s)} characters; at least 1000 are required. A much larger and diverse licensed corpus is needed for meaningful training.")
+          print(f"Preflight passed: corpus={p}; characters={len(s)}; steps={steps}; target={repo}. Verify data provenance/license before publishing.")
           PY
       - name: Install CPU training dependencies
         run: |
           python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.2,<2.7"
           python -m pip install "transformers>=4.45,<5" "tokenizers>=0.20" "huggingface_hub>=0.26" "safetensors>=0.4" "accelerate>=0.26"
-      - name: Train ARIES model and publish to Hugging Face
+      - name: Train, export, locally reload, and publish model
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_REPO_ID: ${{ inputs.hf_repo_id }}
@@ -64,13 +75,21 @@ jobs:
             --output-dir artifacts/aries-published \
             --steps "$TRAINING_STEPS" \
             --model-name "ARIES Experimental Causal LM"
-      - name: Upload reproducibility package
+      - name: Independently download public model and test generation
+        env:
+          HF_REPO_ID: ${{ inputs.hf_repo_id }}
+        run: |
+          python benchmarks/verify_hf_model.py "$HF_REPO_ID" --max-new-tokens 16
+      - name: Upload training and validation evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: aries-training-and-publish-logs
+          name: aries-training-publish-verification
           path: |
             artifacts/aries-published/README.md
             artifacts/aries-published/config.json
+            artifacts/aries-published/model.safetensors
+            artifacts/aries-published/tokenizer.json
+            artifacts/aries-published/tokenizer_config.json
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 30

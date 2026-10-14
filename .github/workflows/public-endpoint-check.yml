@@ -46,7 +46,7 @@ jobs:
           while time.monotonic() < deadline:
               try:
                   status, root = request("/")
-                  if status == 200 and root.get("backend") == "aries-native-char-ngram" and root.get("inference_ready") is True and root.get("native_reasoner_enabled") is True:
+                  if status == 200 and root.get("backend") == "aries-native-char-ngram" and root.get("inference_ready") is True and root.get("native_reasoner_enabled") is True and root.get("native_reasoner_version") == "0.2":
                       break
                   last_error = f"service has not switched to native image yet: {root}"
               except Exception as exc:
@@ -63,7 +63,7 @@ jobs:
               assert status == 200, f"{path} returned HTTP {status}: {body}"
           diag = request("/diagnostics")[1]
           models = request("/v1/models")[1]
-          assert diag.get("inference_configured") is True and diag.get("checks",{}).get("deterministic_reasoner_loaded") is True, f"Native reasoner/model not ready: {diag}"
+          assert diag.get("inference_configured") is True and diag.get("checks",{}).get("deterministic_reasoner_loaded") is True and diag.get("native_reasoner_version") == "0.2", f"Native reasoner/model not ready: {diag}"
           assert models.get("data"), f"No model advertised: {models}"
           model_id = models["data"][0]["id"]
           status, chat = request("/v1/chat/completions", {

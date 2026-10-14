@@ -1,6 +1,6 @@
 # ARIES Tier 0 — Native Inference, API, and External Tests
 
-ARIES now includes an independently authored, provider-free inference service. The Docker deployment trains a small character n-gram baseline from `software/deployment_corpus.txt` during image build and serves an OpenAI-compatible chat endpoint. It does not require a third-party model API key or upstream URL.
+ARIES now includes an independently authored, provider-free inference service. The Docker deployment trains a small character n-gram baseline from `software/deployment_corpus.txt` during image build, plus a transparent deterministic task engine for basic arithmetic, simple logic, weekday arithmetic, exact-output formatting, and a tiny verified fact table. It serves an OpenAI-compatible chat endpoint. It does not require a third-party model API key or upstream URL.
 
 **Important capability limit:** this built-in model is a tiny character n-gram baseline, not a modern large language model. It proves that ARIES's own software can train, load, and serve a model without a hosted inference provider. It is not evidence of Tier-0 capability, strong reasoning, or leaderboard-level performance. Responses may be incoherent and quality tests may score poorly. Do not advertise it as equivalent to a modern LLM.
 
@@ -46,7 +46,7 @@ This prepares the corpus, trains a local baseline, and starts the API at `http:/
 python .\tools\aries_bench.py --base-url http://127.0.0.1:8000 --model aries-native --limit 10 --output .\reports\native-benchmark.json
 ```
 
-The benchmark writes actual responses, exact-match scores, and latency measurements. It is an ARIES-authored diagnostic suite, not an official academic benchmark or independent certification.
+The public workflow runs the 10-case ARIES-authored diagnostic suite and stores measured responses, exact-match scores, and latency as a downloadable GitHub Actions artifact. The rule engine handles some narrow cases directly, so its score measures this authored software test suite—not general LLM intelligence. It is not an official academic benchmark or independent certification.
 
 ## External verification
 
@@ -59,6 +59,7 @@ The public endpoint workflow must pass against the live service before claiming 
 ## Native runtime components
 
 - `software/native_runtime.py` — training, loading, and character n-gram generation
+- `software/native_reasoner.py` — auditable deterministic task handlers for supported narrow tasks
 - `software/public_native_server.py` — public HTTP API for the native baseline
 - `software/data_pipeline.py` — text normalization and corpus hashes
 - `tools/aries_bench.py` — endpoint diagnostics and small exact-match suite

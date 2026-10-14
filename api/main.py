@@ -1,3 +1,4 @@
+# ARIES public gateway: real inference requires an explicitly configured upstream backend.
 import os
 from typing import Any
 

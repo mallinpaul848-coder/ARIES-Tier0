@@ -15,6 +15,15 @@ The scorecard workflow runs on pushes affecting its benchmark software, can be r
 
 **Interpretation limit:** 100% means only 10/10 exact matches on these 10 ARIES-authored diagnostic prompts. It is not an independent model-quality certification, not MMLU/GSM8K/BBH/LiveBench, and not an official leaderboard score. The scorecard is an ARIES-maintained diagnostic report, not an external ranking.
 
+## Latest strict response-quality validation
+
+- **Strict public benchmark:** FAIL — [GitHub Actions run](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38502970352).
+- **Measured result:** all 4 public HTTP checks returned success and all 3 chat requests returned non-empty responses, but only 2 of 3 answer-quality assertions passed.
+- **Failed case:** the public deployment gave an irrelevant character n-gram continuation for the API health-check explanation prompt. This correctly fails the stricter benchmark; HTTP 200 and non-empty text are not sufficient evidence of answer quality.
+- **Report artifact:** [Download strict benchmark JSON](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38502970352/artifacts/11866463431).
+- **Fix committed:** the ARIES native deterministic engine now includes an explicit health-check explanation and supports the phrase “multiplied by”; regression tests were added. A new public benchmark is triggered by future native inference code changes to verify whether the deployed service has picked up the fix.
+- **Official leaderboard:** still **not submitted**. A passing small diagnostic is not an official leaderboard score.
+
 ## What has been exercised
 
 1. The public deployment's health, root/readiness, diagnostics, and model-list routes.

@@ -1,47 +1,45 @@
 @echo off
 setlocal
 cd /d "%~dp0.."
-title ARIES Local Inference Setup
+title ARIES Tier 0 - Local Inference
 echo ==========================================
 echo   ARIES Tier 0 - Local Inference Runtime
 echo ==========================================
 echo.
-where py >nul 2>nul
+where llama >nul 2>nul
 if errorlevel 1 (
-  echo Python was not found. Install Python 3.11 or 3.12 from https://www.python.org/downloads/windows/
-  echo During setup, check "Add Python to PATH".
-  pause
-  exit /b 1
-)
-if not exist ".venv\Scripts\python.exe" (
-  echo Creating isolated Python environment...
-  py -3.12 -m venv .venv 2>nul
-  if errorlevel 1 py -3.11 -m venv .venv
+  echo llama.cpp runtime was not found.
+  where winget >nul 2>nul
   if errorlevel 1 (
-    echo Could not create virtual environment. Install Python 3.11 or 3.12.
+    echo Windows Package Manager winget was not found.
+    echo Install llama.cpp from https://github.com/ggml-org/llama.cpp/releases
+    echo then reopen this launcher.
+    pause
+    exit /b 1
+  )
+  echo Installing the official llama.cpp runtime...
+  winget install --id ggml.llamacpp --exact --accept-source-agreements --accept-package-agreements
+  if errorlevel 1 (
+    echo Automatic installation did not finish. Install llama.cpp from:
+    echo https://github.com/ggml-org/llama.cpp/releases
     pause
     exit /b 1
   )
 )
-call ".venv\Scripts\activate.bat"
-python -m pip install --upgrade pip
-python -m pip install -r software\requirements-inference.txt
+where llama >nul 2>nul
 if errorlevel 1 (
-  echo.
-  echo Inference dependency installation failed. This can happen if a compatible wheel
-  echo is unavailable for your Python/Windows version. See software\LOCAL_INFERENCE.md.
-  pause
-  exit /b 1
-)
-python software\download_model.py
-if errorlevel 1 (
+  echo llama.cpp was installed but the command is not yet on PATH.
+  echo Close this window, open a new terminal, then run this launcher again.
   pause
   exit /b 1
 )
 echo.
-echo Starting ARIES. Keep this window open.
+echo Starting a local OpenAI-compatible ARIES API.
+echo The first run downloads the public Qwen2.5 0.5B GGUF model.
+echo Keep this window open. Do not share this local API publicly.
 echo API: http://127.0.0.1:8080
 echo Health: http://127.0.0.1:8080/health
 echo Press Ctrl+C to stop.
-python software\aries_inference_server.py
+echo.
+llama serve -hf Qwen/Qwen2.5-0.5B-Instruct-GGUF:Q4_K_M
 pause

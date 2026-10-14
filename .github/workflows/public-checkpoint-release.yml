@@ -50,6 +50,4 @@ jobs:
             published/aries-core-v1/model.safetensors
             published/aries-core-v1/tokenizer.json
             published/aries-core-v1/tokenizer_config.json
-            published/aries-core-v1/special_tokens_map.json
-            published/aries-core-v1/generation_config.json
             published/aries-core-v1/README.md

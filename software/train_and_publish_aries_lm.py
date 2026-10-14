@@ -204,6 +204,22 @@ No independent benchmark score is claimed. Run reproducible evaluation on a pinn
 
     print(f"Exported files to: {out.resolve()}", flush=True)
     print(f"Parameter count: {parameter_count:,}", flush=True)
+
+    # Validate the saved artifact from disk before any upload.
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    check_tokenizer = AutoTokenizer.from_pretrained(out, local_files_only=True)
+    check_model = AutoModelForCausalLM.from_pretrained(out, local_files_only=True)
+    check_inputs = check_tokenizer("ARIES model validation", return_tensors="pt")
+    check_output = check_model.generate(
+        **check_inputs,
+        max_new_tokens=4,
+        do_sample=False,
+        pad_token_id=check_tokenizer.pad_token_id,
+    )
+    if check_output.shape[1] <= check_inputs["input_ids"].shape[1]:
+        raise RuntimeError("Saved model reloaded but failed to generate tokens.")
+    print("PASS: saved model and tokenizer reloaded; generation succeeded.", flush=True)
+
     if args.skip_upload:
         print("Upload skipped by --skip-upload.", flush=True)
         return 0

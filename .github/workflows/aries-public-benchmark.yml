@@ -6,6 +6,8 @@ on:
     paths:
       - "benchmarks/**"
       - ".github/workflows/aries-public-benchmark.yml"
+      - "software/native_reasoner.py"
+      - "software/public_native_server.py"
 permissions:
   contents: read
 jobs:

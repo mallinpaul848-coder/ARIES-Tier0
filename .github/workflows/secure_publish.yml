@@ -27,6 +27,8 @@ jobs:
   secure-publish:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
     steps:
       - name: Check out ARIES repository
         uses: actions/checkout@v4
@@ -49,7 +51,6 @@ jobs:
       - name: Publish only if Hugging Face write token is configured
         if: ${{ env.HF_TOKEN != '' }}
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_TARGET_REPO: ${{ inputs.hf_repo_id || 'PaulMallin/aries-core-v1' }}
           ARIES_MODEL_DIR: ${{ inputs.model_dir || 'published/aries-core-v1' }}
         run: python scripts/publish_robust.py

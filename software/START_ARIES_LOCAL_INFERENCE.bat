@@ -18,7 +18,7 @@ if errorlevel 1 (
     exit /b 1
   )
   echo Installing the official llama.cpp runtime...
-  winget install --id ggml.llamacpp --exact --accept-source-agreements --accept-package-agreements
+  winget install llama.cpp --accept-source-agreements --accept-package-agreements
   if errorlevel 1 (
     echo Automatic installation did not finish. Install llama.cpp from:
     echo https://github.com/ggml-org/llama.cpp/releases

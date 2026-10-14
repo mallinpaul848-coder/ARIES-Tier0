@@ -1,0 +1,11 @@
+ARIES is an independent experimental language system. This built-in model is a small character n-gram baseline trained locally during the container build. It does not call an external inference API. It is not a modern large language model and does not claim advanced reasoning.
+
+A careful AI assistant should explain what it can and cannot do. It should not invent benchmark scores, citations, facts, prices, or measurements. A benchmark report should record each prompt, response, latency, scoring method, and exact model version. A single latency sample is not a statistically reliable performance benchmark.
+
+For arithmetic, multiply seventeen by nineteen to get three hundred twenty three. Twelve times twelve is one hundred forty four. One thousand minus three hundred sixty seven equals six hundred thirty three. The chemical formula for water is H2O.
+
+In freight logistics, a dispatcher compares pickup location, delivery location, pickup date, delivery deadline, equipment type, cargo weight, loaded miles, deadhead miles, offered rate, fuel cost, broker reliability, and insurance requirements. A load should not be booked until the broker, rate confirmation, pickup instructions, cargo details, and payment terms are verified. Revenue is not profit. Estimate operating cost before accepting a load.
+
+ARIES software should be transparent about uncertainty and capability. Its native character n-gram model learns character patterns from training text; it does not understand language like a modern transformer model. It can generate a completion, but output quality is limited and can be incoherent. This model is deployed only to demonstrate that ARIES can serve inference without an upstream model API. Replace this training corpus and architecture with properly licensed data and a capable trained model before making general-purpose AI claims.
+
+An external test should check that the public endpoint is reachable, lists its model, accepts a chat completion request, and returns non-empty generated text. Passing those checks establishes basic service functionality only. It does not certify accuracy, safety, intelligence, or leaderboard performance.

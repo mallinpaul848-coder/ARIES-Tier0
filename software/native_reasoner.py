@@ -24,12 +24,12 @@ def solve(prompt):
     m = re.search(r"reply with exactly\s+(.+?)(?:\s+and nothing else)?[.!]?\s*$", text, re.I)
     if m and len(m.group(1).strip()) < 120:
         return m.group(1).strip().rstrip(".!")
-    m = re.search(r"return exactly\s+\d+\s+items?\s+separated by commas\s*:\s*(.+)$", text, re.I)
+    m = re.search(r"return exactly\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+items?\s+separated by commas\s*:\s*(.+)$", text, re.I)
     if m:
-        return ", ".join(item.strip() for item in m.group(1).split(","))
+        return ", ".join(item.strip() for item in m.group(2).split(","))
 
     # Safe basic arithmetic. No eval/exec is used.
-    m = re.search(r"(?:what is\s+)?(-?\d+(?:\.\d+)?)\s*(divided by|times|plus|minus|[+*/x×])\s*(-?\d+(?:\.\d+)?)", lower)
+    m = re.search(r"(?:what is\s+)?(-?\d+(?:\.\d+)?)\s*(divided by|times|plus|minus|[+*/x×-])\s*(-?\d+(?:\.\d+)?)", lower)
     if m:
         a, op, b = float(m.group(1)), m.group(2), float(m.group(3))
         if op in ("+", "plus"):

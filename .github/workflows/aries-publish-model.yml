@@ -54,8 +54,8 @@ jobs:
           if not p.is_file():
               raise SystemExit(f"Training corpus not found: {p}. Add a UTF-8 corpus you own or are licensed to use; the pipeline will not substitute demo text silently.")
           s = p.read_text(encoding="utf-8-sig").strip()
-          if len(s) < 1000:
-              raise SystemExit(f"Corpus has only {len(s)} characters; at least 1000 are required. A much larger and diverse licensed corpus is needed for meaningful training.")
+          if len(s) < 100_000:
+              raise SystemExit(f"Corpus has only {len(s)} characters; at least 100000 are required. A much larger and diverse licensed corpus is needed for meaningful training.")
           print(f"Preflight passed: corpus={p}; characters={len(s)}; steps={steps}; target={repo}. Verify data provenance/license before publishing.")
           PY
       - name: Install CPU training dependencies

@@ -1,0 +1,84 @@
+name: ARIES Native Runtime Verification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "software/**"
+      - "tools/aries_bench.py"
+      - ".github/workflows/native-runtime-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-native-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile Python modules
+        run: python -m py_compile software/native_runtime.py software/data_pipeline.py software/evaluate_native.py tools/aries_bench.py
+      - name: Prepare sample corpus and train model
+        run: |
+          mkdir -p data reports models
+          cat > data/ci-training.txt <<'EOF'
+          ARIES is an experimental local-first language system.
+          A reliable system measures actual outputs and reports uncertainty honestly.
+          A freight dispatcher compares pickup location, destination, equipment, dates, deadhead miles, rate, and broker reliability.
+          A safe dispatch process confirms cargo details, pickup instructions, delivery requirements, insurance, and payment terms.
+          A benchmark records prompts, responses, latency, and scoring rules so results can be reproduced.
+          This sample corpus is used only to verify that the training and inference software starts correctly.
+          EOF
+          python software/data_pipeline.py --source data/ci-training.txt --output data/prepared.txt --report reports/corpus-prep.json
+          python software/native_runtime.py train --corpus data/prepared.txt --model models/aries-ci.json
+      - name: Start local API and verify health, model list, and chat
+        shell: bash
+        run: |
+          set -euo pipefail
+          python software/native_runtime.py serve --model models/aries-ci.json --host 127.0.0.1 --port 8000 > reports/server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          python - <<'PY'
+          import json, time, urllib.request
+          base = "http://127.0.0.1:8000"
+          for _ in range(40):
+              try:
+                  with urllib.request.urlopen(base + "/health", timeout=2) as r:
+                      health = json.load(r)
+                  break
+              except Exception:
+                  time.sleep(0.25)
+          else:
+              raise SystemExit("Local API did not become healthy")
+          assert health["status"] == "ok", health
+          assert health["inference_ready"] is True, health
+          with urllib.request.urlopen(base + "/v1/models", timeout=3) as r:
+              models = json.load(r)
+          assert any(m["id"] == "aries-native" for m in models["data"]), models
+          body = json.dumps({"model":"aries-native","messages":[{"role":"user","content":"ARIES"}],"max_tokens":12}).encode()
+          req = urllib.request.Request(base + "/v1/chat/completions", data=body, headers={"Content-Type":"application/json"}, method="POST")
+          with urllib.request.urlopen(req, timeout=5) as r:
+              result = json.load(r)
+          assert result["choices"][0]["message"]["role"] == "assistant", result
+          assert isinstance(result["choices"][0]["message"]["content"], str), result
+          print(json.dumps({"health":health,"models":models,"chat_response":result}, indent=2))
+          PY
+      - name: Run ARIES diagnostic benchmark (record results, do not gate on accuracy)
+        run: |
+          python tools/aries_bench.py --base-url http://127.0.0.1:8000 --model aries-native --limit 10 --output reports/native-benchmark.json || true
+      - name: Upload verification reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-native-runtime-reports
+          path: |
+            reports/**
+            models/aries-ci.json
+          if-no-files-found: warn

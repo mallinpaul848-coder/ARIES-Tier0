@@ -1,0 +1,37 @@
+name: ARIES Public Inference Benchmark
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "benchmarks/**"
+      - ".github/workflows/aries-public-benchmark.yml"
+permissions:
+  contents: read
+jobs:
+  public-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run public endpoint checks and repeated inference samples
+        id: benchmark
+        continue-on-error: true
+        env:
+          ARIES_PUBLIC_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
+          ARIES_BENCHMARK_REPORT: aries-public-benchmark.json
+        run: python benchmarks/aries_public_benchmark.py
+      - name: Upload benchmark report even if endpoint fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-public-benchmark-report
+          path: aries-public-benchmark.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Fail workflow if real inference did not pass
+        if: steps.benchmark.outcome != 'success'
+        run: exit 1

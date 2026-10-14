@@ -51,8 +51,12 @@ def main():
         print(f"ERROR: corpus file not found: {corpus}", file=sys.stderr)
         return 2
     text = corpus.read_text(encoding="utf-8-sig").strip()
-    if len(text) < 1000:
-        print("ERROR: corpus is too small (<1000 characters); provide a larger licensed corpus.", file=sys.stderr)
+    if len(text) < 100_000:
+        print(
+            f"ERROR: corpus has only {len(text):,} characters; this strict training pipeline requires at least 100,000 characters of licensed, diverse text. "
+            "The deployment demonstration corpus is not suitable evidence of a properly trained language model.",
+            file=sys.stderr,
+        )
         return 2
     if args.hidden_size % args.heads:
         print("ERROR: --hidden-size must be divisible by --heads.", file=sys.stderr)
@@ -101,8 +105,12 @@ def main():
     tokenizer.save_pretrained(out)
 
     ids = tokenizer(text, add_special_tokens=False)["input_ids"]
-    if len(ids) < args.block_size * 2:
-        print(f"ERROR: corpus yields only {len(ids)} tokens; need at least {args.block_size * 2}.", file=sys.stderr)
+    if len(ids) < max(args.block_size * 2, 20_000):
+        print(
+            f"ERROR: corpus yields only {len(ids):,} tokens; need at least {max(args.block_size * 2, 20_000):,} tokens. "
+            "Provide a larger licensed corpus before training.",
+            file=sys.stderr,
+        )
         return 2
     usable = (len(ids) // args.block_size) * args.block_size
     blocks = [ids[i:i + args.block_size] for i in range(0, usable, args.block_size)]

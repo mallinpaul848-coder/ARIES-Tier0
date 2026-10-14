@@ -104,6 +104,11 @@ def main() -> int:
             print(f"ERROR: staged export is missing required files: {missing}", file=sys.stderr)
             return 4
 
+        if "--validate-only" in sys.argv[1:]:
+            print("[3/4] VALIDATION PASSED: existing checkpoint loaded, generation succeeded, and allowlisted export files are staged.", flush=True)
+            print("No upload was attempted because --validate-only was selected.", flush=True)
+            return 0
+
         if not token:
             print("[3/4] Local checkpoint validation and allowlisted export passed.", flush=True)
             print("BLOCKED: HF_TOKEN is missing, so no Hugging Face upload was attempted. Add it as a GitHub Actions repository secret; never paste it into source code or chat.", file=sys.stderr)

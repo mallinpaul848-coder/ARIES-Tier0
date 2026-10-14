@@ -108,3 +108,22 @@ Invoke-RestMethod "https://aries-tier0-api-6qjh.onrender.com/math/prise" -Method
 ```
 
 These routes are served by the same public container, but will not exist until the deployment has rebuilt successfully. SAT uses exponential brute force and is limited to small test cases; no P-vs-NP proof or sub-nanosecond timing is claimed.
+
+
+## Create a portable ARIES ZIP archive
+
+From the repository root on Windows PowerShell:
+
+```powershell
+python .\tools\package_aries.py
+```
+
+This writes `aries_sub_nanosecond_model.zip` in the repository root. The archive includes source, benchmark code, configuration, and available checkpoint assets, while excluding Git metadata, virtual environments, common caches, and common credential files. It also embeds `EXPORT_MANIFEST.json` with file sizes and SHA-256 hashes.
+
+To choose another output location:
+
+```powershell
+python .\tools\package_aries.py --output "$env:USERPROFILE\Desktop\aries_sub_nanosecond_model.zip"
+```
+
+Inspect the archive before sharing it; automated exclusions are not a guarantee that every secret or licensed file is removed. Packaging does not measure latency, certify model quality, publish to Hugging Face, or submit to a leaderboard.

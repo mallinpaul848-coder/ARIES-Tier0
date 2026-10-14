@@ -1,4 +1,29 @@
-# ARIES Tier 0 — API and External Test Setup
+# ARIES Tier 0 — API, Native Runtime, and External Test Setup
+
+## Independent local software (no external model API)
+
+A standalone local-first baseline is included under `software/`. It uses Python's standard library for corpus preparation, training a small character-level model, local inference, and held-out evaluation. It does not call a third-party inference API.
+
+**Important:** this baseline is not a modern large language model and is not evidence of Tier-0 capability. It is a reproducible starting point for building and measuring independent software. Real model capability requires suitable training data, architecture, compute, and trained weights.
+
+### Windows quick start
+
+Clone this repository, open PowerShell in its folder, and run:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\software\run_windows.ps1
+```
+
+This creates a demonstration corpus if none exists, prepares it, trains a tiny local model, and starts the local API on `http://127.0.0.1:8000`. Keep the terminal open. In a second PowerShell window, run:
+
+```powershell
+python .\tools\aries_bench.py --base-url http://127.0.0.1:8000 --model aries-native --limit 10 --output .\reports\native-benchmark.json
+```
+
+Read [the native runtime guide](software/NATIVE_RUNTIME.md) and [software module guide](software/README.md). The first demo corpus is only for testing the pipeline; replace it with legally obtained training text before serious experiments.
+
+---
 
 ARIES Tier 0 currently provides a FastAPI service with health, model-listing, and OpenAI-compatible chat-completions routes. GitHub Actions validates the API contract and RTL smoke test. **Those checks are not proof of model quality or a public inference benchmark.**
 

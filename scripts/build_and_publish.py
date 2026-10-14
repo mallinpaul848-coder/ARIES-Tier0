@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """ARIES training/export/Hub-publish orchestrator.
 
-This calls the repository's real corpus-trained GPT-2-style trainer. It does not
-pretend randomly initialized weights are a trained ARIES model. A licensed corpus
-of sufficient size and HF_TOKEN with write permission are required for publishing.
+Trains from a corpus file, validates a local reload/generation, and publishes only
+when HF_TOKEN is present. Without a token it still creates a verified local artifact;
+that is not a Hugging Face publication or leaderboard submission.
 """
 from __future__ import annotations
 
@@ -31,30 +31,14 @@ def main() -> int:
 
     corpus = Path(args.corpus)
     if not corpus.is_file():
-        print(
-            f"ERROR: training corpus not found: {corpus}. Add a UTF-8 dataset you own "
-            "or are licensed to use; the demo deployment corpus is intentionally not "
-            "substituted for a real training dataset.",
-            file=sys.stderr,
-        )
+        print(f"ERROR: training corpus not found: {corpus}.", file=sys.stderr)
         return 2
     corpus_text = corpus.read_text(encoding="utf-8-sig").strip()
     if len(corpus_text) < 100_000:
-        print(
-            f"ERROR: corpus contains {len(corpus_text):,} characters; at least 100,000 "
-            "are required by the repository training safeguards. Use a larger, diverse, "
-            "licensed corpus.",
-            file=sys.stderr,
-        )
-        return 2
-    if not os.getenv("HF_TOKEN"):
-        print(
-            "ERROR: HF_TOKEN is missing. Add a Hugging Face write token under GitHub "
-            "Settings > Secrets and variables > Actions. Never paste it into source code.",
-            file=sys.stderr,
-        )
+        print(f"ERROR: corpus contains {len(corpus_text):,} characters; at least 100,000 are required.", file=sys.stderr)
         return 2
 
+    token = os.getenv("HF_TOKEN", "").strip()
     cmd = [
         sys.executable, "software/train_and_publish_aries_lm.py",
         "--corpus", str(corpus),
@@ -66,8 +50,11 @@ def main() -> int:
     ]
     if args.private:
         cmd.append("--private")
+    if not token:
+        cmd.append("--skip-upload")
+        print("HF_TOKEN is not configured: running local train/export/validation only; publishing will be skipped.", flush=True)
 
-    print(f"Starting real corpus-based ARIES training: corpus={corpus}, steps={args.steps}, target={args.repo_id}", flush=True)
+    print(f"Starting corpus-based ARIES training: corpus={corpus}, characters={len(corpus_text):,}, steps={args.steps}, target={args.repo_id}", flush=True)
     result = subprocess.run(cmd, check=False)
     if result.returncode:
         return result.returncode
@@ -78,7 +65,10 @@ def main() -> int:
     if missing:
         print(f"ERROR: expected exported files are missing: {missing}", file=sys.stderr)
         return 3
-    print("PASS: trained model artifacts exist; training script completed local reload checks and Hub upload.", flush=True)
+    if token:
+        print("PASS: model artifacts exist; local reload/generation validation passed and upload command completed.", flush=True)
+    else:
+        print("PASS: local model artifacts exist and reload/generation validation passed. NOT PUBLISHED: HF_TOKEN is missing.", flush=True)
     return 0
 
 

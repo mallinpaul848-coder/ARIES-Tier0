@@ -52,6 +52,18 @@ jobs:
               raise SystemExit(f"Unexpected model type: {cfg.get('model_type')}")
           print("PASS: Safetensors, config, tokenizer artifacts, and model card are present.")
           PY
+      - name: Reload exported model and generate a sample
+        run: |
+          python - <<'PY'
+          from transformers import AutoModelForCausalLM, AutoTokenizer
+          path = "artifacts/aries-smoke"
+          tokenizer = AutoTokenizer.from_pretrained(path, local_files_only=True)
+          model = AutoModelForCausalLM.from_pretrained(path, local_files_only=True)
+          inputs = tokenizer("ARIES", return_tensors="pt")
+          output = model.generate(**inputs, max_new_tokens=4, do_sample=False, pad_token_id=tokenizer.eos_token_id)
+          assert output.shape[1] > inputs["input_ids"].shape[1], "Model did not generate tokens"
+          print("PASS: exported model reloaded locally and generated tokens.")
+          PY
       - name: Upload smoke-test artifacts
         if: always()
         uses: actions/upload-artifact@v4

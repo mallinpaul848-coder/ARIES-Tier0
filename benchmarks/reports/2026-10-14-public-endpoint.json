@@ -1,0 +1,17 @@
+{
+  "target": "https://aries-tier0-api-6qjh.onrender.com",
+  "measurement_source": "GitHub Actions hosted runner",
+  "measured_at_utc": "2026-10-14T02:29:35Z",
+  "endpoint_checks": [
+    {"path": "/health", "http_status": 200, "latency_ms": 138.12},
+    {"path": "/", "http_status": 200, "latency_ms": 72.96, "status": "needs_backend"},
+    {"path": "/diagnostics", "http_status": 200, "latency_ms": 55.52, "inference_configured": false},
+    {"path": "/v1/models", "http_status": 200, "latency_ms": 124.82, "model_count": 0}
+  ],
+  "chat_samples_requested": 3,
+  "successful_chat_samples": 0,
+  "chat_latency_summary_ms": null,
+  "result": "FAIL",
+  "failure_reason": "Public API has no configured ARIES_UPSTREAM_BASE_URL or ARIES_MODEL_ID, so real chat inference was skipped.",
+  "scope_note": "These measurements are HTTP endpoint latency only, not model inference speed or a leaderboard score."
+}

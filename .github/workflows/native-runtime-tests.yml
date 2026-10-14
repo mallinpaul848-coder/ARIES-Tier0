@@ -70,9 +70,25 @@ jobs:
           assert isinstance(result["choices"][0]["message"]["content"], str), result
           print(json.dumps({"health":health,"models":models,"chat_response":result}, indent=2))
           PY
-      - name: Run ARIES diagnostic benchmark (record results, do not gate on accuracy)
+      - name: Run ARIES diagnostic benchmark against live local API
+        shell: bash
         run: |
-          python tools/aries_bench.py --base-url http://127.0.0.1:8000 --model aries-native --limit 10 --output reports/native-benchmark.json || true
+          set -euo pipefail
+          python software/native_runtime.py serve --model models/aries-ci.json --host 127.0.0.1 --port 8000 > reports/benchmark-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          python - <<'PY'
+          import time, urllib.request
+          for _ in range(40):
+              try:
+                  urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=2).read()
+                  break
+              except Exception:
+                  time.sleep(0.25)
+          else:
+              raise SystemExit("Benchmark API did not become healthy")
+          PY
+          python tools/aries_bench.py --base-url http://127.0.0.1:8000 --model aries-native --limit 10 --output reports/native-benchmark.json
       - name: Upload verification reports
         if: always()
         uses: actions/upload-artifact@v4

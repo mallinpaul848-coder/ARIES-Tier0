@@ -1,0 +1,7 @@
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 ARIES_LAUNCHPAD_HOST=0.0.0.0 ARIES_LAUNCHPAD_PORT=8090
+WORKDIR /app
+COPY aries_launchpad.py /app/aries_launchpad.py
+EXPOSE 8090
+USER 10001
+CMD ["python", "/app/aries_launchpad.py"]

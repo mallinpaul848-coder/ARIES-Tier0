@@ -1,17 +1,19 @@
 {
   "target": "https://aries-tier0-api-6qjh.onrender.com",
   "measurement_source": "GitHub Actions hosted runner",
-  "measured_at_utc": "2026-10-14T02:29:35Z",
+  "measured_at_utc": "2026-10-14T02:51:15Z",
   "endpoint_checks": [
-    {"path": "/health", "http_status": 200, "latency_ms": 138.12},
-    {"path": "/", "http_status": 200, "latency_ms": 72.96, "status": "needs_backend"},
-    {"path": "/diagnostics", "http_status": 200, "latency_ms": 55.52, "inference_configured": false},
-    {"path": "/v1/models", "http_status": 200, "latency_ms": 124.82, "model_count": 0}
+    {"path": "/health", "http_status": 200, "latency_ms": 154.78},
+    {"path": "/", "http_status": 200, "latency_ms": 146.95, "status": "configured", "inference_ready": true},
+    {"path": "/diagnostics", "http_status": 200, "latency_ms": 174.62, "inference_configured": true, "backend": "native", "trained_characters": 2164},
+    {"path": "/v1/models", "http_status": 200, "latency_ms": 126.27, "model_count": 1, "model_id": "aries-native-ngram"}
   ],
   "chat_samples_requested": 3,
-  "successful_chat_samples": 0,
-  "chat_latency_summary_ms": null,
-  "result": "FAIL",
-  "failure_reason": "Public API has no configured ARIES_UPSTREAM_BASE_URL or ARIES_MODEL_ID, so real chat inference was skipped.",
-  "scope_note": "These measurements are HTTP endpoint latency only, not model inference speed or a leaderboard score."
+  "successful_chat_samples": 3,
+  "quality_passes": 3,
+  "quality_total": 3,
+  "chat_latency_summary_ms": {"min": 116.29, "median": 131.01, "max": 147.99},
+  "result": "PASS",
+  "scope_note": "Measured HTTP endpoint and three narrow response assertions only. The deployed model is an ARIES-owned character n-gram baseline plus deterministic task engine, not a modern general-purpose LLM and not an official leaderboard evaluation.",
+  "source_run": "https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503195895"
 }

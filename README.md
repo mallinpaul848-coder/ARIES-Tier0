@@ -1,71 +1,67 @@
-# ARIES Tier 0 — API, Native Runtime, and External Test Setup
+# ARIES Tier 0 — Native Inference, API, and External Tests
 
-## Independent local software (no external model API)
+ARIES now includes an independently authored, provider-free inference service. The Docker deployment trains a small character n-gram baseline from `software/deployment_corpus.txt` during image build and serves an OpenAI-compatible chat endpoint. It does not require a third-party model API key or upstream URL.
 
-A standalone local-first baseline is included under `software/`. It uses Python's standard library for corpus preparation, training a small character-level model, local inference, and held-out evaluation. It does not call a third-party inference API.
+**Important capability limit:** this built-in model is a tiny character n-gram baseline, not a modern large language model. It proves that ARIES's own software can train, load, and serve a model without a hosted inference provider. It is not evidence of Tier-0 capability, strong reasoning, or leaderboard-level performance. Responses may be incoherent and quality tests may score poorly. Do not advertise it as equivalent to a modern LLM.
 
-**Important:** this baseline is not a modern large language model and is not evidence of Tier-0 capability. It is a reproducible starting point for building and measuring independent software. Real model capability requires suitable training data, architecture, compute, and trained weights.
+## Public API
 
-### Windows quick start
+After Render deploys the latest commit, use the service URL shown in Render. The known service URL is:
 
-Clone this repository, open PowerShell in its folder, and run:
+`https://aries-tier0-api-6qjh.onrender.com`
+
+- `GET /` — service readiness and model type
+- `GET /health` — health check
+- `GET /diagnostics` — native model status
+- `GET /v1/models` — model listing
+- `POST /v1/chat/completions` — generated response
+
+No `ARIES_UPSTREAM_BASE_URL`, `ARIES_MODEL_ID`, or provider API key is required for this native baseline. Render must finish rebuilding the Docker image before the new routes and model are live.
+
+Example PowerShell request:
+
+```powershell
+$body = @{
+  model = "aries-native-ngram"
+  messages = @(@{ role = "user"; content = "Explain what ARIES can do." })
+  max_tokens = 100
+  temperature = 0.2
+} | ConvertTo-Json -Depth 5
+
+Invoke-RestMethod "https://aries-tier0-api-6qjh.onrender.com/v1/chat/completions" -Method Post -ContentType "application/json" -Body $body
+```
+
+## Run the same native software on Windows
+
+From the repository root in PowerShell:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
 .\software\run_windows.ps1
 ```
 
-This creates a demonstration corpus if none exists, prepares it, trains a tiny local model, and starts the local API on `http://127.0.0.1:8000`. Keep the terminal open. In a second PowerShell window, run:
+This prepares the corpus, trains a local baseline, and starts the API at `http://127.0.0.1:8000`. In another PowerShell window, run:
 
 ```powershell
 python .\tools\aries_bench.py --base-url http://127.0.0.1:8000 --model aries-native --limit 10 --output .\reports\native-benchmark.json
 ```
 
-Read [the native runtime guide](software/NATIVE_RUNTIME.md) and [software module guide](software/README.md). The first demo corpus is only for testing the pipeline; replace it with legally obtained training text before serious experiments.
+The benchmark writes actual responses, exact-match scores, and latency measurements. It is an ARIES-authored diagnostic suite, not an official academic benchmark or independent certification.
 
----
+## External verification
 
-ARIES Tier 0 currently provides a FastAPI service with health, model-listing, and OpenAI-compatible chat-completions routes. GitHub Actions validates the API contract and RTL smoke test. **Those checks are not proof of model quality or a public inference benchmark.**
+- [Public endpoint workflow](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/public-endpoint-check.yml)
+- [API tests](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/api-tests.yml)
+- [All GitHub Actions runs](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions)
 
-## Deploy the API
+The public endpoint workflow must pass against the live service before claiming that the deployment is working. The endpoint smoke test verifies availability and non-empty generated text only. Real capability evaluation requires a larger trained model, suitable compute, a defined test suite, repeated measurements, and published methodology.
 
-[Deploy ARIES to Render](https://render.com/deploy?repo=https://github.com/mallinpaul848-coder/ARIES-Tier0)
+## Native runtime components
 
-The Render blueprint creates a free web service named `aries-tier0-api` from this repository. After deployment, Render displays the public HTTPS URL.
+- `software/native_runtime.py` — training, loading, and character n-gram generation
+- `software/public_native_server.py` — public HTTP API for the native baseline
+- `software/data_pipeline.py` — text normalization and corpus hashes
+- `tools/aries_bench.py` — endpoint diagnostics and small exact-match suite
+- `platform/` — self-hosted Launchpad dashboard
 
-## Required backend configuration
-
-In the Render service's **Environment** settings, configure:
-
-- `ARIES_UPSTREAM_BASE_URL`: base URL of a real, authorized OpenAI-compatible inference API. It may end with `/v1`; do not include `/chat/completions` or the full `/v1/chat/completions` path. ARIES now handles either base-URL style.
-- `ARIES_MODEL_ID`: exact model identifier accepted by that backend. This is required.
-- `ARIES_UPSTREAM_API_KEY`: secret key for that backend, if required. Keep it in Render's secret environment settings; never commit it to GitHub.
-- `ARIES_UPSTREAM_TIMEOUT_SECONDS`: defaults to `90`.
-
-The repository does not contain model weights or a configured inference provider. Without a working upstream backend, model ID, and any required credential, health checks may pass but chat inference will not work. Do not advertise the API as inference-ready until a real chat response is verified.
-
-## Run public endpoint checks
-
-After deployment and backend configuration:
-
-1. Open [ARIES Public Endpoint Smoke Test](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/public-endpoint-smoke-test.yml).
-2. Select **Run workflow**.
-3. Enter the public Render HTTPS base URL (for example, `https://your-service.onrender.com`) and start it.
-
-The workflow checks health, readiness, the model list, and a real chat-completions response. It records one end-to-end latency sample; that sample is not a statistically valid benchmark or leaderboard result.
-
-## Current verification
-
-- GitHub API contract tests: check the latest run linked below.
-- RTL external smoke workflow: check the latest run linked below.
-- Live public endpoint and actual model inference: not yet verified.
-- External AI benchmark/leaderboard submission: not completed.
-
-[View API test workflow runs](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/api-tests.yml)
-
-Only publish measured performance after repeatable tests against a live, working model endpoint.
-
-
-## ARIES Launchpad — self-hosted deployment dashboard
-
-A small self-hosted control panel and Docker Compose stack is available in [platform/](platform/README.md). It monitors ARIES API readiness and shows live service diagnostics. Start it on a machine with Docker Desktop using the instructions in that guide. This is an owned dashboard and service configuration, not a full cloud provider: it cannot provision compute, DNS, TLS, or model weights on its own. The public Render endpoint remains a separate deployment and still requires a working inference backend before external model testing can pass.
+The native deployment is a working software baseline, not a full cloud platform. It cannot create DNS/TLS, guarantee always-on free hosting, or create a capable pretrained model from a tiny demonstration corpus.

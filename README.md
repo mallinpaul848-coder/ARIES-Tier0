@@ -68,11 +68,10 @@ The public endpoint workflow must pass against the live service before claiming 
 The native deployment is a working software baseline, not a full cloud platform. It cannot create DNS/TLS, guarantee always-on free hosting, or create a capable pretrained model from a tiny demonstration corpus.
 
 
-## Public diagnostic scorecard
+## Latest external validation status
 
-ARIES has a repeatable public endpoint diagnostic workflow that measures exact-match results and end-to-end HTTP latency, then generates HTML, JSON, and CSV reports:
+The latest strict public inference run **passed**: [GitHub Actions run](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503058912). All four public API checks returned HTTP 200 and all three response-quality assertions passed. Measured chat latency was 276.36 ms minimum, 279.09 ms median, and 358.10 ms maximum from a GitHub-hosted runner. The JSON evidence is available [here](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503058912/artifacts/11865749543).
 
-- [Run history and latest scorecard artifacts](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/aries-scorecard.yml)
-- [Leaderboard readiness and limitations](https://github.com/mallinpaul848-coder/ARIES-Tier0/blob/main/benchmarks/LEADERBOARD_READINESS.md)
+On the same commit, [API tests](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503059069), [end-to-end API integration](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503058967), and [RTL external smoke tests](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503059087) also passed. The [10-case diagnostic scorecard](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38502634925) previously reported 10/10 exact matches on its small ARIES-authored prompt set.
 
-The latest recorded run returned 10/10 exact matches on the 10-case ARIES-authored diagnostic set (100%), with 127.793 ms median and 180.602 ms mean end-to-end HTTP latency from a GitHub-hosted runner. This is a small internal diagnostic result only, not an official benchmark score or accepted leaderboard ranking. The official model leaderboard entry remains not submitted because the currently deployed native character n-gram baseline is not a supported Transformers foundation model.
+**Leaderboard status: NOT SUBMITTED.** These checks validate API availability and a few narrow responses, not broad model quality or official leaderboard ranking. The deployed ARIES-owned character n-gram baseline is not a supported Transformers foundation model for the normal Open LLM Leaderboard submission path. Official submission still requires a suitable public model repository with supported weights/config/tokenizer, AutoClass loading verification, standard evaluation, and an actual submission/queue confirmation. See the [leaderboard readiness checklist](https://github.com/mallinpaul848-coder/ARIES-Tier0/blob/main/benchmarks/LEADERBOARD_READINESS.md) and the [official submission guide](https://huggingface.co/docs/leaderboards/en/open_llm_leaderboard/submitting).

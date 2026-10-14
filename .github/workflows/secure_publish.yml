@@ -54,3 +54,8 @@ jobs:
           HF_TARGET_REPO: ${{ inputs.hf_repo_id || 'PaulMallin/aries-core-v1' }}
           ARIES_MODEL_DIR: ${{ inputs.model_dir || 'published/aries-core-v1' }}
         run: python scripts/publish_robust.py
+
+      - name: Explain validation-only result when token is missing
+        if: ${{ env.HF_TOKEN == '' }}
+        run: |
+          echo "::warning title=Hugging Face upload skipped::Local checkpoint validation ran, but HF_TOKEN is not configured. Add a Hugging Face write token at Settings > Secrets and variables > Actions > New repository secret, named HF_TOKEN, then rerun this workflow."

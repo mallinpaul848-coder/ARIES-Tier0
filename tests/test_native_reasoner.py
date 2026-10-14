@@ -33,4 +33,9 @@ def test_small_verified_fact():
 
 def test_unknown_prompt_falls_back_to_model():
     assert solve("Write a poem about a blue mountain.") is None
-\n\ndef test_api_health_check_explanation_is_accurate():\n    answer = solve("In one sentence, explain what an API health check proves.")\n    assert answer is not None\n    assert "reachable" in answer.lower() and "does not prove" in answer.lower()\n
+
+
+def test_api_health_check_explanation_is_accurate():
+    answer = solve("In one sentence, explain what an API health check proves.")
+    assert answer is not None
+    assert "reachable" in answer.lower() and "does not prove" in answer.lower()\n

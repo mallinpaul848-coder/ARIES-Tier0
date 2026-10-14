@@ -1,0 +1,3 @@
+# Local CPU inference runtime. Windows wheels are available for many Python versions;
+# if pip cannot find a compatible wheel, use the llama.cpp prebuilt server instead.
+llama-cpp-python>=0.3.9

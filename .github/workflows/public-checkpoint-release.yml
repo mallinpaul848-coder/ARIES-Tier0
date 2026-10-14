@@ -1,0 +1,55 @@
+name: ARIES Public Checkpoint Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "published/aries-core-v1/**"
+      - ".github/workflows/public-checkpoint-release.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  publish-github-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out ARIES
+        uses: actions/checkout@v4
+
+      - name: Verify public checkpoint files exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s published/aries-core-v1/config.json
+          test -s published/aries-core-v1/model.safetensors
+          test -s published/aries-core-v1/tokenizer_config.json
+          echo "Checkpoint files are present."
+          du -h published/aries-core-v1/*
+
+      - name: Publish checkpoint files as public GitHub Release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: aries-core-v1-latest
+          name: ARIES Core v1 — Experimental Checkpoint
+          body: |
+            Public distribution of the existing ARIES experimental checkpoint.
+
+            This release provides downloadable model artifacts without requiring a Hugging Face token.
+            It is an experimental checkpoint, not an official leaderboard result or independent quality certification.
+            Review the repository model card and evaluation notes before use.
+          draft: false
+          prerelease: true
+          make_latest: false
+          overwrite_files: true
+          fail_on_unmatched_files: true
+          files: |
+            published/aries-core-v1/config.json
+            published/aries-core-v1/model.safetensors
+            published/aries-core-v1/tokenizer.json
+            published/aries-core-v1/tokenizer_config.json
+            published/aries-core-v1/special_tokens_map.json
+            published/aries-core-v1/generation_config.json
+            published/aries-core-v1/README.md

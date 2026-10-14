@@ -1,0 +1,56 @@
+name: ARIES Launchpad Platform Tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - "platform/**"
+      - ".github/workflows/aries-launchpad-tests.yml"
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  launchpad-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Syntax-check platform
+        run: python -m py_compile platform/aries_launchpad.py
+      - name: Exercise dashboard and health endpoints
+        env:
+          ARIES_LAUNCHPAD_HOST: 127.0.0.1
+          ARIES_LAUNCHPAD_PORT: "18090"
+          ARIES_API_BASE_URL: http://127.0.0.1:9
+        run: |
+          python platform/aries_launchpad.py > /tmp/aries-launchpad.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          python - <<'PY'
+          import json, time, urllib.request
+          base = "http://127.0.0.1:18090"
+          for attempt in range(30):
+              try:
+                  with urllib.request.urlopen(base + "/health", timeout=1) as r:
+                      assert r.status == 200
+                      assert json.load(r)["service"] == "aries-launchpad"
+                  break
+              except Exception:
+                  time.sleep(0.25)
+          else:
+              raise SystemExit("Launchpad did not start")
+          with urllib.request.urlopen(base + "/", timeout=2) as r:
+              html = r.read().decode()
+              assert r.status == 200 and "ARIES Launchpad" in html
+          with urllib.request.urlopen(base + "/api/status", timeout=2) as r:
+              payload = json.load(r)
+              assert r.status == 200
+              assert payload["platform"] == "ARIES Launchpad"
+              assert payload["services"][0]["inference_ready"] is False
+          with urllib.request.urlopen(base + "/missing", timeout=2) as r:
+              raise SystemExit("Unknown route unexpectedly returned success")
+          PY

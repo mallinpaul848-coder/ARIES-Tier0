@@ -29,14 +29,14 @@ def solve(prompt):
         return ", ".join(item.strip() for item in m.group(2).split(","))
 
     # Safe basic arithmetic. No eval/exec is used.
-    m = re.search(r"(?:what is\s+)?(-?\d+(?:\.\d+)?)\s*(divided by|times|plus|minus|[+*/x×-])\s*(-?\d+(?:\.\d+)?)", lower)
+    m = re.search(r"(?:what is\s+)?(-?\d+(?:\.\d+)?)\s*(divided by|multiplied by|times|plus|minus|[+*/x×-])\s*(-?\d+(?:\.\d+)?)", lower)
     if m:
         a, op, b = float(m.group(1)), m.group(2), float(m.group(3))
         if op in ("+", "plus"):
             result = a + b
         elif op in ("-", "minus"):
             result = a - b
-        elif op in ("*", "x", "×", "times"):
+        elif op in ("*", "x", "×", "times", "multiplied by"):
             result = a * b
         else:
             if b == 0:

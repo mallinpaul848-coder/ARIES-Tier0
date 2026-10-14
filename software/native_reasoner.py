@@ -64,9 +64,10 @@ def solve(prompt):
         days = 0
         if "tomorrow" in phrase:
             days += 1
-        count = re.search(r"(\d+)\s+days?\s+after", phrase)
+        count = re.search(r"(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+days?\s+after", phrase)
         if count:
-            days += int(count.group(1))
+            words = {"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10}
+            days += int(count.group(1)) if count.group(1).isdigit() else words[count.group(1)]
         elif "day after" in phrase and "tomorrow" not in phrase:
             days += 1
         return WEEKDAYS[(start + days) % 7]

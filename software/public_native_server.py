@@ -8,6 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 from native_runtime import NativeModel
 from native_reasoner import solve
+from latency_engine import FastPathEngine, LatencyMonitor
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aries_math.prise_unified import (ARIESExecutionEngine, PRISEProblem, exact_sat_bruteforce)
 
@@ -16,6 +17,8 @@ MATH_ENGINE = ARIESExecutionEngine()
 MODEL_PATH = os.getenv("ARIES_NATIVE_MODEL", "/app/models/aries-native-ngram.json")
 MODEL = NativeModel(MODEL_PATH)
 MODEL_ID = "aries-native-ngram"
+FAST_PATH = FastPathEngine(solve, max_entries=int(os.getenv("ARIES_FAST_CACHE_SIZE", "2048")))
+LATENCY_MONITOR = LatencyMonitor(window_size=int(os.getenv("ARIES_LATENCY_WINDOW_SIZE", "2048")))
 PORT = int(os.getenv("PORT", "10000"))
 HOST = "0.0.0.0"
 
@@ -65,6 +68,13 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200, {"object":"list","data":[
                 {"id":MODEL_ID,"object":"model","owned_by":"aries"}],
                 "inference_ready":True,"model_type":"character n-gram baseline"})
+        if path == "/performance":
+            return self.send_json(200, {
+                "service": "ARIES AI API",
+                "fast_path_cache": FAST_PATH.snapshot(),
+                "latency": LATENCY_MONITOR.snapshot(),
+                "notice": "In-process measured elapsed times only; no sub-nanosecond guarantee."
+            })
         if path == "/math/diagnostics":
             return self.send_json(200, {
                 "module":"ARIES PRISE unified mathematics",
@@ -114,11 +124,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(400, {"error":{"message":"message content must not be empty"}})
             max_tokens = max(1,min(int(body.get("max_tokens",128)),512))
             temperature = max(0.05,min(float(body.get("temperature",0.7)),2.0))
-            started = time.perf_counter()
-            answer = solve(prompt)
+            started_ns = time.perf_counter_ns()
+            answer, fast_path_cache_hit, fast_path_elapsed_ns = FAST_PATH.solve_with_metadata(prompt)
             if answer is None:
                 answer = MODEL.generate(prompt, max_tokens=max_tokens, temperature=temperature)
-            elapsed = time.perf_counter()-started
+            elapsed_ns = max(0, time.perf_counter_ns() - started_ns)
+            LATENCY_MONITOR.record("chat_completion", elapsed_ns)
             if not answer.strip():
                 answer = "ARIES native n-gram inference ran but produced no text for this prompt. This baseline has limited capability."
             return self.send_json(200, {
@@ -128,8 +139,15 @@ class Handler(BaseHTTPRequestHandler):
                             "finish_reason":"stop"}],
                 "usage":{"prompt_tokens":len(prompt),"completion_tokens":len(answer),
                          "total_tokens":len(prompt)+len(answer)},
-                "aries_native":{"runtime":"stdlib-char-ngram","inference_seconds":round(elapsed,6),
-                                "model_type":"baseline_not_modern_llm"}
+                "aries_native":{
+                    "runtime":"stdlib-char-ngram",
+                    "inference_seconds":round(elapsed_ns / 1000000000, 9),
+                    "inference_ns":elapsed_ns,
+                    "fast_path_elapsed_ns":fast_path_elapsed_ns,
+                    "fast_path_cache_hit":fast_path_cache_hit,
+                    "model_type":"baseline_not_modern_llm",
+                    "latency_note":"Nanosecond-unit elapsed timing is not proof of sub-nanosecond execution."
+                }
             })
         except (ValueError,TypeError,KeyError,json.JSONDecodeError) as exc:
             return self.send_json(400, {"error":{"message":"Invalid request: "+str(exc)}})

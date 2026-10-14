@@ -1,0 +1,1 @@
+"""ARIES automated tests."""

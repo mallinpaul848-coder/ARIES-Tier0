@@ -18,6 +18,7 @@ on:
     paths:
       - "scripts/publish_robust.py"
       - ".github/workflows/secure_publish.yml"
+      - "published/aries-core-v1/**"
 
 permissions:
   contents: read
@@ -40,7 +41,13 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "torch>=2.2,<2.7" "transformers>=4.45,<5" "huggingface_hub>=0.26" "safetensors>=0.4"
 
-      - name: Validate existing checkpoint and publish allowlisted files
+      - name: Validate existing checkpoint and staged public export
+        env:
+          ARIES_MODEL_DIR: ${{ inputs.model_dir || 'published/aries-core-v1' }}
+        run: python scripts/publish_robust.py --validate-only
+
+      - name: Publish only if Hugging Face write token is configured
+        if: ${{ env.HF_TOKEN != '' }}
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_TARGET_REPO: ${{ inputs.hf_repo_id || 'PaulMallin/aries-core-v1' }}

@@ -1,0 +1,51 @@
+name: ARIES Permanent Microbenchmark
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "benchmarks/**"
+      - ".github/workflows/aries-permanent-microbenchmark.yml"
+  pull_request:
+    paths:
+      - "benchmarks/**"
+      - ".github/workflows/aries-permanent-microbenchmark.yml"
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Number of measured iterations (minimum 100)"
+        required: false
+        default: "10000"
+  schedule:
+    - cron: "23 8 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  microbenchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Compile benchmark
+        run: g++ -O3 -std=c++17 -Wall -Wextra -Werror benchmarks/aries_microbenchmark.cpp -o aries_microbenchmark
+      - name: Run deterministic microbenchmark
+        shell: bash
+        run: |
+          N="${{ github.event.inputs.iterations || '10000' }}"
+          if ! [[ "$N" =~ ^[0-9]+$ ]] || (( N < 100 )); then
+            echo "iterations must be an integer >= 100" >&2
+            exit 2
+          fi
+          ./aries_microbenchmark "$N" | tee aries_microbenchmark_report.txt
+      - name: Upload raw samples and report
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-microbenchmark-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            aries_microbenchmark_report.txt
+            aries_microbenchmark_samples.csv
+          if-no-files-found: error
+          retention-days: 90

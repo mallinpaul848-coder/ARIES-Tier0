@@ -127,3 +127,25 @@ python .\tools\package_aries.py --output "$env:USERPROFILE\Desktop\aries_sub_nan
 ```
 
 Inspect the archive before sharing it; automated exclusions are not a guarantee that every secret or licensed file is removed. Packaging does not measure latency, certify model quality, publish to Hugging Face, or submit to a leaderboard.
+
+
+## Low-latency deterministic fast path and measured telemetry
+
+ARIES includes `software/latency_engine.py`:
+
+- Bounded thread-safe LRU cache for deterministic rule-engine results only. Unknown prompts still fall back to the character n-gram generator.
+- Case-sensitive cache keys so exact-output prompts don't accidentally reuse a differently cased answer.
+- `GET /performance` reports cache use, monotonic timer metadata, and rolling latency percentiles collected from real chat requests.
+- Chat completions include `aries_native.inference_ns`, `fast_path_elapsed_ns`, and `fast_path_cache_hit`.
+- `tools/aries_latency_bench.py` compares direct rule solving, cache-disabled routing, unique-prompt cache misses, and repeated-prompt cache hits on the machine where it runs.
+
+Run from the repository root in PowerShell:
+
+```powershell
+python -m pytest -q tests/test_latency_engine.py tests/test_native_reasoner.py
+python tools/aries_latency_bench.py --iterations 20000 --output reports/aries-latency-benchmark.json
+```
+
+The [ARIES Latency Engine Tests and Microbenchmark workflow](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/aries-latency-bench.yml) runs the tests and uploads the measured JSON report for its specific GitHub-hosted runner.
+
+**Latency measurement boundary:** times are represented in nanoseconds using Python's `perf_counter_ns()`; this does not guarantee nanosecond timer resolution, much less sub-nanosecond inference. The microbenchmark measures a deterministic rule/cache path—not generative model inference, external API latency, or CPU cycles. The current character n-gram model remains a small baseline, not a modern LLM. Do not market the report as proof of sub-nanosecond AI inference.

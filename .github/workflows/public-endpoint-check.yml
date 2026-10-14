@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/public-endpoint-check.yml"
       - "api/main.py"
+      - "software/**"
       - "Dockerfile"
       - "render.yaml"
   workflow_dispatch:
@@ -16,75 +17,64 @@ permissions:
 jobs:
   check-public-endpoint:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 15
     steps:
-      - name: Check deployed Render endpoint without exposing credentials
+      - name: Wait for Render deployment and validate real native inference
         env:
           ARIES_PUBLIC_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
         run: |
           python - <<'PY'
           import json, os, time, urllib.error, urllib.request
           base = os.environ["ARIES_PUBLIC_BASE_URL"].rstrip("/")
-          report = {"target": base, "checks": []}
-          def get(path):
-              start = time.perf_counter()
+          deadline = time.monotonic() + 720
+          last_error = "deployment has not returned the native runtime yet"
+
+          def request(path, payload=None, timeout=20):
+              data = None if payload is None else json.dumps(payload).encode()
+              headers = {"Accept":"application/json"}
+              if data is not None:
+                  headers["Content-Type"] = "application/json"
+              req = urllib.request.Request(base + path, data=data, headers=headers,
+                  method="GET" if data is None else "POST")
+              with urllib.request.urlopen(req, timeout=timeout) as response:
+                  raw = response.read().decode("utf-8", "replace")
+                  return response.status, json.loads(raw) if raw else {}
+
+          # Render builds asynchronously after a Git push. Don't fail on the old
+          # deployment while the new Docker image is still being built.
+          while time.monotonic() < deadline:
               try:
-                  with urllib.request.urlopen(base + path, timeout=25) as response:
-                      raw = response.read().decode("utf-8", "replace")
-                      data = json.loads(raw) if raw else {}
-                      item = {"path": path, "http_status": response.status,
-                              "latency_ms": round((time.perf_counter()-start)*1000, 2),
-                              "body": data}
-              except urllib.error.HTTPError as exc:
-                  raw = exc.read().decode("utf-8", "replace")
-                  try: body = json.loads(raw)
-                  except Exception: body = raw[:500]
-                  item = {"path": path, "http_status": exc.code,
-                          "latency_ms": round((time.perf_counter()-start)*1000, 2),
-                          "body": body}
+                  status, root = request("/")
+                  if status == 200 and root.get("backend") == "aries-native-char-ngram" and root.get("inference_ready") is True:
+                      break
+                  last_error = f"service has not switched to native image yet: {root}"
               except Exception as exc:
-                  item = {"path": path, "error": type(exc).__name__ + ": " + str(exc)}
-              report["checks"].append(item)
-              return item
-          for path in ("/health", "/", "/diagnostics", "/v1/models"):
-              get(path)
-          diag = next((x.get("body", {}) for x in report["checks"] if x["path"] == "/diagnostics"), {})
-          model_id = ""
-          models = next((x.get("body", {}) for x in report["checks"] if x["path"] == "/v1/models"), {})
-          if isinstance(models, dict) and models.get("data"):
-              model_id = models["data"][0].get("id", "")
-          if model_id and diag.get("inference_configured"):
-              payload = json.dumps({"model": model_id, "messages": [{"role":"user","content":"Reply with exactly ARIES-ENDPOINT-OK"}], "max_tokens": 24, "temperature": 0}).encode()
-              req = urllib.request.Request(base + "/v1/chat/completions", data=payload,
-                    headers={"Content-Type":"application/json"}, method="POST")
-              start = time.perf_counter()
-              try:
-                  with urllib.request.urlopen(req, timeout=40) as response:
-                      data = json.loads(response.read().decode("utf-8", "replace"))
-                      choices = data.get("choices", [])
-                      answer = choices[0].get("message", {}).get("content", "") if choices else ""
-                      report["checks"].append({"path":"/v1/chat/completions","http_status":response.status,
-                        "latency_ms":round((time.perf_counter()-start)*1000,2),
-                        "nonempty_response":bool(str(answer).strip()),"model":model_id})
-              except urllib.error.HTTPError as exc:
-                  report["checks"].append({"path":"/v1/chat/completions","http_status":exc.code,
-                    "latency_ms":round((time.perf_counter()-start)*1000,2),
-                    "body":exc.read().decode("utf-8","replace")[:500]})
-              except Exception as exc:
-                  report["checks"].append({"path":"/v1/chat/completions","error":type(exc).__name__+": "+str(exc)})
+                  last_error = type(exc).__name__ + ": " + str(exc)
+              print("Waiting for Render deployment:", last_error, flush=True)
+              time.sleep(15)
           else:
-              report["checks"].append({"path":"/v1/chat/completions","skipped":True,
-                "reason":"Public endpoint reports inference is not configured or has no model ID."})
-          print(json.dumps(report, indent=2))
-          # A green check must mean the deployed service can actually run inference.
-          required = [x for x in report["checks"] if x.get("path") in ("/health", "/", "/diagnostics", "/v1/models")]
-          failed = [x for x in required if x.get("http_status") != 200]
-          if failed:
-              raise SystemExit("Public endpoint validation failed: one or more required routes did not return HTTP 200.")
-          if not diag.get("inference_configured") or not model_id:
-              raise SystemExit("Public endpoint validation failed: API is online but no inference backend/model is configured.")
-          chat = next((x for x in report["checks"] if x.get("path") == "/v1/chat/completions"), {})
-          if chat.get("http_status") != 200 or not chat.get("nonempty_response"):
-              raise SystemExit("Public endpoint validation failed: real chat inference did not return a non-empty HTTP 200 response.")
-          print("PASS: public endpoint and real inference are configured and responding.")
+              raise SystemExit("FAIL: Render native deployment did not become ready within 12 minutes. Last result: " + last_error)
+
+          report = {"target":base, "backend":root.get("backend"), "model_id":root.get("model_id"), "checks":[]}
+          for path in ("/health", "/", "/diagnostics", "/v1/models"):
+              status, body = request(path)
+              report["checks"].append({"path":path,"http_status":status,"body":body})
+              assert status == 200, f"{path} returned HTTP {status}: {body}"
+          diag = request("/diagnostics")[1]
+          models = request("/v1/models")[1]
+          assert diag.get("inference_configured") is True, f"Native model not ready: {diag}"
+          assert models.get("data"), f"No model advertised: {models}"
+          model_id = models["data"][0]["id"]
+          status, chat = request("/v1/chat/completions", {
+              "model":model_id,
+              "messages":[{"role":"user","content":"Say hello and identify the type of model you are."}],
+              "max_tokens":80,"temperature":0.2
+          }, timeout=60)
+          choices = chat.get("choices",[])
+          answer = choices[0].get("message",{}).get("content","") if choices else ""
+          report["checks"].append({"path":"/v1/chat/completions","http_status":status,
+                                   "nonempty_response":bool(answer.strip()),"response_preview":answer[:180]})
+          print(json.dumps(report,indent=2))
+          assert status == 200 and answer.strip(), "Native inference did not return a non-empty completion."
+          print("PASS: public native API is responding. This verifies service functionality, not LLM quality.")
           PY

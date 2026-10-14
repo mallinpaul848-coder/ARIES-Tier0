@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "project": "ARIES-Tier0 math_core",
+  "status": "exploratory computational framework",
+  "claim_policy": "Numerical tests validate implementations and stated identities only; they do not establish new physical laws or solve Millennium Prize Problems.",
+  "modules": [
+    {
+      "path": "math_core/vortex_transforms.py",
+      "claims": [
+        {
+          "id": "digital-root-mod-9",
+          "statement": "For nonzero integer n, digital_root(n) equals 1 + (abs(n)-1) mod 9; digital_root(0)=0.",
+          "validation": "tests/test_math_invariants.py::test_digital_root_cycle_and_sign"
+        },
+        {
+          "id": "helixo-log-spiral",
+          "statement": "Coordinates use r=radius*exp(growth*t), theta=phase+angular_rate*t, z=t.",
+          "validation": "tests/test_math_invariants.py::test_helixo_radius_and_height"
+        },
+        {
+          "id": "vortex-radius",
+          "statement": "vortex_transform preserves input radius up to radial_scale.",
+          "validation": "tests/test_math_invariants.py::test_vortex_transform_radius_and_rotation"
+        }
+      ]
+    },
+    {
+      "path": "math_core/millennium_invariants.py",
+      "claims": [
+        {
+          "id": "regularized-vortex-divergence",
+          "statement": "The smooth field (-y/(x^2+y^2+epsilon), x/(x^2+y^2+epsilon)) has zero divergence analytically away from invalid epsilon; finite differences check implementation behavior.",
+          "validation": "tests/test_math_invariants.py::test_regularized_vortex_divergence"
+        },
+        {
+          "id": "field-derivative-diagnostics",
+          "statement": "Central finite-difference operators approximate divergence, curl, and Laplacian.",
+          "validation": "tests/test_math_invariants.py::test_finite_difference_operators"
+        }
+      ]
+    }
+  ],
+  "open_problem_boundary": {
+    "navier_stokes_regularitiy": "No proof claimed; diagnostics are not a regularity proof.",
+    "riemann_hypothesis": "No proof or prime-distribution result claimed.",
+    "p_vs_np": "No complexity-theory proof claimed.",
+    "hodge_conjecture": "No proof claimed.",
+    "yang_mills_mass_gap": "No proof claimed."
+  }
+}

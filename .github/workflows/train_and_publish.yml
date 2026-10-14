@@ -123,15 +123,18 @@ jobs:
 
       - name: Publish validated model files to this public GitHub repository
         if: success()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           test -s artifacts/aries-core-v1/config.json
           test -s artifacts/aries-core-v1/model.safetensors
           test -s artifacts/aries-core-v1/tokenizer.json
+          publish_tmp="$(mktemp -d)"
+          cp artifacts/aries-core-v1/config.json artifacts/aries-core-v1/model.safetensors artifacts/aries-core-v1/tokenizer.json artifacts/aries-core-v1/tokenizer_config.json artifacts/aries-core-v1/README.md "$publish_tmp"/
+          # Rebase publication on the latest main so concurrent documentation commits do not cause a non-fast-forward push.
+          git fetch origin main
+          git checkout -B aries-publish origin/main
           mkdir -p published/aries-core-v1
-          cp artifacts/aries-core-v1/config.json artifacts/aries-core-v1/model.safetensors artifacts/aries-core-v1/tokenizer.json artifacts/aries-core-v1/tokenizer_config.json artifacts/aries-core-v1/README.md published/aries-core-v1/
+          cp "$publish_tmp"/* published/aries-core-v1/
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -f published/aries-core-v1/

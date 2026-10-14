@@ -1,0 +1,79 @@
+name: ARIES Public Endpoint Check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/public-endpoint-check.yml"
+      - "api/main.py"
+      - "Dockerfile"
+      - "render.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-public-endpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check deployed Render endpoint without exposing credentials
+        env:
+          ARIES_PUBLIC_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
+        run: |
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.request
+          base = os.environ["ARIES_PUBLIC_BASE_URL"].rstrip("/")
+          report = {"target": base, "checks": []}
+          def get(path):
+              start = time.perf_counter()
+              try:
+                  with urllib.request.urlopen(base + path, timeout=25) as response:
+                      raw = response.read().decode("utf-8", "replace")
+                      data = json.loads(raw) if raw else {}
+                      item = {"path": path, "http_status": response.status,
+                              "latency_ms": round((time.perf_counter()-start)*1000, 2),
+                              "body": data}
+              except urllib.error.HTTPError as exc:
+                  raw = exc.read().decode("utf-8", "replace")
+                  try: body = json.loads(raw)
+                  except Exception: body = raw[:500]
+                  item = {"path": path, "http_status": exc.code,
+                          "latency_ms": round((time.perf_counter()-start)*1000, 2),
+                          "body": body}
+              except Exception as exc:
+                  item = {"path": path, "error": type(exc).__name__ + ": " + str(exc)}
+              report["checks"].append(item)
+              return item
+          for path in ("/health", "/", "/diagnostics", "/v1/models"):
+              get(path)
+          diag = next((x.get("body", {}) for x in report["checks"] if x["path"] == "/diagnostics"), {})
+          model_id = ""
+          models = next((x.get("body", {}) for x in report["checks"] if x["path"] == "/v1/models"), {})
+          if isinstance(models, dict) and models.get("data"):
+              model_id = models["data"][0].get("id", "")
+          if model_id and diag.get("inference_configured"):
+              payload = json.dumps({"model": model_id, "messages": [{"role":"user","content":"Reply with exactly ARIES-ENDPOINT-OK"}], "max_tokens": 24, "temperature": 0}).encode()
+              req = urllib.request.Request(base + "/v1/chat/completions", data=payload,
+                    headers={"Content-Type":"application/json"}, method="POST")
+              start = time.perf_counter()
+              try:
+                  with urllib.request.urlopen(req, timeout=40) as response:
+                      data = json.loads(response.read().decode("utf-8", "replace"))
+                      choices = data.get("choices", [])
+                      answer = choices[0].get("message", {}).get("content", "") if choices else ""
+                      report["checks"].append({"path":"/v1/chat/completions","http_status":response.status,
+                        "latency_ms":round((time.perf_counter()-start)*1000,2),
+                        "nonempty_response":bool(str(answer).strip()),"model":model_id})
+              except urllib.error.HTTPError as exc:
+                  report["checks"].append({"path":"/v1/chat/completions","http_status":exc.code,
+                    "latency_ms":round((time.perf_counter()-start)*1000,2),
+                    "body":exc.read().decode("utf-8","replace")[:500]})
+              except Exception as exc:
+                  report["checks"].append({"path":"/v1/chat/completions","error":type(exc).__name__+": "+str(exc)})
+          else:
+              report["checks"].append({"path":"/v1/chat/completions","skipped":True,
+                "reason":"Public endpoint reports inference is not configured or has no model ID."})
+          print(json.dumps(report, indent=2))
+          PY

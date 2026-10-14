@@ -1,60 +1,61 @@
 # ARIES external validation and leaderboard readiness
 
-## Latest public validation
+## Public inference endpoint
 
-- **Latest strict public inference benchmark:** PASS — [GitHub Actions run](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503195895), commit `80e9773a34136826e5a9c7b8ee0b2d55602043e3`.
-- **Latest strict benchmark report:** [Download JSON evidence](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503195895/artifacts/11865794630) (retained for 30 days).
-- **Live endpoint checks:** 4/4 returned HTTP 200: `/health`, `/`, `/diagnostics`, and `/v1/models`.
-- **Live chat quality checks:** 3/3 returned non-empty responses and passed their assertions: exact-output control, 17 × 19 = 323, and the API-health-check explanation.
-- **Measured live chat latency from a GitHub-hosted runner:** minimum 276.36 ms; median 279.09 ms; maximum 358.10 ms. These are end-to-end HTTP measurements and include network/service overhead.
-- **Other workflows on the same commit:** [API tests PASS](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503059069), [end-to-end API integration PASS](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503058967), and [RTL external smoke test PASS](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38503059087).
-- **Public scorecard:** [10-case scorecard run](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38502634925) reported 10/10 exact matches (100% on that small ARIES-authored set), mean latency 180.602 ms, median 127.793 ms, minimum 112.687 ms, maximum 326.689 ms.
-- **Public endpoint:** https://aries-tier0-api-6qjh.onrender.com
-- **Backend:** ARIES-authored native character n-gram baseline and narrow deterministic task engine; no hosted inference API key is required.
+- **Endpoint:** https://aries-tier0-api-6qjh.onrender.com
+- **Latest recorded public endpoint benchmark:** [GitHub Actions run 38510422674](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38510422674)
+- **Machine-readable report:** [2026-10-14-public-endpoint.json](./reports/2026-10-14-public-endpoint.json)
+- **Measured from a GitHub-hosted runner at 2026-10-14T02:51:15Z:**
+  - `/health`: HTTP 200, 154.78 ms
+  - `/`: HTTP 200, 146.95 ms
+  - `/diagnostics`: HTTP 200, 174.62 ms; native backend reported configured, 2,164 trained characters
+  - `/v1/models`: HTTP 200, 126.27 ms; model ID `aries-native-ngram`
+  - Chat requests: 3/3 returned successful responses; 3/3 narrow assertions passed
+  - Chat end-to-end latency: minimum 116.29 ms, median 131.01 ms, maximum 147.99 ms
+- **Other automated checks:** [API tests](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38510448842), [end-to-end integration](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38510448787), and [RTL smoke test](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38510448857) passed.
 
-The strict public benchmark runs automatically on changes to benchmark or native inference code, and can also be started manually from GitHub Actions. It saves a JSON report as a workflow artifact. Historical failures remain in GitHub Actions for auditability; the latest run above is green.
+These are deployment and regression checks, not independent certification of broad language-model capability. The endpoint currently serves ARIES's native character n-gram baseline and narrow task engine; it is not the experimental Transformer checkpoint described below.
 
-**Interpretation limit:** The strict run's 3/3 pass means only that three deliberately narrow response assertions passed. The separate 10/10 scorecard is also only an ARIES-authored diagnostic set. Neither result is an independent model-quality certification, a MMLU/GSM8K/BBH/LiveBench result, or an official leaderboard score. These are useful deployment and regression checks, not evidence of broad LLM capability.
+## Experimental Transformer checkpoint
 
-## What has been exercised
+- **Training/export workflow:** [Run 38511413963](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38511413963) completed successfully.
+- **Training log:** 141.0151 seconds; reported training loss 6.508822067260742; 5,273,088 parameters.
+- **Local artifact checks:** model and tokenizer reloaded; a generation smoke test succeeded.
+- **Public GitHub artifact directory:** [published/aries-core-v1](https://github.com/mallinpaul848-coder/ARIES-Tier0/tree/main/published/aries-core-v1).
+- **Workflow artifact (30-day retention):** [download](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/38511413963/artifacts/11869839365).
+- **Hugging Face upload:** NOT COMPLETED. The workflow reported that `HF_TOKEN` was not configured. Do not paste a token into an issue or chat. If you choose to publish, add a Hugging Face write token under [GitHub Actions repository secrets](https://github.com/mallinpaul848-coder/ARIES-Tier0/settings/secrets/actions) as `HF_TOKEN`, and verify the resulting public model page and files.
+- The enhanced wrapper adds seven short educational math notes to the base corpus. This is not evidence of novel mathematics, proof of a Millennium Prize problem, or competitive model quality. Confirm training-data licensing/provenance and test for memorization before distributing weights.
 
-1. The live deployment's health, root/readiness, diagnostics, and model-list routes.
-2. Public chat-completions requests returning non-empty generated text.
-3. Three strict response-quality assertions against the deployed endpoint.
-4. A repeatable 10-case diagnostic benchmark with measured per-request latency and exact-match checks.
-5. Native runtime/container verification and API integration tests in GitHub Actions.
-6. A deterministic, explicitly scoped rule engine for selected arithmetic and structured prompts.
-7. A generated HTML/JSON/CSV scorecard stored as a GitHub Actions artifact, plus a strict benchmark JSON artifact.
+## Proprietary source boundary
+
+This repository is public. Keep raw derivations, proprietary operators, private corpora, unpublished proofs, and secret credentials outside it—preferably in a separate private repository or local directory. The current `.gitignore` excludes common private paths and secret patterns, but ignore rules do not remove previously committed files.
+
+The supplied experimental `BioBinaryFrequencyAttention` implementation should **not** be added to this public repository if it contains trade-secret implementation details. Keep it private and only publish an adapter/configuration and artifacts you have reviewed and have the right to release. The current main-branch tree does not contain `aries_core/bio_binary_engine.py`, but deleting a file from the latest tree does not erase its earlier public Git history. If the historical version contains sensitive trade secrets, history rewriting and force-pushing (or GitHub Support for cached references) may still be necessary. No claim is made here that history has been scrubbed.
+
+The frequency-modulation mechanism is a research hypothesis. It has not been demonstrated to improve model quality and does not itself establish a new mathematical result.
 
 ## Official leaderboard status
 
-**Official model leaderboard submission: NOT SUBMITTED.** The API and regression validation is currently passing, but this does not automatically submit or rank the model on an independent leaderboard.
+**Official leaderboard submission: NOT SUBMITTED. No official rank is claimed.**
 
-The [Hugging Face Open LLM Leaderboard submission instructions](https://huggingface.co/docs/leaderboards/en/open_llm_leaderboard/submitting) require a public model that loads through supported Transformers AutoClasses, compatible public weights (the instructions specify Safetensors), a model card, and compliance with the leaderboard's supported evaluation setup. See also the [official FAQ](https://huggingface.co/docs/leaderboards/en/open_llm_leaderboard/faq).
+The public endpoint checks and GitHub Actions tests do not submit ARIES to a leaderboard. The native n-gram endpoint is not a standard Transformers foundation-model submission. The experimental Transformer checkpoint has not been verified as uploaded to a public Hugging Face model repository, and no official leaderboard queue/acceptance result is recorded.
 
-The deployed ARIES character n-gram baseline is not a Transformers foundation model and is not eligible as a normal Open LLM Leaderboard entry. A third-party GGUF used by the optional local launcher must not be relabeled as ARIES-trained weights. The current GitHub integration has no verified public model-hub upload or leaderboard submission confirmation, so an accepted entry cannot be claimed.
+For a legitimate submission:
+1. Establish training-data provenance and licensing.
+2. Publish the reviewed model weights, tokenizer, config, and accurate model card to a public model repository.
+3. Verify loading using supported Transformers AutoClasses at a pinned revision.
+4. Run a supported, reproducible evaluator and publish its complete results.
+5. Submit that exact revision through the leaderboard's official process and verify the actual queue/result.
 
-## Model repository loading check
+Official references: [Open LLM Leaderboard submission instructions](https://huggingface.co/docs/leaderboards/en/open_llm_leaderboard/submitting) and [FAQ](https://huggingface.co/docs/leaderboards/en/open_llm_leaderboard/faq). An account token and an explicit official submission/confirmation are required for steps that need account access; a passing CI workflow is not a substitute.
 
-A reusable loader smoke test has been added at [`benchmarks/verify_hf_model.py`](./verify_hf_model.py). Once the actual public Hugging Face model repository exists, run:
+## Public model-loading check
+
+After an actual public model repository exists, run:
 
 ```bash
 python -m pip install -U transformers torch safetensors
 python benchmarks/verify_hf_model.py YOUR_HF_ORG/aries-v1 --revision MODEL_COMMIT_SHA
 ```
 
-The script attempts to load `AutoConfig`, `AutoTokenizer`, and `AutoModelForCausalLM`, then reports the detected architecture and parameter count. It is a packaging check only; it does not train weights, prove ownership, measure benchmark quality, or submit a leaderboard request. No concrete Hugging Face model repository ID or uploaded ARIES weights have been verified in this repository yet.
-
-## Remaining requirements for an official model leaderboard entry
-
-1. Train or otherwise establish provenance for an ARIES-owned model suitable for the chosen leaderboard and record dataset licenses and training details.
-2. Export actual model weights and tokenizer/configuration to a public model repository in a supported format.
-3. Verify model and tokenizer loading with supported Transformers AutoClasses.
-4. Run a standard, reproducible evaluator against a pinned model revision and publish complete results and limitations.
-5. Submit that exact model revision through the official process and verify the actual queue status and result. This submission step requires access to the model-hosting/leaderboard account; GitHub Actions passing alone cannot do it.
-
-Until those steps and a real submission confirmation exist, the official entry status remains **not submitted**.
-
-## Local software
-
-The repository includes a local inference wrapper and a standalone native runtime. The wrapper can serve a compatible GGUF locally; that is a serving implementation, not proof that those GGUF weights were trained by ARIES. The standard-library character n-gram runtime is ARIES-authored but intentionally small and limited. Neither should be represented as a state-of-the-art general-purpose model.
+This is a packaging check only; it does not measure quality or submit the model to a leaderboard.

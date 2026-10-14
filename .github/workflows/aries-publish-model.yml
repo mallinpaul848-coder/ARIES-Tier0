@@ -54,12 +54,15 @@ jobs:
       - name: Train ARIES model and publish to Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO_ID: ${{ inputs.hf_repo_id }}
+          CORPUS_PATH: ${{ inputs.corpus_path }}
+          TRAINING_STEPS: ${{ inputs.training_steps }}
         run: |
           python software/train_and_publish_aries_lm.py \
-            --corpus "${{ inputs.corpus_path }}" \
-            --repo-id "${{ inputs.hf_repo_id }}" \
+            --corpus "$CORPUS_PATH" \
+            --repo-id "$HF_REPO_ID" \
             --output-dir artifacts/aries-published \
-            --steps "${{ inputs.training_steps }}" \
+            --steps "$TRAINING_STEPS" \
             --model-name "ARIES Experimental Causal LM"
       - name: Upload reproducibility package
         if: always()

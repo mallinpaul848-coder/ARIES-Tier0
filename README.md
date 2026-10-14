@@ -88,3 +88,23 @@ python -m unittest tests.test_prise_unified_math -v
 ```
 
 Scientific scope: this is an additive research module, not yet connected to the public API request path. It does not prove P = NP or P != NP. The SAT baseline is exponential by design, and no sub-nanosecond latency claim is made. The sample signal routines are diagnostics, not a rigorous general Helmholtz-Hodge decomposition. See the module documentation for limitations.
+
+
+### Public PRISE mathematics endpoints
+
+The native server now exposes these additive endpoints after the latest container rebuild:
+
+- `GET /math/diagnostics` — lists the research operators and scientific scope.
+- `POST /math/analyze` — JSON body `{"payload":"ARIES sample"}`; returns byte/checksum, digital-root and toroidal features.
+- `POST /math/prise` — JSON body with `name`, `priority`, `risk`, `impact`, `systemic`, and `emergent` values from 0 to 1; returns the weighted PRISE score.
+- `POST /math/sat` — JSON body `{"clauses":[[1,-2],[2]],"variable_count":2}`; runs bounded exhaustive CNF-SAT for up to 24 variables by default.
+
+PowerShell example:
+
+```powershell
+Invoke-RestMethod "https://aries-tier0-api-6qjh.onrender.com/math/diagnostics"
+$body = @{ name="Dispatch delay"; priority=0.8; risk=0.5; impact=0.9; systemic=0.6; emergent=0.4 } | ConvertTo-Json
+Invoke-RestMethod "https://aries-tier0-api-6qjh.onrender.com/math/prise" -Method Post -ContentType "application/json" -Body $body
+```
+
+These routes are served by the same public container, but will not exist until the deployment has rebuilt successfully. SAT uses exponential brute force and is limited to small test cases; no P-vs-NP proof or sub-nanosecond timing is claimed.

@@ -6,6 +6,7 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 from native_runtime import NativeModel
+from native_reasoner import solve
 
 MODEL_PATH = os.getenv("ARIES_NATIVE_MODEL", "/app/models/aries-native-ngram.json")
 MODEL = NativeModel(MODEL_PATH)
@@ -48,9 +49,9 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200, {
                 "service":"ARIES AI API","api_version":"1.0.5",
                 "checks":{"upstream_base_url_configured":False,"model_id_configured":True,
-                          "api_key_configured":False,"native_model_loaded":True},
+                          "api_key_configured":False,"native_model_loaded":True,"deterministic_reasoner_loaded":True},
                 "inference_configured":True,"backend":"native",
-                "model_format":"character n-gram baseline",
+                "model_format":"hybrid deterministic task engine plus character n-gram baseline",
                 "trained_characters":MODEL.trained_characters,
                 "next_step":"Run real response-quality tests; this baseline is not a modern LLM."
             })
@@ -76,7 +77,9 @@ class Handler(BaseHTTPRequestHandler):
             max_tokens = max(1,min(int(body.get("max_tokens",128)),512))
             temperature = max(0.05,min(float(body.get("temperature",0.7)),2.0))
             started = time.perf_counter()
-            answer = MODEL.generate(prompt, max_tokens=max_tokens, temperature=temperature)
+            answer = solve(prompt)
+            if answer is None:
+                answer = MODEL.generate(prompt, max_tokens=max_tokens, temperature=temperature)
             elapsed = time.perf_counter()-started
             if not answer.strip():
                 answer = "ARIES native n-gram inference ran but produced no text for this prompt. This baseline has limited capability."

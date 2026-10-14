@@ -7,6 +7,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 from native_runtime import NativeModel
 from native_reasoner import solve
+from aries_math.prise_unified import (ARIESExecutionEngine, PRISEProblem, exact_sat_bruteforce)
+
+MATH_ENGINE = ARIESExecutionEngine()
 
 MODEL_PATH = os.getenv("ARIES_NATIVE_MODEL", "/app/models/aries-native-ngram.json")
 MODEL = NativeModel(MODEL_PATH)
@@ -60,15 +63,47 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200, {"object":"list","data":[
                 {"id":MODEL_ID,"object":"model","owned_by":"aries"}],
                 "inference_ready":True,"model_type":"character n-gram baseline"})
+        if path == "/math/diagnostics":
+            return self.send_json(200, {
+                "module":"ARIES PRISE unified mathematics",
+                "available_operators":["digital_root_369","toroidal_geometry","helixo_spiral",
+                    "sample_signal_diagnostics","euler_characteristic","finite_euler_product",
+                    "prise_scoring","small_instance_exact_sat"],
+                "p_vs_np_status":"No proof of P=NP or P!=NP is claimed.",
+                "latency_claim":"MEASURE_REQUIRED"
+            })
         return self.send_json(404, {"error":{"message":"Not found","type":"not_found"}})
     def do_POST(self):
-        if urlparse(self.path).path != "/v1/chat/completions":
+        path = urlparse(self.path).path
+        if path not in {"/v1/chat/completions", "/math/analyze", "/math/prise", "/math/sat"}:
             return self.send_json(404, {"error":{"message":"Not found","type":"not_found"}})
         try:
             size = int(self.headers.get("Content-Length","0"))
             if size <= 0 or size > 1_000_000:
                 return self.send_json(400, {"error":{"message":"Request body must be 1 byte to 1 MB."}})
             body = json.loads(self.rfile.read(size))
+            if path == "/math/analyze":
+                payload = body.get("payload", "")
+                if not isinstance(payload, str):
+                    return self.send_json(400, {"error":{"message":"payload must be a string"}})
+                result = MATH_ENGINE.analyze_binary_stream(payload.encode("utf-8"))
+                return self.send_json(200, {"module":"ARIES PRISE unified mathematics", "result":result})
+            if path == "/math/prise":
+                problem = PRISEProblem(
+                    name=str(body.get("name", "unnamed")),
+                    priority=float(body["priority"]), risk=float(body["risk"]),
+                    impact=float(body["impact"]), systemic=float(body["systemic"]),
+                    emergent=float(body["emergent"]), notes=str(body.get("notes", "")))
+                return self.send_json(200, {"module":"ARIES PRISE unified mathematics",
+                                            "result":problem.to_dict()})
+            if path == "/math/sat":
+                clauses = body.get("clauses")
+                variables = body.get("variable_count")
+                if not isinstance(clauses, list) or not isinstance(variables, int) or isinstance(variables, bool):
+                    return self.send_json(400, {"error":{"message":"clauses must be a list and variable_count an integer"}})
+                result = exact_sat_bruteforce(clauses, variables)
+                return self.send_json(200, {"module":"ARIES PRISE unified mathematics", "result":result,
+                                            "notice":"Exhaustive SAT baseline; exponential-time and not a P-vs-NP proof."})
             messages = body.get("messages")
             if not isinstance(messages,list) or not messages:
                 return self.send_json(400, {"error":{"message":"messages must be a non-empty list"}})

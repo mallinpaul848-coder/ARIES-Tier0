@@ -6,6 +6,7 @@ on:
     paths:
       - "software/latency_engine.py"
       - "software/native_reasoner.py"
+      - "software/public_native_server.py"
       - "tools/aries_latency_bench.py"
       - "tests/test_latency_engine.py"
       - ".github/workflows/aries-latency-bench.yml"
@@ -35,7 +36,7 @@ jobs:
       - name: Measure this GitHub-hosted runner
         run: |
           mkdir -p reports
-          python tools/aries_latency_bench.py --iterations "${{ inputs.iterations || '20000' }}" --output reports/aries-latency-benchmark.json
+          python tools/aries_latency_bench.py --iterations "${{ github.event.inputs.iterations || '20000' }}" --output reports/aries-latency-benchmark.json
       - name: Upload machine-measured report
         uses: actions/upload-artifact@v4
         with:

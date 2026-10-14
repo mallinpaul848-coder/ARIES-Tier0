@@ -16,6 +16,7 @@ on:
   push:
     branches: ["main"]
     paths:
+      - "scripts/publish_clean.py"
       - "scripts/publish_robust.py"
       - ".github/workflows/secure_publish.yml"
       - "published/aries-core-v1/**"
@@ -46,14 +47,14 @@ jobs:
       - name: Validate existing checkpoint and staged public export
         env:
           ARIES_MODEL_DIR: ${{ inputs.model_dir || 'published/aries-core-v1' }}
-        run: python scripts/publish_robust.py --validate-only
+        run: python scripts/publish_clean.py --validate-only
 
       - name: Publish only if Hugging Face write token is configured
         if: ${{ env.HF_TOKEN != '' }}
         env:
           HF_TARGET_REPO: ${{ inputs.hf_repo_id || 'PaulMallin/aries-core-v1' }}
           ARIES_MODEL_DIR: ${{ inputs.model_dir || 'published/aries-core-v1' }}
-        run: python scripts/publish_robust.py
+        run: python scripts/publish_clean.py
 
       - name: Explain validation-only result when token is missing
         if: ${{ env.HF_TOKEN == '' }}

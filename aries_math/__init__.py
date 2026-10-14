@@ -1,0 +1,1 @@
+"""ARIES mathematical research utilities."""

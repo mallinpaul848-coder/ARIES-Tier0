@@ -131,7 +131,7 @@ class Handler(BaseHTTPRequestHandler):
                 "aries_native":{"runtime":"stdlib-char-ngram","inference_seconds":round(elapsed,6),
                                 "model_type":"baseline_not_modern_llm"}
             })
-        except (ValueError,TypeError,json.JSONDecodeError) as exc:
+        except (ValueError,TypeError,KeyError,json.JSONDecodeError) as exc:
             return self.send_json(400, {"error":{"message":"Invalid request: "+str(exc)}})
     def log_message(self, fmt, *args):
         print("%s - %s" % (self.address_string(), fmt % args), flush=True)

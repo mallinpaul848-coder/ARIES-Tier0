@@ -3,6 +3,7 @@ name: ARIES Cycle-Level Benchmark
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - "benchmarks/cycle-level/**"
       - ".github/workflows/aries-cycle-benchmark.yml"
@@ -11,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  build-and-smoke-test:
+  build-and-measure:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -21,21 +22,26 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake g++
-      - name: Configure
+      - name: Configure optimized benchmark
         run: cmake -S benchmarks/cycle-level -B build/cycle-benchmark -DCMAKE_BUILD_TYPE=Release
       - name: Build
         run: cmake --build build/cycle-benchmark --parallel 2
-      - name: Run bounded smoke benchmark
-        run: ./build/cycle-benchmark/aries_benchmark --warmup 10000 --iterations 10000 | tee cycle-benchmark-smoke.txt
-      - name: Validate report fields
+      - name: Run repeatable cycle-level measurement
         run: |
-          grep -q "Raw timestamp-window distribution" cycle-benchmark-smoke.txt
-          grep -q "P50:" cycle-benchmark-smoke.txt
-          grep -q "P99:" cycle-benchmark-smoke.txt
-          grep -q "does NOT establish sub-nanosecond" cycle-benchmark-smoke.txt
-      - name: Upload smoke report
+          mkdir -p reports
+          ./build/cycle-benchmark/aries_benchmark --warmup 100000 --iterations 200000 | tee reports/aries-cycle-benchmark.txt
+      - name: Validate measurement report
+        run: |
+          grep -q "Raw timestamp-window distribution" reports/aries-cycle-benchmark.txt
+          grep -q "Min:" reports/aries-cycle-benchmark.txt
+          grep -q "P50:" reports/aries-cycle-benchmark.txt
+          grep -q "P99:" reports/aries-cycle-benchmark.txt
+          grep -q "Mean:" reports/aries-cycle-benchmark.txt
+          grep -q "does NOT establish sub-nanosecond" reports/aries-cycle-benchmark.txt
+      - name: Upload machine-measured report
         uses: actions/upload-artifact@v4
         with:
-          name: aries-cycle-benchmark-smoke
-          path: cycle-benchmark-smoke.txt
+          name: aries-cycle-level-measured-report
+          path: reports/aries-cycle-benchmark.txt
           if-no-files-found: error
+          retention-days: 90

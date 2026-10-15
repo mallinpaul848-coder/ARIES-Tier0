@@ -25,7 +25,7 @@ jobs:
       - name: Compile with strict C++20 warnings
         run: |
           g++ --version
-          g++ -std=c++20 -O2 -Wall -Wextra -Wpedantic -Werror -pthread \
+          g++ -std=c++20 -O2 -Wall -Wextra -Wpedantic -Werror -pthread -I. \
             tests/cpp/test_mallin_master_platform.cpp -o mallin-master-test
       - name: Run functional tests
         run: ./mallin-master-test

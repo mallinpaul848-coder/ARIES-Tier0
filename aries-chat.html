@@ -42,11 +42,25 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
    const configured=base();
    try { return await fetch(configured+path,options); }
    catch(localError) {
+     if(!/^https?:\\/\\/(127\\.0\\.0\\.1|localhost)(:\\d+)?$/i.test(configured)) throw localError;
      $('hint').textContent='Local API is offline; trying the hosted ARIES API…';
      return await fetch(PUBLIC_API+path,options);
    }
  }
- if(!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(base())) throw localError;
+ async function check(){
+   $('check').disabled=true;
+   status(false,'Checking API…');
+   $('hint').textContent='Checking '+base();
+   try {
+     const r=await apiFetch('/health',{method:'GET'});
+     if(!r.ok) throw new Error('Health check returned HTTP '+r.status);
+     status(true,'API connected');
+     $('hint').textContent='API is reachable. Ask ARIES a question below.';
+   } catch(e) {
+     status(false,'API unavailable');
+     $('hint').textContent='Could not reach the local or hosted API. Start the local launcher or retry in a moment.';
+   } finally { $('check').disabled=false; }
+ }
  async function send(text){text=(text||prompt.value).trim();if(!text)return;prompt.value='';prompt.style.height='auto';conversation.push({role:'user',content:text});addMessage('user',text);$('send').disabled=true;$('check').disabled=true;const answer=addMessage('assistant','ARIES is thinking…');try{let r;try{r=await apiFetch('/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'aries-native-ngram',messages:conversation,max_tokens:180,temperature:0.2})});}catch(e){throw new Error('Both local and hosted API requests failed: '+(e.message||String(e)));}let data;try{data=await r.json()}catch{throw new Error('The API returned a non-JSON response (HTTP '+r.status+').')}if(!r.ok)throw new Error((data.error&&data.error.message)||data.detail||'HTTP '+r.status);const result=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;if(typeof result!=='string'||!result.trim())throw new Error('The API returned an empty answer.');answer.textContent=result.trim();conversation.push({role:'assistant',content:result.trim()});status(true,'API connected');}catch(e){answer.textContent='Could not get a response. '+(e.message||String(e))+'\\n\\nLocal API: '+base()+'\\nHosted fallback: '+PUBLIC_API+'\\nUse Check connection to retry.';status(false,'Request failed');}finally{$('send').disabled=false;$('check').disabled=false;prompt.focus();chat.scrollTop=chat.scrollHeight;}}
  $('check').addEventListener('click',check);$('clear').addEventListener('click',()=>{conversation.length=0;chat.querySelectorAll('.message').forEach(n=>n.remove());$('welcome').classList.remove('hidden');prompt.focus();});
  $('send').addEventListener('click',()=>send());prompt.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});prompt.addEventListener('input',()=>{prompt.style.height='auto';prompt.style.height=Math.min(prompt.scrollHeight,150)+'px';});

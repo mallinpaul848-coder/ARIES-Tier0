@@ -6,10 +6,18 @@ Set-Location $root
 # Support both common Windows Python entry points: "python" and "py -3".
 $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
 if ($pythonCommand) {
+    & $pythonCommand.Source --version *> $null
+    if ($LASTEXITCODE -ne 0) { $pythonCommand = $null }
+}
+if ($pythonCommand) {
     $script:AriesPython = $pythonCommand.Source
     $script:AriesPythonPrefix = @()
 } else {
     $pythonCommand = Get-Command py -ErrorAction SilentlyContinue
+    if ($pythonCommand) {
+        & $pythonCommand.Source -3 --version *> $null
+        if ($LASTEXITCODE -ne 0) { $pythonCommand = $null }
+    }
     if (-not $pythonCommand) {
         Write-Host ""
         Write-Host "ERROR: Python 3 was not found. Install it from https://www.python.org/downloads/windows/" -ForegroundColor Red

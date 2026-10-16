@@ -1,46 +1,51 @@
 @echo off
-setlocal
+setlocal EnableExtensions
 cd /d "%~dp0.."
 title ARIES AI - Local Chat Launcher
-
 echo.
 echo  ARIES AI - Local Chat Launcher
 echo  ==============================
 echo  Project folder: %CD%
 echo.
 
-REM Find a working Python 3 command. Some Windows installs provide "py" instead of "python".
-set "PYTHON_CMD=python"
-python --version >nul 2>&1
-if errorlevel 1 (
-    set "PYTHON_CMD=py -3"
-    py -3 --version >nul 2>&1
-    if errorlevel 1 goto NO_PYTHON
+where python >nul 2>&1
+if not errorlevel 1 (
+  set "PY=python"
+  goto PYTHON_FOUND
+)
+where py >nul 2>&1
+if not errorlevel 1 (
+  set "PY=py -3"
+  goto PYTHON_FOUND
+)
+echo ERROR: Python 3 was not found.
+echo Install Python from https://www.python.org/downloads/windows/
+echo Enable "Add Python to PATH" during installation if offered.
+pause
+exit /b 1
+
+:PYTHON_FOUND
+echo Python command: %PY%
+echo.
+echo Starting ARIES local API. Keep the API window open.
+start "ARIES Native API - KEEP OPEN" powershell.exe -NoExit -ExecutionPolicy Bypass -File "%CD%\software\run_windows.ps1"
+
+echo Starting local web server. Keep the web server window open.
+if "%PY%"=="python" (
+  start "ARIES Chat Web Server - KEEP OPEN" cmd.exe /k "python -m http.server 8080 --bind 127.0.0.1"
+) else (
+  start "ARIES Chat Web Server - KEEP OPEN" cmd.exe /k "py -3 -m http.server 8080 --bind 127.0.0.1"
 )
 
-echo Python found: %PYTHON_CMD%
 echo.
-echo Starting the ARIES native API in a separate window...
-start "ARIES Native API" powershell -NoExit -ExecutionPolicy Bypass -File "%CD%\software\run_windows.ps1"
-echo Starting the local chat page server...
-start "ARIES Chat Web Server" cmd /k "%PYTHON_CMD% -m http.server 8080 --bind 127.0.0.1"
-timeout /t 3 /nobreak >nul
+echo Waiting for local chat page...
+timeout /t 2 /nobreak >nul
 start "" "http://127.0.0.1:8080/aries-chat.html"
 echo.
-echo Browser: http://127.0.0.1:8080/aries-chat.html
-echo Keep both ARIES windows open while chatting.
-echo If either window shows an error, leave it open so you can read it.
+echo Chat page: http://127.0.0.1:8080/aries-chat.html
+echo API health check: http://127.0.0.1:8000/health
+echo IMPORTANT: Leave both ARIES windows open while chatting.
+echo If the API window says STARTUP FAILED, read the error shown there.
 echo.
 pause
 endlocal
-exit /b 0
-
-:NO_PYTHON
-echo ERROR: Python 3 was not found.
-echo.
-echo Install Python from https://www.python.org/downloads/windows/
-echo During installation, enable "Add Python to PATH" if that option appears.
-echo Then close this window and double-click START_ARIES_CHAT.bat again.
-echo.
-pause
-exit /b 1

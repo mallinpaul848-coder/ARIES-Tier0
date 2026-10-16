@@ -42,7 +42,7 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
    const configured=base();
    try { return await fetch(configured+path,options); }
    catch(localError) {
-     if(!/^https?:\\/\\/(127\\.0\\.0\\.1|localhost)(:\\d+)?$/i.test(configured)) throw localError;
+     if(!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(configured)) throw localError;
      $('hint').textContent='Local API is offline; trying the hosted ARIES API…';
      return await fetch(PUBLIC_API+path,options);
    }

@@ -154,3 +154,23 @@ The [ARIES Latency Engine Tests and Microbenchmark workflow](https://github.com/
 ## Latest validation and comparison report
 
 See [ARIES external validation and model comparison — 2026-10-14](benchmarks/ARIES_VALIDATION_COMPARISON_2026-10-14.md) for the latest passing GitHub Actions checks, measured cache/rule-engine timing, public endpoint diagnostic results, comparison to a current leading public model index, and the remaining official leaderboard publication steps.
+
+
+## Browser chat on Windows
+
+A simple browser chat page is available at [aries-chat.html](aries-chat.html). For the easiest launch, download/extract the repository ZIP, ensure Python is installed, then double-click `software/START_ARIES_CHAT.bat`. It starts the native API and a local web server, then opens the chat at `http://127.0.0.1:8080/aries-chat.html`. Keep both opened terminal windows running while chatting.
+
+If Windows blocks the launcher, open PowerShell in the repository folder and run:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\software\run_windows.ps1
+```
+
+Then in a second PowerShell window from the repository root run:
+
+```powershell
+python -m http.server 8080 --bind 127.0.0.1
+```
+
+Open `http://127.0.0.1:8080/aries-chat.html`. The page connects to `http://127.0.0.1:8000`. This UI uses the existing native character n-gram baseline; it does not turn that baseline into a modern LLM, and response quality may be limited. The browser chat is local to your PC and is not automatically published as a public website.

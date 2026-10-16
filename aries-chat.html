@@ -6,7 +6,7 @@
 <title>ARIES AI — Local Chat</title>
 <style>
 :root{color-scheme:dark;--bg:#080b12;--panel:#111723;--panel2:#0d131e;--line:#263347;--cyan:#42e8ff;--muted:#9aa9bd;--text:#edf6ff;--user:#123044;--assistant:#141d2a}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#12304a 0,transparent 55%),var(--bg);color:var(--text);font:15px/1.5 Segoe UI,system-ui,-apple-system,sans-serif;min-height:100vh}
+*{box-sizing:border-box}body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:radial-gradient(1px 1px at 7% 18%,#ffffffcc 99%,transparent 100%),radial-gradient(2px 2px at 19% 73%,#c9d7ffbb 99%,transparent 100%),radial-gradient(1px 1px at 33% 42%,#ffffffcc 99%,transparent 100%),radial-gradient(1px 1px at 47% 12%,#b6c8ffcc 99%,transparent 100%),radial-gradient(2px 2px at 63% 64%,#ffffffbb 99%,transparent 100%),radial-gradient(1px 1px at 78% 27%,#ffffffcc 99%,transparent 100%),radial-gradient(1px 1px at 91% 83%,#c7d6ffcc 99%,transparent 100%),radial-gradient(ellipse at 50% 48%,#7c3aed16 0,transparent 52%);background-size:100% 100%;opacity:.95}body{margin:0;background:radial-gradient(ellipse at 50% 8%,#39266f 0,transparent 44%),radial-gradient(ellipse at 82% 72%,#063b59 0,transparent 38%),radial-gradient(ellipse at 14% 68%,#281343 0,transparent 36%),var(--bg);color:var(--text);font:15px/1.5 Segoe UI,system-ui,-apple-system,sans-serif;min-height:100vh}
 .app{max-width:980px;height:100dvh;min-height:560px;margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border:1px solid var(--line);border-radius:18px;background:#0c121ddd;box-shadow:0 10px 40px #0003}
 .brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;border:1px solid #42e8ff77;background:#42e8ff12;color:var(--cyan);font-weight:800;letter-spacing:-2px;font-size:18px}.brand h1{font-size:17px;margin:0;letter-spacing:.12em}.sub{font-size:12px;color:var(--muted)}.status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);white-space:nowrap}.dot{width:8px;height:8px;border-radius:50%;background:#758297}.dot.ok{background:#50e3a4;box-shadow:0 0 12px #50e3a477}.dot.bad{background:#ff6e7a}
@@ -42,7 +42,6 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
    const configured=base();
    try { return await fetch(configured+path,options); }
    catch(localError) {
-     if(!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(configured)) throw localError;
      $('hint').textContent='Local API is offline; trying the hosted ARIES API…';
      return await fetch(PUBLIC_API+path,options);
    }

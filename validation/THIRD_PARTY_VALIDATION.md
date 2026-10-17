@@ -69,3 +69,16 @@ Open the [public workflow run](https://github.com/mallinpaul848-coder/ARIES-Tier
 ## Claim boundary
 
 This report records a successful automated integration test on a GitHub-hosted runner. It is **not** an independent certification, academic benchmark result, Open LLM Leaderboard submission, proof of general intelligence, or evidence of sub-nanosecond end-to-end inference. Any future independent review should be linked here without altering the raw results.
+
+
+## Standard benchmark run: HellaSwag
+
+A completed GitHub Actions workflow ran the full HellaSwag test split through EleutherAI's `lm-evaluation-harness` against the repository's small experimental Transformer checkpoint `published/aries-core-v1`:
+- Workflow: https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/39017873547
+- Evaluator job: checkpoint loading and full HellaSwag evaluation; completed successfully.
+- Reported examples/likelihood requests: 10,042 HellaSwag examples (40,168 choice likelihood requests).
+- Accuracy (`acc`): **25.67% ± 0.44 percentage points**.
+- Normalized accuracy (`acc_norm`): **25.74% ± 0.44 percentage points**.
+- Artifact: https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/39017873547/artifacts/12095249773
+
+This is a standardized benchmark executed by the project workflow using a third-party evaluation harness, but it is **not an independent third-party audit**: the workflow was initiated by the project repository. The score is close to the four-choice chance level of 25%, so it does not demonstrate strong HellaSwag commonsense performance. It is a result for the small Transformer checkpoint, not for the separately deployed n-gram API. The tested commit was `f16a1787c47d6e0221c5a35dea29f98171508a48`; it must not be attributed to later code without rerunning.

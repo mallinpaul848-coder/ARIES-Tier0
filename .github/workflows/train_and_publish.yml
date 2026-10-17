@@ -132,8 +132,7 @@ jobs:
             --output-dir artifacts/aries-core-v1 \
             --steps "$TRAINING_STEPS" \
             --target-training-tokens "$TARGET_TRAINING_TOKENS" \
-            --checkpoint-every-steps "$CHECKPOINT_EVERY_STEPS" \
-            $(if [ "$RESUME_FROM_CHECKPOINT" = "true" ]; then printf "%s" "--resume-from-checkpoint"; fi)
+            --checkpoint-every-steps "$CHECKPOINT_EVERY_STEPS" 
 
       - name: Publish validated model files to this public GitHub repository
         if: success()

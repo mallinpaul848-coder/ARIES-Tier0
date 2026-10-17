@@ -47,3 +47,28 @@ torus with major radius R greater than minor radius r.
 No sub-nanosecond performance is asserted. Use a monotonic high-resolution timer, repeated
 runs, disclosed hardware/runtime details, and end-to-end benchmarks to measure latency. The
 module is an additive research package and is not yet wired into the public API request path.
+
+
+## Chat integration
+
+The native chat gateway calls `aries_math/chat_router.py` after its existing deterministic
+fast path and before the character n-gram generator. Supported explicit prompts include:
+
+- `What is the digital root of 18?`
+- `Phase-8 vector 3,4`
+- `Vortex 369 of 12`
+- `Helixo features of 1,2,3,4`
+- `Analyze binary payload: ARIES` (analyzes UTF-8 text bytes, not executable machine code)
+- `PRISE score priority=0.8 risk=0.5 impact=0.9 systemic=0.6 emergent=0.4`
+- `SAT JSON: {"clauses":[[1,-2],[2]],"variable_count":2}`
+
+The chat response includes `aries_native.math_route` when one of these tools handles a request.
+Unmatched prompts continue to the existing model. This is deterministic tool routing, not a claim
+that the n-gram language model itself learned these operations. SAT is still exponential exhaustive
+search for small instances; these features do not establish a P vs NP result.
+
+Run tests with:
+
+```powershell
+python -m unittest tests.test_prise_chat_router tests.test_prise_unified_math -v
+```

@@ -87,7 +87,7 @@ Run the focused test suite from the repository root:
 python -m unittest tests.test_prise_unified_math -v
 ```
 
-Scientific scope: this is an additive research module, not yet connected to the public API request path. It does not prove P = NP or P != NP. The SAT baseline is exponential by design, and no sub-nanosecond latency claim is made. The sample signal routines are diagnostics, not a rigorous general Helmholtz-Hodge decomposition. See the module documentation for limitations.
+Scientific scope: the research module is connected to the native chat request path through explicit deterministic tool routing. It does not prove P = NP or P != NP. The SAT baseline is exponential by design, and no sub-nanosecond latency claim is made. The sample signal routines are diagnostics, not a rigorous general Helmholtz-Hodge decomposition. See the module documentation for limitations.
 
 
 ### Public PRISE mathematics endpoints

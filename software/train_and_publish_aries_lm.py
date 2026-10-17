@@ -18,7 +18,10 @@ from __future__ import annotations
 
 import os
 import sys
+import json
+import hashlib
 import argparse
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -32,7 +35,10 @@ def parse_args():
     p.add_argument("--layers", type=int, default=4)
     p.add_argument("--heads", type=int, default=4)
     p.add_argument("--hidden-size", type=int, default=256)
-    p.add_argument("--steps", type=int, default=1000)
+    p.add_argument("--steps", type=int, default=1000, help="Training steps for this run (additional steps when resuming)")
+    p.add_argument("--target-training-tokens", type=int, default=1_000_000_000_000, help="Long-term target; this value is a goal, not evidence of completed training")
+    p.add_argument("--checkpoint-every-steps", type=int, default=100, help="Save a resumable checkpoint every N optimizer steps")
+    p.add_argument("--resume-from-checkpoint", nargs="?", const="latest", default=None, help="Resume from a checkpoint path, or latest checkpoint under output-dir")
     p.add_argument("--batch-size", type=int, default=2)
     p.add_argument("--learning-rate", type=float, default=5e-4)
     p.add_argument("--seed", type=int, default=369)
@@ -61,8 +67,8 @@ def main():
     if args.hidden_size % args.heads:
         print("ERROR: --hidden-size must be divisible by --heads.", file=sys.stderr)
         return 2
-    if args.block_size < 32 or args.vocab_size < 256 or args.steps < 1:
-        print("ERROR: block-size >=32, vocab-size >=256, and steps >=1 are required.", file=sys.stderr)
+    if args.block_size < 32 or args.vocab_size < 256 or args.steps < 1 or args.target_training_tokens < 1 or args.checkpoint_every_steps < 1:
+        print("ERROR: block-size >=32, vocab-size >=256, steps >=1, target-training-tokens >=1, and checkpoint-every-steps >=1 are required.", file=sys.stderr)
         return 2
     token = os.getenv("HF_TOKEN")
     if not args.skip_upload and not token:
@@ -142,6 +148,56 @@ def main():
     model.generation_config.pad_token_id = tokenizer.pad_token_id
     model.generation_config.eos_token_id = tokenizer.eos_token_id
 
+    checkpoint_dir = out / "training-checkpoints"
+    manifest_path = out / "training_evidence.json"
+    corpus_sha256 = hashlib.sha256(corpus.read_bytes()).hexdigest()
+    prior_tokens = 0
+    if args.resume_from_checkpoint and manifest_path.exists():
+        prior_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if prior_manifest.get("corpus_sha256") != corpus_sha256:
+            print("ERROR: corpus SHA-256 differs from the previous run; refusing to combine evidence from different corpora.", file=sys.stderr)
+            return 2
+        prior_tokens = int(prior_manifest.get("training_tokens_processed", 0))
+
+    def write_evidence(tokens_processed, step, status):
+        evidence = {
+            "project": "ARIES-Tier0",
+            "status": status,
+            "target_training_tokens": args.target_training_tokens,
+            "training_tokens_processed": int(tokens_processed),
+            "target_met": int(tokens_processed) >= args.target_training_tokens,
+            "optimizer_step": int(step),
+            "run_steps_requested": args.steps,
+            "corpus_file_name": corpus.name,
+            "corpus_sha256": corpus_sha256,
+            "corpus_token_occurrences": len(ids),
+            "block_size": args.block_size,
+            "batch_size": args.batch_size,
+            "layers": args.layers,
+            "hidden_size": args.hidden_size,
+            "heads": args.heads,
+            "device": "cuda" if torch.cuda.is_available() else "cpu",
+            "started_or_updated_utc": datetime.now(timezone.utc).isoformat(),
+            "accounting_note": "Processed training tokens include repeated epochs/blocks; corpus token occurrences are not a count of unique tokens across the world. Target is not achieved unless measured processed count reaches it."
+        }
+        temp_path = manifest_path.with_suffix(".json.tmp")
+        temp_path.write_text(json.dumps(evidence, indent=2) + "\\n", encoding="utf-8")
+        temp_path.replace(manifest_path)
+
+    class EvidenceTrainer(Trainer):
+        def __init__(self, *trainer_args, initial_tokens=0, **trainer_kwargs):
+            super().__init__(*trainer_args, **trainer_kwargs)
+            self.training_tokens_processed = int(initial_tokens)
+            self._evidence_last_step = -1
+
+        def training_step(self, model, inputs, num_items_in_batch=None):
+            token_count = int(inputs["input_ids"].numel())
+            result = super().training_step(model, inputs, num_items_in_batch)
+            self.training_tokens_processed += token_count
+            step = int(self.state.global_step)
+            write_evidence(self.training_tokens_processed, step, "running")
+            return result
+
     train_args = TrainingArguments(
         output_dir=str(out / "training-checkpoints"),
         max_steps=args.steps,
@@ -150,16 +206,32 @@ def main():
         weight_decay=0.01,
         warmup_steps=min(50, max(0, args.steps // 10)),
         logging_steps=max(1, min(25, args.steps // 20)),
-        save_strategy="no",
+        save_strategy="steps",
+        save_steps=args.checkpoint_every_steps,
+        save_total_limit=3,
         report_to=[],
         seed=args.seed,
         data_seed=args.seed,
         fp16=bool(torch.cuda.is_available()),
         use_cpu=not torch.cuda.is_available(),
     )
-    trainer = Trainer(model=model, args=train_args, train_dataset=PackedDataset())
-    print(f"Training fresh GPT-2-style model on {len(blocks)} corpus blocks.", flush=True)
-    trainer.train()
+    trainer = EvidenceTrainer(model=model, args=train_args, train_dataset=PackedDataset(), initial_tokens=prior_tokens)
+    print(f"Training GPT-2-style model on {len(blocks)} corpus blocks; target={args.target_training_tokens:,} tokens; previously counted={prior_tokens:,}.", flush=True)
+    resume_checkpoint = None
+    if args.resume_from_checkpoint:
+        if args.resume_from_checkpoint == "latest":
+            from transformers.trainer_utils import get_last_checkpoint
+            resume_checkpoint = get_last_checkpoint(str(checkpoint_dir))
+            if not resume_checkpoint:
+                print("ERROR: --resume-from-checkpoint=latest was set, but no checkpoint exists.", file=sys.stderr)
+                return 2
+        else:
+            resume_checkpoint = args.resume_from_checkpoint
+    write_evidence(prior_tokens, int(trainer.state.global_step), "running")
+    trainer.train(resume_from_checkpoint=resume_checkpoint)
+    write_evidence(trainer.training_tokens_processed, int(trainer.state.global_step), "run_finished")
+    print(f"Training tokens processed (measured input IDs): {trainer.training_tokens_processed:,} / {args.target_training_tokens:,}", flush=True)
+    print(f"Training evidence manifest: {manifest_path.resolve()}", flush=True)
 
     # Save actual model tensors as model.safetensors plus HF config/tokenizer files.
     model.save_pretrained(out, safe_serialization=True)

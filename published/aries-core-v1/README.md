@@ -23,7 +23,7 @@ An experimental, small GPT-2-style causal language model trained from randomly i
 - Layers / hidden size / attention heads: 4 / 256 / 4
 - Context length: 256 tokens
 - Tokenizer vocabulary: 8000
-- Training steps: 1000
+- Training steps: 100000
 - Random seed: 369
 - Corpus file name: training_with_math_curriculum.txt (the corpus itself is not uploaded by this script)
 - Declared corpus provenance: Base corpus: data/training.txt (10,916,753 characters; verify its license and attribution). Supplement: 7 short ARIES-authored educational math notes. These notes are training examples, not proofs of Millennium Prize problems.

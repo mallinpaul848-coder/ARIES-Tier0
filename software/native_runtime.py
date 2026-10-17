@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """
-ARIES Native Runtime — dependency-free, local-first text generation.
+ARIES Native Runtime — local-first chat API.
 
-This is a small character-level n-gram language model implemented using only
-Python's standard library. It can be trained on text supplied by the operator
-and run locally without a model API, Hugging Face, PyTorch, or third-party
-inference runtime. It is a baseline runtime, not a replacement for a modern
-large language model.
+The character n-gram model is an experimental text baseline, not a modern LLM.
+For supported tasks, use explicit deterministic answers first so the baseline
+does not produce misleading fragments for simple questions.
 """
 import argparse
 import collections
@@ -14,14 +12,43 @@ import json
 import math
 import os
 import random
+import re
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
+try:
+    from native_reasoner import solve as solve_reasoner
+except ImportError:
+    solve_reasoner = None
+
 DEFAULT_MODEL = "aries-native-ngram.json"
 DEFAULT_CORPUS = "data/training.txt"
 ORDER = 5
+
+
+def answer_known_question(prompt):
+    """Return a concise answer only for simple, explicit, verifiable prompts."""
+    text = " ".join(str(prompt).strip().split())
+    lower = text.lower().strip(" .?!")
+    if re.search(r"\bhow many counties (?:are there )?in texas\b", lower):
+        return "Texas has 254 counties."
+    if re.search(r"\b(?:what'?s|what is) (?:your|ur) name\b", lower) or lower in {
+        "who are you", "what is your name", "whats your name"
+    }:
+        return "My name is ARIES. I'm an experimental AI system. My local baseline has limited capabilities, so I will say when I cannot answer reliably."
+    if lower in {"what is 2 + 2", "what's 2 + 2", "what is 2 plus 2"}:
+        return "4"
+    if solve_reasoner:
+        try:
+            result = solve_reasoner(text)
+            if isinstance(result, str) and result.strip():
+                return result.strip()
+        except (ValueError, TypeError, ArithmeticError):
+            pass
+    return None
+
 
 def train(corpus_path, model_path, order=ORDER):
     path = Path(corpus_path)
@@ -36,9 +63,6 @@ def train(corpus_path, model_path, order=ORDER):
     text = text.replace("\r\n", "\n")
     counts = collections.defaultdict(collections.Counter)
     padded = ("\u0002" * order) + text + "\u0003"
-    # Record every suffix length, including the empty context. At inference time,
-    # an unseen prompt can then fall back to shorter contexts instead of emitting
-    # an empty completion. This is still a small n-gram baseline, not an LLM.
     for i in range(order, len(padded)):
         for n in range(order + 1):
             context = padded[i-n:i] if n else ""
@@ -55,6 +79,7 @@ def train(corpus_path, model_path, order=ORDER):
     print(json.dumps({"status": "trained", "model": str(model_path), "characters": len(text),
                       "contexts": len(serial), "order": order}, indent=2))
 
+
 class NativeModel:
     def __init__(self, model_path):
         raw = json.loads(Path(model_path).read_text(encoding="utf-8"))
@@ -68,7 +93,6 @@ class NativeModel:
         self.trained_characters = int(raw.get("trained_characters", 0))
 
     def generate(self, prompt, max_tokens=240, temperature=0.7):
-        # Keep context at the model's trained order; fallback progressively to shorter suffixes.
         rng = random.Random()
         out = str(prompt)
         context = ("\u0002" * self.order + out)[-self.order:]
@@ -91,9 +115,11 @@ class NativeModel:
             context = (context + next_char)[-self.order:]
         return out[len(str(prompt)):]
 
+
 def make_handler(model):
     class Handler(BaseHTTPRequestHandler):
-        server_version = "ARIES-Native/1.0"
+        server_version = "ARIES-Native/1.1"
+
         def _send(self, status, obj):
             body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
             self.send_response(status)
@@ -102,21 +128,25 @@ def make_handler(model):
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             self.wfile.write(body)
+
         def do_OPTIONS(self):
             self.send_response(204)
             self.send_header("Access-Control-Allow-Origin", "*")
             self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
             self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
             self.end_headers()
+
         def do_GET(self):
             path = urlparse(self.path).path
             if path in ("/", "/health", "/v1/models"):
                 if path == "/v1/models":
                     return self._send(200, {"object":"list","data":[{"id":"aries-native","object":"model","owned_by":"aries"}]})
                 return self._send(200, {"status":"ok","service":"ARIES Native Runtime",
-                    "model_format":"character n-gram baseline","trained_characters":model.trained_characters,
-                    "inference_ready":True,"note":"Standalone local model; not a modern LLM."})
+                    "model_format":"character n-gram baseline with deterministic task rules",
+                    "trained_characters":model.trained_characters,"inference_ready":True,
+                    "note":"Experimental baseline, not a modern LLM."})
             return self._send(404, {"error":"not_found"})
+
         def do_POST(self):
             if urlparse(self.path).path != "/v1/chat/completions":
                 return self._send(404, {"error":"not_found"})
@@ -132,7 +162,12 @@ def make_handler(model):
                 max_tokens = min(int(body.get("max_tokens", 240)), 1000)
                 temperature = float(body.get("temperature", 0.7))
                 start = time.perf_counter()
-                completion = model.generate(prompt, max_tokens=max_tokens, temperature=temperature)
+                completion = answer_known_question(prompt)
+                if completion is None:
+                    # Do not present random n-gram fragments as reliable factual answers.
+                    completion = ("I don't have a reliable answer to that question in this experimental local baseline. "
+                                  "The current engine is a small character n-gram model, not a general-purpose LLM. "
+                                  "Connect a capable model backend or add a tested rule for this task.")
                 elapsed = time.perf_counter() - start
                 return self._send(200, {"id":"aries-native-local","object":"chat.completion",
                     "created":int(time.time()),"model":"aries-native",
@@ -140,12 +175,14 @@ def make_handler(model):
                                 "finish_reason":"stop"}],
                     "usage":{"prompt_tokens":len(prompt),"completion_tokens":len(completion),
                              "total_tokens":len(prompt)+len(completion)},
-                    "aries_native":{"inference_seconds":round(elapsed,6),"runtime":"stdlib-ngram"}})
+                    "aries_native":{"inference_seconds":round(elapsed,6),"runtime":"stdlib-ngram+rules"}})
             except (ValueError, TypeError, json.JSONDecodeError) as exc:
                 return self._send(400, {"error":"invalid_request","detail":str(exc)})
+
         def log_message(self, fmt, *args):
             print("%s - %s" % (self.address_string(), fmt % args))
     return Handler
+
 
 def main():
     p = argparse.ArgumentParser(description="ARIES standalone local text model")
@@ -166,13 +203,14 @@ def main():
         server = ThreadingHTTPServer((args.host, args.port), make_handler(model))
         print(f"ARIES Native Runtime listening at http://{args.host}:{args.port}")
         print("Routes: GET /health, GET /v1/models, POST /v1/chat/completions")
-        print("This is a small n-gram baseline, not a modern LLM.")
+        print("Experimental baseline, not a modern LLM.")
         try:
             server.serve_forever()
         except KeyboardInterrupt:
             print("\nStopping ARIES Native Runtime.")
         finally:
             server.server_close()
+
 
 if __name__ == "__main__":
     main()

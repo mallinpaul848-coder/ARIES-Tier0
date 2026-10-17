@@ -181,7 +181,7 @@ def main():
             "accounting_note": "Processed training tokens include repeated epochs/blocks; corpus token occurrences are not a count of unique tokens across the world. Target is not achieved unless measured processed count reaches it."
         }
         temp_path = manifest_path.with_suffix(".json.tmp")
-        temp_path.write_text(json.dumps(evidence, indent=2) + "\\n", encoding="utf-8")
+        temp_path.write_text(json.dumps(evidence, indent=2) + chr(10), encoding="utf-8")
         temp_path.replace(manifest_path)
 
     class EvidenceTrainer(Trainer):

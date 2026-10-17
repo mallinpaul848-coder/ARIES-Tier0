@@ -1,0 +1,90 @@
+name: ARIES Unified Runtime Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "software/aries_unified.py"
+      - "software/native_runtime.py"
+      - "software/native_reasoner.py"
+      - "software/run_windows.ps1"
+      - "software/START_ARIES_UNIFIED.bat"
+      - ".github/workflows/aries-unified-runtime.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-unified-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Compile ARIES runtime files
+        run: python -m py_compile software/aries_unified.py software/native_runtime.py software/native_reasoner.py
+      - name: Start unified API
+        shell: bash
+        run: |
+          set -euo pipefail
+          python software/aries_unified.py > unified-runtime.log 2>&1 &
+          echo $! > unified-runtime.pid
+          python - <<'PY'
+          import json, time, urllib.request
+          for _ in range(60):
+              try:
+                  with urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=2) as response:
+                      data = json.load(response)
+                  if data.get("status") == "ok" and data.get("version") == "9.0.0-unified":
+                      print(json.dumps(data, indent=2))
+                      break
+              except Exception:
+                  time.sleep(0.25)
+          else:
+              raise SystemExit("ARIES Unified Runtime did not become healthy")
+          PY
+      - name: Validate chat response
+        run: |
+          python - <<'PY'
+          import json, urllib.request
+          body = json.dumps({
+              "model": "aries-native",
+              "messages": [{"role": "user", "content": "What is 2 + 2?"}],
+              "max_tokens": 24
+          }).encode()
+          request = urllib.request.Request(
+              "http://127.0.0.1:8000/v1/chat/completions",
+              data=body,
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(request, timeout=5) as response:
+              result = json.load(response)
+          answer = result["choices"][0]["message"]["content"]
+          assert answer.strip() == "4", f"Unexpected ARIES response: {answer!r}"
+          assert result.get("aries", {}).get("version") == "9.0.0-unified"
+          print(json.dumps({"status": "pass", "answer": answer, "route": result["aries"]["route"]}, indent=2))
+          PY
+      - name: Run concurrent latency benchmark
+        run: python software/aries_unified.py --bench --requests 1000 --concurrency 100 --output reports/aries-unified-ci-report.json
+      - name: Stop API
+        if: always()
+        run: |
+          if [ -f unified-runtime.pid ]; then kill "$(cat unified-runtime.pid)" 2>/dev/null || true; fi
+      - name: Upload benchmark report and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-unified-runtime-validation
+          path: |
+            reports/aries-unified-ci-report.json
+            unified-runtime.log
+          if-no-files-found: warn
+          retention-days: 90

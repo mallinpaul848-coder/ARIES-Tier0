@@ -1,0 +1,47 @@
+name: ARIES Training Pipeline Checks
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "software/train_and_publish_aries_lm.py"
+      - "scripts/build_and_publish.py"
+      - "scripts/train_and_publish_enhanced.py"
+      - ".github/workflows/aries-training-code-check.yml"
+  pull_request:
+    paths:
+      - "software/train_and_publish_aries_lm.py"
+      - "scripts/build_and_publish.py"
+      - "scripts/train_and_publish_enhanced.py"
+      - ".github/workflows/aries-training-code-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syntax-and-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile training scripts
+        run: |
+          python -m py_compile \
+            software/train_and_publish_aries_lm.py \
+            scripts/build_and_publish.py \
+            scripts/train_and_publish_enhanced.py
+      - name: Verify command-line interfaces load
+        run: |
+          python software/train_and_publish_aries_lm.py --help > /tmp/aries-trainer-help.txt
+          python scripts/build_and_publish.py --help > /tmp/aries-build-help.txt
+          python scripts/train_and_publish_enhanced.py --help > /tmp/aries-enhanced-help.txt
+          grep -q -- "--target-training-tokens" /tmp/aries-trainer-help.txt
+          grep -q -- "--checkpoint-every-steps" /tmp/aries-trainer-help.txt
+          grep -q -- "--target-training-tokens" /tmp/aries-build-help.txt
+          grep -q -- "--target-training-tokens" /tmp/aries-enhanced-help.txt
+          echo "PASS: syntax and training CLI argument checks."

@@ -11,6 +11,7 @@ from native_reasoner import solve
 from latency_engine import FastPathEngine, LatencyMonitor
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aries_math.prise_unified import (ARIESExecutionEngine, PRISEProblem, exact_sat_bruteforce)
+from aries_math.chat_router import route_math_prompt
 
 MATH_ENGINE = ARIESExecutionEngine()
 
@@ -126,8 +127,14 @@ class Handler(BaseHTTPRequestHandler):
             temperature = max(0.05,min(float(body.get("temperature",0.7)),2.0))
             started_ns = time.perf_counter_ns()
             answer, fast_path_cache_hit, fast_path_elapsed_ns = FAST_PATH.solve_with_metadata(prompt)
+            math_route = None
             if answer is None:
-                answer = MODEL.generate(prompt, max_tokens=max_tokens, temperature=temperature)
+                math_result = route_math_prompt(prompt)
+                if math_result is not None:
+                    answer = math_result["answer"]
+                    math_route = math_result["route"]
+                else:
+                    answer = MODEL.generate(prompt, max_tokens=max_tokens, temperature=temperature)
             elapsed_ns = max(0, time.perf_counter_ns() - started_ns)
             LATENCY_MONITOR.record("chat_completion", elapsed_ns)
             if not answer.strip():
@@ -146,6 +153,7 @@ class Handler(BaseHTTPRequestHandler):
                     "fast_path_elapsed_ns":fast_path_elapsed_ns,
                     "fast_path_cache_hit":fast_path_cache_hit,
                     "model_type":"baseline_not_modern_llm",
+                    "math_route":math_route,
                     "latency_note":"Nanosecond-unit elapsed timing is not proof of sub-nanosecond execution."
                 }
             })

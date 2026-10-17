@@ -36,7 +36,7 @@ def route_math_prompt(prompt: str) -> dict[str, str] | None:
         return {
             "route": "digital_root_369",
             "answer": _json({"input": n, **ResearchDigitalRoot.triad(n),
-                             "is_3_6_9": DigitalRootSystem.validate_triad(n)}),
+                             "is_3_6_9": (n != 0 and abs(n) % 3 == 0)}),
         }
 
     # Phase-8 vector descriptor.

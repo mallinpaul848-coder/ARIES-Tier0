@@ -14,14 +14,24 @@ on:
         default: "data/training.txt"
         type: string
       training_steps:
-        description: "Optimizer-step limit for this run (CPU-only; quality is not guaranteed)"
+        description: "Optimizer-step budget for this run; use suitable compute and resume checkpoints across runs"
         required: true
         default: "1000"
         type: string
       target_training_tokens:
-        description: "Long-term processed-token target; not a claim of completed training"
+        description: "Fixed immediate target: 1 trillion measured processed training tokens; target is not completion evidence"
         required: true
         default: "1000000000000"
+        type: string
+      runner_label:
+        description: "GitHub runner label; use ubuntu-latest for hosted CPU or your configured self-hosted GPU runner label"
+        required: true
+        default: "ubuntu-latest"
+        type: string
+      resume_checkpoint:
+        description: "Optional path to a restored Transformers checkpoint; leave blank for a fresh run"
+        required: false
+        default: ""
         type: string
       checkpoint_every_steps:
         description: "Save a resumable checkpoint every N optimizer steps"
@@ -34,7 +44,7 @@ permissions:
 
 jobs:
   train-validate-publish:
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.inputs.runner_label || 'ubuntu-latest' }}
     timeout-minutes: 360
     steps:
       - name: Check out repository
@@ -118,6 +128,7 @@ jobs:
           TRAINING_STEPS: ${{ github.event.inputs.training_steps || '1000' }}
           TARGET_TRAINING_TOKENS: ${{ github.event.inputs.target_training_tokens || '1000000000000' }}
           CHECKPOINT_EVERY_STEPS: ${{ github.event.inputs.checkpoint_every_steps || '100' }}
+          RESUME_CHECKPOINT: ${{ github.event.inputs.resume_checkpoint || '' }}
           TRAINING_DATA_PROVENANCE: "Salesforce/wikitext wikitext-2-raw-v1 fallback; see dataset card and license. If a custom corpus path is supplied, uploader is responsible for its provenance and rights."
         run: |
           python scripts/train_and_publish_enhanced.py \
@@ -126,7 +137,8 @@ jobs:
             --output-dir artifacts/aries-core-v1 \
             --steps "$TRAINING_STEPS" \
             --target-training-tokens "$TARGET_TRAINING_TOKENS" \
-            --checkpoint-every-steps "$CHECKPOINT_EVERY_STEPS" 
+            --checkpoint-every-steps "$CHECKPOINT_EVERY_STEPS" \
+            ${RESUME_CHECKPOINT:+--resume-from-checkpoint "$RESUME_CHECKPOINT"}
 
       - name: Publish validated model files to this public GitHub repository
         if: success()
@@ -167,6 +179,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aries-model-training-publish-evidence
-          path: artifacts/aries-core-v1/
+          path: |
+            artifacts/aries-core-v1/
+            artifacts/aries-core-v1/training-checkpoints/
           if-no-files-found: ignore
           retention-days: 30

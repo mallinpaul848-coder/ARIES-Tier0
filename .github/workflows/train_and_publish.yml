@@ -28,8 +28,8 @@ on:
         required: true
         default: "ubuntu-latest"
         type: string
-      resume_checkpoint:
-        description: "Optional path to a restored Transformers checkpoint; leave blank for a fresh run"
+      resume_run_id:
+        description: "Optional prior successful training run ID whose checkpoint artifact should be restored"
         required: false
         default: ""
         type: string
@@ -120,6 +120,15 @@ jobs:
           python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.2,<2.7"
           python -m pip install "transformers>=4.45,<5" "tokenizers>=0.20" "huggingface_hub>=0.26" "safetensors>=0.4" "accelerate>=0.26"
 
+      - name: Restore checkpoint from a previous training run
+        if: ${{ github.event.inputs.resume_run_id != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: aries-model-training-publish-evidence
+          run-id: ${{ github.event.inputs.resume_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: artifacts/aries-core-v1
+
       - name: Train, export, validate locally, and publish when credentials exist
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -128,7 +137,7 @@ jobs:
           TRAINING_STEPS: ${{ github.event.inputs.training_steps || '1000' }}
           TARGET_TRAINING_TOKENS: ${{ github.event.inputs.target_training_tokens || '1000000000000' }}
           CHECKPOINT_EVERY_STEPS: ${{ github.event.inputs.checkpoint_every_steps || '100' }}
-          RESUME_CHECKPOINT: ${{ github.event.inputs.resume_checkpoint || '' }}
+          RESUME_CHECKPOINT: ${{ github.event.inputs.resume_run_id != '' && 'latest' || '' }}
           TRAINING_DATA_PROVENANCE: "Salesforce/wikitext wikitext-2-raw-v1 fallback; see dataset card and license. If a custom corpus path is supplied, uploader is responsible for its provenance and rights."
         run: |
           set -euo pipefail

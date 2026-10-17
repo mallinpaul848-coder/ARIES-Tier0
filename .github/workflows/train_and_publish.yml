@@ -28,11 +28,6 @@ on:
         required: true
         default: "100"
         type: string
-      resume_from_checkpoint:
-        description: "Resume from the latest saved checkpoint"
-        required: true
-        default: false
-        type: boolean
 
 permissions:
   contents: write
@@ -123,7 +118,6 @@ jobs:
           TRAINING_STEPS: ${{ github.event.inputs.training_steps || '1000' }}
           TARGET_TRAINING_TOKENS: ${{ github.event.inputs.target_training_tokens || '1000000000000' }}
           CHECKPOINT_EVERY_STEPS: ${{ github.event.inputs.checkpoint_every_steps || '100' }}
-          RESUME_FROM_CHECKPOINT: ${{ github.event.inputs.resume_from_checkpoint || 'false' }}
           TRAINING_DATA_PROVENANCE: "Salesforce/wikitext wikitext-2-raw-v1 fallback; see dataset card and license. If a custom corpus path is supplied, uploader is responsible for its provenance and rights."
         run: |
           python scripts/train_and_publish_enhanced.py \

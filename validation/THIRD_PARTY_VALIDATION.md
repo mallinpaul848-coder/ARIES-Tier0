@@ -32,6 +32,18 @@ The GitHub-hosted `ubuntu-latest` runner reported the following for the local lo
 
 These measurements are from one CI run and are sensitive to runner load and scheduling. The high P95/P99/max show that this run does **not** establish a sub-second latency guarantee under concurrency. The benchmark includes HTTP/client/server overhead; it is not a pure hardware instruction latency measurement.
 
+
+## Public deployment smoke test (separate from local CI)
+
+A separate GitHub-hosted workflow also passed against the deployed Render API on 2026-10-17:
+- Run: https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/39018955533
+- Public endpoint: `https://aries-tier0-api-6qjh.onrender.com`
+- Result: public native API returned non-empty responses; the 10-case authored diagnostic suite scored 10/10 exact matches.
+- Mean request latency: 102.796 ms; median: 102.838 ms; minimum: 94.245 ms; maximum: 110.448 ms.
+- Raw JSON artifact: https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/39018955533/artifacts/12095449796
+
+This is a real external HTTP smoke/diagnostic test from a GitHub-hosted runner against the deployed URL. The 10 prompts are authored in the project and overlap with explicit deterministic handlers, so it is **not an independent evaluation of general model capability**. It verifies endpoint behavior for this small case set only. The public deployment test ran on commit `31f937ca01430181375c046184cd13f5a1f2f1be`; verify the deployment revision separately before attributing the result to later code.
+
 ## What was actually tested
 
 - Python compilation for the unified runtime and existing ARIES runtime modules.

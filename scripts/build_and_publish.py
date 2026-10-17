@@ -21,6 +21,9 @@ def main() -> int:
     parser.add_argument("--repo-id", default=os.getenv("HF_TARGET_REPO", "PaulMallin/aries-core-v1"))
     parser.add_argument("--output-dir", default="artifacts/aries-core-v1")
     parser.add_argument("--steps", type=int, default=int(os.getenv("TRAINING_STEPS", "1000")))
+    parser.add_argument("--target-training-tokens", type=int, default=int(os.getenv("TARGET_TRAINING_TOKENS", "1000000000000")))
+    parser.add_argument("--checkpoint-every-steps", type=int, default=int(os.getenv("CHECKPOINT_EVERY_STEPS", "100")))
+    parser.add_argument("--resume-from-checkpoint", nargs="?", const="latest", default=None)
     parser.add_argument("--private", action="store_true")
     args = parser.parse_args()
 
@@ -28,6 +31,8 @@ def main() -> int:
         parser.error("--repo-id must be a valid namespace/name identifier")
     if args.steps < 1 or args.steps > 100000:
         parser.error("--steps must be between 1 and 100000")
+    if args.target_training_tokens < 1 or args.checkpoint_every_steps < 1:
+        parser.error("--target-training-tokens and --checkpoint-every-steps must be positive")
 
     corpus = Path(args.corpus)
     if not corpus.is_file():
@@ -45,9 +50,13 @@ def main() -> int:
         "--repo-id", args.repo_id,
         "--output-dir", args.output_dir,
         "--steps", str(args.steps),
+        "--target-training-tokens", str(args.target_training_tokens),
+        "--checkpoint-every-steps", str(args.checkpoint_every_steps),
         "--model-name", "ARIES Experimental Causal LM",
         "--license", "other",
     ]
+    if args.resume_from_checkpoint is not None:
+        cmd.extend(["--resume-from-checkpoint", args.resume_from_checkpoint])
     if args.private:
         cmd.append("--private")
     if not token:

@@ -1,9 +1,8 @@
-# ARIES self-contained local software bootstrap for Windows PowerShell
+# ARIES Unified Runtime launcher for Windows PowerShell
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
-# Support both common Windows Python entry points: "python" and "py -3".
 $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
 if ($pythonCommand) {
     & $pythonCommand.Source --version *> $null
@@ -21,7 +20,7 @@ if ($pythonCommand) {
     if (-not $pythonCommand) {
         Write-Host ""
         Write-Host "ERROR: Python 3 was not found. Install it from https://www.python.org/downloads/windows/" -ForegroundColor Red
-        Write-Host "If offered, select 'Add Python to PATH', then reopen this launcher."
+        Write-Host "Select 'Add Python to PATH' during installation, then reopen ARIES."
         Read-Host "Press Enter to close"
         exit 1
     }
@@ -38,36 +37,28 @@ function Invoke-AriesPython {
 }
 
 try {
-    New-Item -ItemType Directory -Force data, models, reports | Out-Null
-
-    if (-not (Test-Path ".\data\training.txt")) {
-@'
-ARIES is an experimental local-first language system.
-A reliable system measures actual outputs and reports uncertainty honestly.
-A freight dispatcher compares pickup location, destination, equipment, dates, deadhead miles, rate, and broker reliability.
-A safe dispatch process confirms cargo details, pickup instructions, delivery requirements, insurance, and payment terms.
-A benchmark records prompts, responses, latency, and scoring rules so results can be reproduced.
-'@ | Set-Content -Encoding utf8 ".\data\training.txt"
-        Write-Host "Created a tiny sample corpus. Replace it with legally obtained training text for real experiments."
+    Write-Host ""
+    Write-Host "ARIES AI - UNIFIED RUNTIME 9.0.0"
+    Write-Host "Python: $($script:AriesPython) $($script:AriesPythonPrefix -join ' ')"
+    Write-Host "Checking required packages..."
+    & $script:AriesPython @script:AriesPythonPrefix -c "import fastapi, uvicorn, httpx" *> $null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Installing ARIES dependencies from requirements.txt..."
+        Invoke-AriesPython -m pip install -r ".\requirements.txt"
     }
-
-    Write-Host "Python command: $($script:AriesPython) $($script:AriesPythonPrefix -join ' ')"
-    Write-Host "1/3 Preparing text corpus..."
-    Invoke-AriesPython ".\software\data_pipeline.py" --source ".\data\training.txt" --output ".\data\prepared.txt" --report ".\reports\corpus-prep.json"
-
-    Write-Host "2/3 Training local baseline..."
-    Invoke-AriesPython ".\software\native_runtime.py" train --corpus ".\data\prepared.txt" --model ".\models\aries-native-ngram.json"
-
-    Write-Host "3/3 Starting local inference API at http://127.0.0.1:8000"
-    Write-Host "Keep this window open while chatting. To stop the API, press Ctrl+C."
-    Invoke-AriesPython ".\software\native_runtime.py" serve --model ".\models\aries-native-ngram.json" --host "127.0.0.1" --port 8000
-    if ($LASTEXITCODE -ne 0) { throw "The ARIES API server stopped with exit code $LASTEXITCODE." }
+    Write-Host ""
+    Write-Host "Starting unified ARIES API at http://127.0.0.1:8000"
+    Write-Host "Health: http://127.0.0.1:8000/health"
+    Write-Host "Chat API: http://127.0.0.1:8000/v1/chat/completions"
+    Write-Host "Performance metrics: http://127.0.0.1:8000/performance"
+    Write-Host "Keep this window open. Press Ctrl+C to stop the API."
+    Invoke-AriesPython ".\software\aries_unified.py"
 } catch {
     Write-Host ""
-    Write-Host "ARIES STARTUP FAILED:" -ForegroundColor Red
+    Write-Host "ARIES UNIFIED STARTUP FAILED:" -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Red
     Write-Host ""
-    Write-Host "Read the error above. Check that Python 3 is installed and that port 8000 is not already in use."
+    Write-Host "Check that port 8000 is free and the dependencies installed correctly."
     Read-Host "Press Enter to close this window"
     exit 1
 }

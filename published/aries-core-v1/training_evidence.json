@@ -1,0 +1,20 @@
+{
+  "project": "ARIES-Tier0",
+  "status": "run_finished",
+  "target_training_tokens": 1000000000000,
+  "training_tokens_processed": 512000,
+  "target_met": false,
+  "optimizer_step": 1000,
+  "run_steps_requested": 1000,
+  "corpus_file_name": "training_with_math_curriculum.txt",
+  "corpus_sha256": "e525eb1d768a1dc2184d36230593fdc0fe72267c19b3de914b67299b6d83b1d2",
+  "corpus_token_occurrences": 2730145,
+  "block_size": 256,
+  "batch_size": 2,
+  "layers": 4,
+  "hidden_size": 256,
+  "heads": 4,
+  "device": "cpu",
+  "started_or_updated_utc": "2026-10-17T06:33:45.789230+00:00",
+  "accounting_note": "Processed training tokens include repeated epochs/blocks; corpus token occurrences are not a count of unique tokens across the world. Target is not achieved unless measured processed count reaches it."
+}

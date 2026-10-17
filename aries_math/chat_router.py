@@ -12,12 +12,10 @@ from typing import Any
 
 from .prise_unified import (
     ARIESExecutionEngine,
-    DigitalRootSystem,
-    HelixoSpiralGeometry,
     PRISEProblem,
     exact_sat_bruteforce,
 )
-from .prise_research_engine import phase8, vortex369, helixo_features
+from .prise_research_engine import DigitalRootSystem as ResearchDigitalRoot, phase8, vortex369, helixo_features
 
 _BINARY_ENGINE = ARIESExecutionEngine()
 
@@ -37,7 +35,7 @@ def route_math_prompt(prompt: str) -> dict[str, str] | None:
         n = int(match.group(1))
         return {
             "route": "digital_root_369",
-            "answer": _json({"input": n, **__import__("aries_math.prise_research_engine", fromlist=["DigitalRootSystem"]).DigitalRootSystem.triad(n),
+            "answer": _json({"input": n, **ResearchDigitalRoot.triad(n),
                              "is_3_6_9": DigitalRootSystem.validate_triad(n)}),
         }
 

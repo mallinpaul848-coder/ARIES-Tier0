@@ -1,0 +1,135 @@
+name: ARIES HTTP Inference Latency Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/aries-http-latency-validation.yml"
+      - "software/native_runtime.py"
+      - "software/data_pipeline.py"
+  workflow_dispatch:
+    inputs:
+      requests:
+        description: "Number of sequential chat requests (100–10000)"
+        required: false
+        default: "10000"
+
+permissions:
+  contents: read
+
+jobs:
+  measure-http-latency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build a small CI-only test model
+        run: |
+          mkdir -p data reports models
+          cat > data/latency-ci.txt <<'EOF'
+          ARIES is an experimental local-first language system.
+          A benchmark measures response latency, throughput, errors, and reproducible outputs.
+          Reliable dispatch compares pickup, destination, equipment, rate, deadhead distance, and broker reliability.
+          EOF
+          python software/data_pipeline.py --source data/latency-ci.txt --output data/latency-prepared.txt --report reports/corpus-prep.json
+          python software/native_runtime.py train --corpus data/latency-prepared.txt --model models/aries-latency-ci.json
+      - name: Start API and validate health
+        shell: bash
+        run: |
+          set -euo pipefail
+          python software/native_runtime.py serve --model models/aries-latency-ci.json --host 127.0.0.1 --port 8000 > reports/server.log 2>&1 &
+          echo $! > reports/server.pid
+          python - <<'PY'
+          import json, time, urllib.request
+          url = "http://127.0.0.1:8000/health"
+          for _ in range(60):
+              try:
+                  with urllib.request.urlopen(url, timeout=2) as r:
+                      health = json.load(r)
+                  if health.get("status") == "ok":
+                      print(json.dumps(health))
+                      break
+              except Exception:
+                  time.sleep(0.25)
+          else:
+              raise SystemExit("ARIES local API did not become healthy")
+          PY
+      - name: Run 10000-request HTTP latency test
+        env:
+          REQUEST_COUNT: ${{ github.event.inputs.requests || '10000' }}
+        run: |
+          python - <<'PY'
+          import json, os, statistics, time, urllib.request, urllib.error
+          count = max(100, min(10000, int(os.environ.get("REQUEST_COUNT", "10000"))))
+          url = "http://127.0.0.1:8000/v1/chat/completions"
+          payload = json.dumps({
+              "model": "aries-native",
+              "messages": [{"role": "user", "content": "What is ARIES?"}],
+              "max_tokens": 24
+          }).encode()
+          samples_ms = []
+          errors = []
+          status_counts = {}
+          wall_start = time.perf_counter()
+          for i in range(count):
+              req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"}, method="POST")
+              start = time.perf_counter()
+              try:
+                  with urllib.request.urlopen(req, timeout=10) as response:
+                      body = json.loads(response.read())
+                      elapsed = (time.perf_counter() - start) * 1000
+                      samples_ms.append(elapsed)
+                      status_counts[str(response.status)] = status_counts.get(str(response.status), 0) + 1
+                      if not body.get("choices") or not isinstance(body["choices"][0].get("message", {}).get("content"), str):
+                          errors.append({"request": i + 1, "error": "missing assistant response"})
+              except Exception as exc:
+                  errors.append({"request": i + 1, "error": str(exc)[:300]})
+          total_seconds = time.perf_counter() - wall_start
+          ordered = sorted(samples_ms)
+          def percentile(p):
+              if not ordered: return None
+              return round(ordered[min(len(ordered)-1, max(0, int((p/100)*len(ordered))))], 4)
+          report = {
+              "benchmark": "ARIES native HTTP chat inference latency",
+              "environment": "GitHub-hosted ubuntu-latest runner; local loopback API; CI-only small model",
+              "requests_requested": count,
+              "successful_http_responses": len(samples_ms),
+              "errors": len(errors),
+              "status_counts": status_counts,
+              "latency_ms": {
+                  "min": round(min(ordered), 4) if ordered else None,
+                  "mean": round(statistics.mean(ordered), 4) if ordered else None,
+                  "median": round(statistics.median(ordered), 4) if ordered else None,
+                  "p90": percentile(90),
+                  "p95": percentile(95),
+                  "p99": percentile(99),
+                  "max": round(max(ordered), 4) if ordered else None
+              },
+              "elapsed_seconds": round(total_seconds, 4),
+              "throughput_requests_per_second": round(len(samples_ms)/total_seconds, 2) if total_seconds else None,
+              "errors_sample": errors[:20],
+              "limitations": "This measures HTTP request latency for the repository's small CI-only native model on a GitHub runner. It is not a benchmark of a large trained LLM, Windows hardware, or the public Render endpoint."
+          }
+          os.makedirs("reports", exist_ok=True)
+          with open("reports/aries-http-latency.json", "w") as f:
+              json.dump(report, f, indent=2)
+          print(json.dumps(report, indent=2))
+          if len(samples_ms) == 0 or len(errors) > count * 0.01:
+              raise SystemExit("Latency validation failed: no successful requests or error rate exceeds 1%")
+          PY
+      - name: Stop local API
+        if: always()
+        run: |
+          if [ -f reports/server.pid ]; then kill "$(cat reports/server.pid)" 2>/dev/null || true; fi
+      - name: Upload latency report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-http-latency-report
+          path: reports/
+          retention-days: 90

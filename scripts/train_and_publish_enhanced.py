@@ -42,6 +42,9 @@ def main() -> int:
     parser.add_argument("--repo-id", default=os.getenv("HF_TARGET_REPO", "PaulMallin/aries-core-v1"))
     parser.add_argument("--output-dir", default="artifacts/aries-core-v1")
     parser.add_argument("--steps", type=int, default=int(os.getenv("TRAINING_STEPS", "1000")))
+    parser.add_argument("--target-training-tokens", type=int, default=int(os.getenv("TARGET_TRAINING_TOKENS", "1000000000000")))
+    parser.add_argument("--checkpoint-every-steps", type=int, default=int(os.getenv("CHECKPOINT_EVERY_STEPS", "100")))
+    parser.add_argument("--resume-from-checkpoint", nargs="?", const="latest", default=None)
     args = parser.parse_args()
 
     corpus = Path(args.corpus)
@@ -69,7 +72,11 @@ def main() -> int:
             "--repo-id", args.repo_id,
             "--output-dir", args.output_dir,
             "--steps", str(args.steps),
+            "--target-training-tokens", str(args.target_training_tokens),
+            "--checkpoint-every-steps", str(args.checkpoint_every_steps),
         ]
+        if args.resume_from_checkpoint is not None:
+            cmd.extend(["--resume-from-checkpoint", args.resume_from_checkpoint])
         print(f"ARIES enhanced pipeline: base characters={len(base):,}; math curriculum entries={len(MATH_CURRICULUM)}; steps={args.steps}", flush=True)
         return subprocess.run(cmd, env=env, check=False).returncode
 

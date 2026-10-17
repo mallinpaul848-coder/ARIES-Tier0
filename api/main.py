@@ -1,12 +1,15 @@
 # ARIES public gateway: real inference requires an explicitly configured upstream backend.
 import os
+import math
+import numbers
+import time
 from typing import Any
 
 import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="ARIES AI API", version="1.0.4")
+app = FastAPI(title="ARIES AI API", version="1.0.5")
 
 MODEL_ID = os.getenv("ARIES_MODEL_ID", "").strip()
 UPSTREAM_BASE_URL = os.getenv("ARIES_UPSTREAM_BASE_URL", "").strip().rstrip("/")
@@ -40,6 +43,127 @@ class ChatRequest(BaseModel):
     messages: list[Message] = Field(min_length=1, max_length=256)
     max_tokens: int = Field(default=256, ge=1, le=32768)
     temperature: float = Field(default=0.2, ge=0, le=2)
+
+
+class CalculationRequest(BaseModel):
+    """Request for bounded, deterministic ARIES math operations."""
+    operation: str = Field(min_length=1, max_length=64)
+    parameters: dict[str, Any] = Field(default_factory=dict)
+
+
+def _integer(value: Any, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, numbers.Integral):
+        raise ValueError(f"'{name}' must be an integer.")
+    return int(value)
+
+
+def _integer_list(value: Any, name: str, *, maximum: int = 10000) -> list[int]:
+    if not isinstance(value, list) or not value or len(value) > maximum:
+        raise ValueError(f"'{name}' must be a non-empty list of at most {maximum} integers.")
+    return [_integer(item, f"{name}[{index}]") for index, item in enumerate(value)]
+
+
+def _matrix(value: Any, name: str) -> list[list[int]]:
+    if not isinstance(value, list) or not value or len(value) > 128:
+        raise ValueError(f"'{name}' must be a non-empty matrix with at most 128 rows.")
+    rows = []
+    width = None
+    for row_index, row in enumerate(value):
+        if not isinstance(row, list) or not row or len(row) > 128:
+            raise ValueError(f"'{name}' rows must be non-empty lists with at most 128 columns.")
+        parsed = [_integer(item, f"{name}[{row_index}][{col}]") for col, item in enumerate(row)]
+        if width is None:
+            width = len(parsed)
+        elif len(parsed) != width:
+            raise ValueError(f"'{name}' must be rectangular.")
+        rows.append(parsed)
+    return rows
+
+
+def _is_prime(n: int) -> bool:
+    if n < 2:
+        return False
+    if n % 2 == 0:
+        return n == 2
+    divisor = 3
+    while divisor * divisor <= n:
+        if n % divisor == 0:
+            return False
+        divisor += 2
+    return True
+
+
+def execute_aries_operation(operation: str, parameters: dict[str, Any]) -> Any:
+    """Run allow-listed deterministic math; never evaluate arbitrary code."""
+    op = operation.strip().lower().replace("-", "_")
+    if op == "digital_root":
+        n = _integer(parameters.get("n"), "n")
+        return 0 if n == 0 else 1 + (abs(n) - 1) % 9
+    if op == "gcd":
+        values = _integer_list(parameters.get("values"), "values")
+        return math.gcd(*values)
+    if op == "lcm":
+        values = _integer_list(parameters.get("values"), "values")
+        return math.lcm(*values)
+    if op == "is_prime":
+        n = _integer(parameters.get("n"), "n")
+        return _is_prime(n)
+    if op == "dot_product":
+        left = _integer_list(parameters.get("left"), "left")
+        right = _integer_list(parameters.get("right"), "right")
+        if len(left) != len(right):
+            raise ValueError("'left' and 'right' must have equal lengths.")
+        return sum(a * b for a, b in zip(left, right))
+    if op == "matrix_multiply":
+        left = _matrix(parameters.get("left"), "left")
+        right = _matrix(parameters.get("right"), "right")
+        if len(left[0]) != len(right):
+            raise ValueError("The number of columns in 'left' must equal rows in 'right'.")
+        columns = list(zip(*right))
+        return [[sum(a * b for a, b in zip(row, col)) for col in columns] for row in left]
+    if op == "integer_mix":
+        # A reproducible 64-bit mixing function, useful for diagnostics, not cryptography.
+        n = _integer(parameters.get("n"), "n") & ((1 << 64) - 1)
+        n ^= n >> 12
+        n ^= (n << 25) & ((1 << 64) - 1)
+        n ^= n >> 27
+        return (n * 0x2545F4914F6CDD1D) & ((1 << 64) - 1)
+    raise ValueError(
+        "Unsupported operation. Choose: digital_root, gcd, lcm, is_prime, "
+        "dot_product, matrix_multiply, integer_mix."
+    )
+
+
+@app.get("/v8/execute/operations")
+def v8_operations() -> dict[str, Any]:
+    return {
+        "version": "8.0",
+        "mode": "deterministic_allowlisted_math",
+        "operations": [
+            "digital_root", "gcd", "lcm", "is_prime",
+            "dot_product", "matrix_multiply", "integer_mix"
+        ],
+        "note": "These are deterministic mathematical operations, not a mathematical proof generator or full AI inference.",
+    }
+
+
+@app.post("/v8/execute")
+def v8_execute(payload: CalculationRequest) -> dict[str, Any]:
+    started = time.perf_counter_ns()
+    try:
+        result = execute_aries_operation(payload.operation, payload.parameters)
+    except (ValueError, TypeError, OverflowError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    elapsed_ns = time.perf_counter_ns() - started
+    return {
+        "status": "success",
+        "engine": "ARIES deterministic math",
+        "version": "8.0",
+        "operation": payload.operation.strip().lower().replace("-", "_"),
+        "result": result,
+        "elapsed_ns": elapsed_ns,
+        "timing_scope": "server-side operation handler only; excludes network and model inference",
+    }
 
 
 @app.get("/")

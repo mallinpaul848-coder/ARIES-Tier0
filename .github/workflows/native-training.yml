@@ -1,0 +1,62 @@
+name: ARIES Native Baseline Training
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "software/native_runtime.py"
+      - "software/data_pipeline.py"
+      - "data/training.txt"
+      - ".github/workflows/native-training.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  train-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out ARIES
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Prepare training corpus
+        run: |
+          mkdir -p data models reports
+          if [ ! -f data/training.txt ]; then
+            printf '%s\n' 'ARIES is an experimental local-first language system.' 'A reliable system measures actual outputs and reports uncertainty honestly.' 'A freight dispatcher compares pickup location, destination, equipment, dates, deadhead miles, rate, and broker reliability.' 'A benchmark records prompts, responses, latency, and scoring rules so results can be reproduced.' > data/training.txt
+          fi
+          python software/data_pipeline.py --source data/training.txt --output data/prepared.txt --report reports/corpus-prep.json
+      - name: Train ARIES character n-gram baseline
+        run: python software/native_runtime.py train --corpus data/prepared.txt --model models/aries-native-ngram.json
+      - name: Verify trained model
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("models/aries-native-ngram.json")
+          model = json.loads(p.read_text(encoding="utf-8"))
+          assert model.get("format") == "aries-native-char-ngram-v1"
+          assert model.get("trained_characters", 0) >= 100
+          assert model.get("contexts")
+          print(json.dumps({
+              "status": "verified",
+              "model": str(p),
+              "trained_characters": model["trained_characters"],
+              "contexts": len(model["contexts"]),
+              "scope": "small character n-gram baseline; not quintillion-token training or a modern LLM"
+          }, indent=2))
+          PY
+      - name: Upload trained baseline and corpus report
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-native-baseline-training
+          path: |
+            models/aries-native-ngram.json
+            reports/corpus-prep.json
+          if-no-files-found: error
+          retention-days: 14

@@ -190,9 +190,10 @@ def main():
             self.training_tokens_processed = int(initial_tokens)
             self._evidence_last_step = -1
 
-        def training_step(self, model, inputs, num_items_in_batch=None):
+        def training_step(self, model, inputs, *args, **kwargs):
             token_count = int(inputs["input_ids"].numel())
-            result = super().training_step(model, inputs, num_items_in_batch)
+            # Forward the exact Trainer arguments for compatibility across supported Transformers 4.x versions.
+            result = super().training_step(model, inputs, *args, **kwargs)
             self.training_tokens_processed += token_count
             step = int(self.state.global_step)
             write_evidence(self.training_tokens_processed, step, "running")

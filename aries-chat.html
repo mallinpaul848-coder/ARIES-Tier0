@@ -28,7 +28,7 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
  <div class="brand"><div class="logo">AR</div><div><h1>ARIES <span style="color:#d8b4fe">AI</span></h1><div class="sub">PURPLE CRAB NEBULA</div></div></div>
  <div class="status" role="status" aria-live="polite"><span id="dot" class="dot"></span><span id="statusText">Checking API…</span></div>
 </header>
-<div class="toolbar"><input id="endpoint" class="endpoint" aria-label="API base URL" value="http://127.0.0.1:8000" spellcheck="false"><button id="check" class="btn" type="button">Check connection</button><button id="clear" class="btn" type="button">Clear chat</button></div>
+<div class="toolbar"><input id="endpoint" class="endpoint" aria-label="API base URL" value="https://aries-tier0-api-6qjh.onrender.com" spellcheck="false"><button id="check" class="btn" type="button">Check connection</button><button id="clear" class="btn" type="button">Clear chat</button></div>
 <main id="chat" aria-live="polite">
  <section id="welcome" class="welcome"><div class="orb" aria-hidden="true">✳</div><h2>Patience, my student.</h2><p>The mind, like code, is strengthened by clarity and precision. Ask your question and let us work through it together. Messages are sent to the configured ARIES API.</p><div class="suggestions"><button class="suggestion" type="button">What is 17 × 19?</button><button class="suggestion" type="button">What can ARIES do?</button><button class="suggestion" type="button">Explain how a benchmark works.</button></div></section>
 </main>
@@ -41,13 +41,13 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
  const chat=$('chat'),prompt=$('prompt');
  const conversation=[];
  const PUBLIC_API='https://aries-tier0-api-6qjh.onrender.com';
- const GREETING='Patience, my student. The mind, like code, must be forged with clarity and precision. Ask your question, and let us solve it.';
+ const GREETING='Welcome to ARIES AI. Ask a question to get started.';
  function base(){return $('endpoint').value.trim().replace(/\/+$/,'');}
  function status(ok,msg){$('dot').className='dot '+(ok?'ok':'bad');$('statusText').textContent=msg;}
  function addMessage(role,text,withVoice){
    $('welcome').classList.add('hidden');
    const row=document.createElement('div');row.className='message '+role;
-   const avatar=document.createElement('div');avatar.className='avatar';avatar.textContent=role==='user'?'YOU':'MS';
+   const avatar=document.createElement('div');avatar.className='avatar';avatar.textContent=role==='user'?'YOU':'AI';
    const bubble=document.createElement('div');bubble.className='bubble';
    const who=document.createElement('div');who.className='who';who.textContent=role==='user'?'You':'ARIES AI';
    const body=document.createElement('div');body.className='message-text';body.textContent=text;

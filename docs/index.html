@@ -1,33 +1,143 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#080d18"><meta name="description" content="ARIES AI — inference diagnostics, benchmark evidence, and logistics operations workspace.">
-<title>ARIES AI | Tier 0 Operations</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#100326">
+<title>ARIES AI</title>
 <style>
-:root{color-scheme:dark;--bg:#080d18;--panel:#101a2b;--line:#243650;--text:#edf4ff;--muted:#9eb0c9;--cyan:#67e8f9;--green:#7ee0ad;--amber:#ffd27a}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% -10%,#173653 0,transparent 38%),var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}a{color:var(--cyan)}.wrap{max-width:1180px;margin:auto;padding:28px 22px 56px}.top{display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:1px solid var(--line);padding-bottom:22px}.brand{display:flex;align-items:center;gap:13px}.mark{display:grid;place-items:center;width:46px;height:46px;border:1px solid var(--cyan);border-radius:14px;color:var(--cyan);font-weight:900;font-size:19px;box-shadow:0 0 28px #67e8f91c}.eyebrow{font-size:11px;letter-spacing:.2em;color:var(--cyan);text-transform:uppercase}.brand h1{font-size:22px;letter-spacing:.07em;margin:0}.top small,.muted{color:var(--muted)}.hero{padding:42px 0 28px;max-width:790px}.hero h2{font-size:clamp(32px,5vw,54px);line-height:1.08;letter-spacing:-.04em;margin:10px 0 15px}.hero p{font-size:17px;color:var(--muted);max-width:680px}.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 15px;border-radius:10px;border:1px solid var(--line);text-decoration:none;color:var(--text);background:#111d30;cursor:pointer;font:inherit}.btn.primary{background:var(--cyan);color:#04121b;border-color:var(--cyan);font-weight:750}.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:15px}.card{grid-column:span 4;background:linear-gradient(145deg,#121f33,#0c1423);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}.card.wide{grid-column:span 8}.card.full{grid-column:1/-1}.card h3{margin:0 0 7px;font-size:17px}.card p{margin:7px 0;color:var(--muted)}.status{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:5px 9px}.dot{width:7px;height:7px;border-radius:50%;background:#8191a8}.dot.good{background:var(--green);box-shadow:0 0 10px #7ee0ad77}.dot.bad{background:#ff8888}.metric{font-size:27px;font-weight:750;letter-spacing:-.03em;margin:12px 0 0}.metric small{font-size:13px;color:var(--muted);font-weight:500}.list{display:grid;gap:11px;margin-top:15px}.item{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #203048;padding:9px 0}.item:last-child{border:0}.item span:last-child{color:var(--muted);text-align:right}.notice{border-left:3px solid var(--amber);padding:10px 13px;background:#ffd27a0d;color:#d9e2f0;border-radius:0 8px 8px 0;margin-top:14px;font-size:13px}footer{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.pill{font-size:11px;border:1px solid var(--line);padding:3px 7px;border-radius:6px;color:var(--cyan)}button:disabled{opacity:.55}@media(max-width:820px){.card,.card.wide{grid-column:span 6}}@media(max-width:560px){.wrap{padding:18px 14px 40px}.top{align-items:flex-start}.card,.card.wide{grid-column:1/-1}.hero{padding-top:30px}}
-</style></head>
-<body><main class="wrap">
-<header class="top"><div class="brand"><div class="mark">A0</div><div><div class="eyebrow">Tier 0 • Operations</div><h1>ARIES AI</h1></div></div><div style="text-align:right"><div class="status"><span class="dot" id="overallDot"></span><span id="overallStatus">Checking service…</span></div><div><small>Public operations console</small></div></div></header>
-<section class="hero"><div class="eyebrow">Independent AI platform</div><h2>Measure what runs.<br>Prove what works.</h2><p>One workspace for ARIES service diagnostics, measured performance evidence, and the next stage of logistics operations. Results shown here are live checks where the browser can reach the backend—not assumed benchmark claims.</p><div class="actions"><button class="btn primary" id="refreshBtn">Refresh diagnostics</button><a class="btn" href="https://github.com/mallinpaul848-coder/ARIES-Tier0">Source repository ↗</a><a class="btn" href="https://aries-tier0-api-6qjh.onrender.com/docs">API documentation ↗</a></div></section>
-<section class="grid">
-<article class="card"><div class="eyebrow">01 / API</div><h3>Backend connectivity</h3><div class="status"><span class="dot" id="apiDot"></span><span id="apiStatus">Not checked</span></div><div class="metric" id="apiLatency">— <small>ms</small></div><p id="apiDetail">Checking health endpoint…</p><div class="actions"><a class="btn" href="https://aries-tier0-api-6qjh.onrender.com/health">Open health endpoint ↗</a></div></article>
-<article class="card"><div class="eyebrow">02 / Model</div><h3>Inference readiness</h3><div class="status"><span class="dot" id="modelDot"></span><span id="modelStatus">Not verified</span></div><div class="metric" id="modelCount">— <small>model IDs</small></div><p id="modelDetail">Checking the model listing endpoint. Listing a model does not by itself prove inference quality.</p><div class="actions"><a class="btn" href="https://aries-tier0-api-6qjh.onrender.com/v1/models">View model listing ↗</a></div></article>
-<article class="card"><div class="eyebrow">03 / Evidence</div><h3>Benchmark integrity</h3><div class="status"><span class="dot good"></span><span>Evidence-first reporting</span></div><div class="metric">Min · P50 · P99</div><p>Cycle microbenchmarks and HTTP inference timings are different measurements. Do not treat a tiny operation as model latency.</p><div class="actions"><a class="btn" href="https://github.com/mallinpaul848-coder/ARIES-Tier0/tree/main/benchmarks">Benchmark files ↗</a><a class="btn" href="https://github.com/mallinpaul848-coder/ARIES-Tier0/actions">CI runs ↗</a></div></article>
-<article class="card wide"><div class="eyebrow">04 / Logistics workspace</div><h3>Dispatch operations — foundation</h3><p>Workspace entry points for the truck and air-freight workflow. Live load feeds, booking authority, and revenue data must be connected and authorized before they can be represented as operational.</p><div class="list"><div class="item"><span>Load intake &amp; matching</span><span class="pill">Integration required</span></div><div class="item"><span>Truck / air-freight dispatch records</span><span class="pill">Foundation</span></div><div class="item"><span>Rate, deadhead &amp; margin calculations</span><span class="pill">Ready to implement</span></div><div class="item"><span>Broker communication &amp; booking</span><span class="pill">Approval / credentials required</span></div><div class="item"><span>Revenue &amp; payment reconciliation</span><span class="pill">Data connection required</span></div></div></article>
-<article class="card"><div class="eyebrow">05 / System status</div><h3>Latest browser checks</h3><div class="list"><div class="item"><span>Health endpoint</span><span id="healthCode">Pending</span></div><div class="item"><span>Model listing</span><span id="modelsCode">Pending</span></div><div class="item"><span>Last checked</span><span id="checkedAt">—</span></div></div><div class="notice">Browser cross-origin rules may block status reads even when an endpoint is reachable. Use the endpoint links to verify directly.</div></article>
-<article class="card full"><div class="eyebrow">Validation policy</div><h3>No fabricated scores</h3><p>This dashboard does not claim that ARIES has achieved sub-nanosecond inference, passed an independent leaderboard, or completed live dispatch bookings. The benchmark report must include raw measurements, hardware/software details, repeatability, and a clearly defined workload. Public model validation must verify non-empty responses and functional correctness—not merely HTTP 200.</p></article>
-</section><footer><span>ARIES AI • Tier 0 Operations Console</span><span>Static website • API diagnostics are best-effort browser checks</span></footer>
+:root{color-scheme:dark;--bg:#05010a;--panel:rgba(18,5,38,.88);--panel2:rgba(5,1,10,.72);--line:rgba(157,78,221,.38);--accent:#a855f7;--accent2:#7e22ce;--text:#f3e8ff;--muted:#b6a4d2;--user:rgba(126,34,206,.24);--assistant:rgba(30,10,60,.82)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 18% 34%,rgba(168,85,247,.42),transparent 34%),radial-gradient(ellipse at 78% 24%,rgba(88,28,135,.5),transparent 32%),radial-gradient(ellipse at 55% 82%,rgba(76,29,149,.32),transparent 38%),linear-gradient(135deg,#03020a 0%,#100326 42%,#21083a 68%,#05010a 100%);background-attachment:fixed;color:var(--text);font:15px/1.55 "Segoe UI",Tahoma,Geneva,Verdana,sans-serif}
+body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(white 1px,transparent 0),radial-gradient(#d8b4fe 1px,transparent 0),radial-gradient(#fff 1px,transparent 0);background-size:60px 60px,97px 97px,137px 137px;background-position:0 0,24px 41px,70px 18px;opacity:.22}body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.45) 100%);}
+.app{position:relative;z-index:1;width:min(960px,100%);height:100dvh;min-height:500px;margin:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:0 0 38px #80008033;backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}.logo{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:13px;border:1px solid #a855f777;background:#a855f71a;color:#e9d5ff;font-size:17px;font-weight:900;letter-spacing:-1px}.brand h1{margin:0;font-size:16px;letter-spacing:.1em}.sub{font-size:11px;color:var(--muted);letter-spacing:.1em}.status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);white-space:nowrap}.dot{width:8px;height:8px;border-radius:50%;background:#8f82a4}.dot.ok{background:#50e3a4;box-shadow:0 0 12px #50e3a477}.dot.bad{background:#ff718d}
+.toolbar{display:flex;gap:8px;align-items:center}.endpoint{flex:1;min-width:0;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:12px ui-monospace,Consolas,monospace}.btn{border:1px solid var(--line);border-radius:10px;padding:10px 13px;background:#2a1240;color:var(--text);cursor:pointer;font-weight:600}.btn:hover,.listen-btn:hover{border-color:#d8b4fe;background:#552080}.btn:disabled{opacity:.52;cursor:wait}
+main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#0d061be3,#08030ef5);padding:20px;scroll-behavior:smooth;backdrop-filter:blur(8px)}
+.welcome{max-width:570px;margin:8vh auto;text-align:center}.orb{width:66px;height:66px;margin:0 auto 16px;border:1px solid #a855f777;border-radius:22px;display:grid;place-items:center;color:#e9d5ff;font-size:26px;background:radial-gradient(circle,#a855f733,transparent);box-shadow:0 0 32px #8000802d}.welcome h2{font-size:23px;margin:0 0 8px;color:#e9d5ff}.welcome p{color:var(--muted);margin:0 auto 20px;max-width:450px}.suggestions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.suggestion{background:#1d0e2d;color:#e9d5ff;border:1px solid var(--line);border-radius:999px;padding:9px 12px;cursor:pointer}.suggestion:hover{background:#35134e}
+.message{display:flex;margin:0 0 18px;gap:10px;align-items:flex-start}.avatar{flex:0 0 32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:10px;font-weight:900;color:#e9d5ff;background:#a855f71a;border:1px solid #a855f766}.message.user .avatar{color:#fff;background:#54217b;border-color:#a855f7}.bubble{max-width:min(760px,calc(100% - 42px));min-width:0;padding:11px 14px;border:1px solid var(--line);border-radius:4px 14px 14px 14px;background:var(--assistant);white-space:pre-wrap;overflow-wrap:anywhere}.message.user .bubble{background:var(--user);border-color:#a855f766;border-radius:14px 4px 14px 14px}.who{font-size:11px;color:#c4addd;margin-bottom:4px}.message.user .who{text-align:right}.message.user{flex-direction:row-reverse}.listen-btn{margin-top:9px;background:#421761;border:1px solid #a855f7;color:#f3e8ff;padding:5px 10px;border-radius:7px;font-size:11px;cursor:pointer}.listen-btn[aria-pressed="true"]{background:#6b21a8}
+.composer{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:10px;box-shadow:0 0 25px #8000801c}.compose-row{display:flex;align-items:flex-end;gap:10px}.prompt{resize:none;flex:1;min-height:46px;max-height:150px;padding:12px;border:1px solid #7e22ce66;border-radius:10px;outline:0;background:#140528;color:var(--text);font:15px/1.5 "Segoe UI",sans-serif}.prompt:focus,.endpoint:focus{border-color:#c084fc;outline:2px solid #a855f722}.prompt::placeholder{color:#a78bfa}.send{min-width:94px;background:linear-gradient(135deg,#7e22ce,#581c87);color:#fff;border-color:#a855f766}.voice-btn{min-width:46px;padding:10px;background:#241039;border:1px solid #a855f7;color:#f3e8ff;border-radius:10px;cursor:pointer;font-size:18px}.voice-btn[aria-pressed="true"]{background:#7e22ce;box-shadow:0 0 16px #a855f766}.voice-btn:disabled{opacity:.5;cursor:not-allowed}.send:hover{background:linear-gradient(135deg,#9333ea,#6b21a8)}.foot{display:flex;justify-content:space-between;gap:10px;padding:7px 3px 0;color:#b6a4d2;font-size:11px}.hidden{display:none!important}.notice{color:#f4c779}
+@media(max-width:600px){.app{padding:8px;gap:8px;min-height:480px}.brand h1{font-size:13px}.sub{font-size:9px}.status{font-size:10px}header{padding:10px}.toolbar{flex-wrap:wrap}.endpoint{flex-basis:100%}main{padding:12px}.welcome{margin:6vh auto}.welcome h2{font-size:20px}.foot{font-size:10px;flex-direction:column;gap:2px}.send{min-width:68px;padding:10px}.bubble{max-width:calc(100% - 42px)}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+ <div class="brand"><div class="logo">AR</div><div><h1>ARIES <span style="color:#d8b4fe">AI</span></h1><div class="sub">PURPLE CRAB NEBULA</div></div></div>
+ <div class="status" role="status" aria-live="polite"><span id="dot" class="dot"></span><span id="statusText">Checking API…</span></div>
+</header>
+<div class="toolbar"><input id="endpoint" class="endpoint" aria-label="API base URL" value="https://aries-tier0-api-6qjh.onrender.com" spellcheck="false"><button id="check" class="btn" type="button">Check connection</button><button id="clear" class="btn" type="button">Clear chat</button></div>
+<main id="chat" aria-live="polite">
+ <section id="welcome" class="welcome"><div class="orb" aria-hidden="true">✳</div><h2>Patience, my student.</h2><p>The mind, like code, is strengthened by clarity and precision. Ask your question and let us work through it together. Messages are sent to the configured ARIES API.</p><div class="suggestions"><button class="suggestion" type="button">What is 17 × 19?</button><button class="suggestion" type="button">What can ARIES do?</button><button class="suggestion" type="button">Explain how a benchmark works.</button></div></section>
 </main>
+<section class="composer"><div class="compose-row"><textarea id="prompt" class="prompt" rows="1" placeholder="Message ARIES AI…" aria-label="Message ARIES"></textarea><button id="voiceInput" class="voice-btn" type="button" aria-label="Start voice input" title="Speak to ARIES" aria-pressed="false">🎙</button><button id="send" class="btn send" type="button">Transmit ↗</button></div><div class="foot"><span id="hint">Ready to chat.</span><span>Enter to send · Shift+Enter for a new line</span></div></section>
+</div>
 <script>
-const API='https://aries-tier0-api-6qjh.onrender.com';
-function setDot(id,state){const e=document.getElementById(id);e.className='dot'+(state===true?' good':state===false?' bad':'')}
-async function check(path){const start=performance.now();try{const r=await fetch(API+path,{headers:{Accept:'application/json'},cache:'no-store'});const elapsed=performance.now()-start;let body=null;try{body=await r.json()}catch{}return {ok:r.ok,status:r.status,ms:elapsed,body}}catch(e){return {ok:false,error:String(e),ms:performance.now()-start}}}
-async function refresh(){const b=document.getElementById('refreshBtn');b.disabled=true;b.textContent='Checking…';document.getElementById('overallStatus').textContent='Checking endpoints…';setDot('overallDot',null);
-const [health,models]=await Promise.all([check('/health'),check('/v1/models')]);
-setDot('apiDot',health.ok);document.getElementById('apiStatus').textContent=health.ok?'Reachable':'Unverified / unreachable';document.getElementById('apiLatency').innerHTML=health.ok?health.ms.toFixed(1)+' <small>ms</small>':'— <small>ms</small>';document.getElementById('apiDetail').textContent=health.ok?'Health endpoint returned HTTP '+health.status+'. This is not an inference test.':(health.error||'HTTP '+health.status+'; check endpoint directly or verify CORS.');document.getElementById('healthCode').textContent=health.status?'HTTP '+health.status:(health.error?'Browser blocked':'No response');
-setDot('modelDot',models.ok);document.getElementById('modelStatus').textContent=models.ok?'Listing endpoint reachable':'Could not verify';const ids=models.body&&Array.isArray(models.body.data)?models.body.data.map(x=>x.id).filter(Boolean):[];document.getElementById('modelCount').innerHTML=(models.ok?ids.length:'—')+' <small>model IDs</small>';document.getElementById('modelDetail').textContent=models.ok?(ids.length?'Listed: '+ids.join(', '):'Endpoint responded but no standard data[].id model IDs were found.'):(models.error||'HTTP '+models.status+'; open the model listing directly.');document.getElementById('modelsCode').textContent=models.status?'HTTP '+models.status:(models.error?'Browser blocked':'No response');document.getElementById('checkedAt').textContent=new Date().toLocaleTimeString();
-const all=health.ok&&models.ok;setDot('overallDot',all);document.getElementById('overallStatus').textContent=all?'Endpoints reachable':'Partial / needs verification';b.disabled=false;b.textContent='Refresh diagnostics'}
-document.getElementById('refreshBtn').addEventListener('click',refresh);refresh();
-</script></body></html>
+(function(){
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const chat=$('chat'),prompt=$('prompt');
+ let recognition=null, listening=false;
+ const voiceButton=$('voiceInput');
+ const conversation=[];
+ const PUBLIC_API='https://aries-tier0-api-6qjh.onrender.com';
+ const GREETING='Welcome to ARIES AI. Ask a question to get started.';
+ function base(){return $('endpoint').value.trim().replace(/\/+$/,'');}
+ function status(ok,msg){$('dot').className='dot '+(ok?'ok':'bad');$('statusText').textContent=msg;}
+ function addMessage(role,text,withVoice){
+   $('welcome').classList.add('hidden');
+   const row=document.createElement('div');row.className='message '+role;
+   const avatar=document.createElement('div');avatar.className='avatar';avatar.textContent=role==='user'?'YOU':'AI';
+   const bubble=document.createElement('div');bubble.className='bubble';
+   const who=document.createElement('div');who.className='who';who.textContent=role==='user'?'You':'ARIES AI';
+   const body=document.createElement('div');body.className='message-text';body.textContent=text;
+   bubble.append(who,body);
+   if(role!=='user'&&withVoice){
+     const speak=document.createElement('button');speak.type='button';speak.className='listen-btn';speak.textContent='🔊 Listen';speak.setAttribute('aria-label','Listen to ARIES response');
+     speak.addEventListener('click',()=>speakText(body.textContent));
+     bubble.append(document.createElement('br'),speak);
+   }
+   row.append(avatar,bubble);chat.append(row);chat.scrollTop=chat.scrollHeight;
+   return body;
+ }
+ function speakText(text){
+   if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){
+     $('hint').textContent='Speech playback is not supported by this browser.';return;
+   }
+   window.speechSynthesis.cancel();
+   const utterance=new SpeechSynthesisUtterance(String(text||''));
+   utterance.pitch=.62;utterance.rate=.82;utterance.volume=1;
+   const voices=window.speechSynthesis.getVoices();
+   const preferred=voices.find(v=>/Microsoft David|Google UK English Male/i.test(v.name))||voices.find(v=>/^en(-|_)/i.test(v.lang));
+   if(preferred)utterance.voice=preferred;
+   window.speechSynthesis.speak(utterance);
+ }
+ async function apiFetch(path,options){
+   const configured=base();
+   try{return await fetch(configured+path,options);}
+   catch(localError){
+     if(!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(configured))throw localError;
+     $('hint').textContent='Connecting to ARIES…';
+     return await fetch(PUBLIC_API+path,options);
+   }
+ }
+ async function check(){
+   $('check').disabled=true;status(false,'Checking API…');$('hint').textContent='Checking '+base();
+   try{
+     const response=await apiFetch('/health',{method:'GET'});
+     if(!response.ok)throw new Error('Health check returned HTTP '+response.status);
+     status(true,'API reachable');$('hint').textContent='API connected. Ready when you are.';
+   }catch(error){
+     status(false,'API unavailable');$('hint').textContent='ARIES is offline. Start the ARIES app and try again.';
+   }finally{$('check').disabled=false;}
+ }
+ async function send(text){
+   text=String(text===undefined?prompt.value:text).trim();if(!text||$('send').disabled)return;
+   prompt.value='';prompt.style.height='auto';
+   conversation.push({role:'user',content:text});addMessage('user',text,false);
+   $('send').disabled=true;$('check').disabled=true;
+   const answer=addMessage('assistant','ARIES is preparing a response…',false);
+   try{
+     const response=await apiFetch('/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'aries-native-ngram',messages:conversation,max_tokens:220,temperature:.2})});
+     let data;try{data=await response.json();}catch(_){throw new Error('The API returned a non-JSON response (HTTP '+response.status+').');}
+     if(!response.ok)throw new Error((data.error&&data.error.message)||data.detail||'HTTP '+response.status);
+     const result=data&&data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+     if(typeof result!=='string'||!result.trim())throw new Error('The API returned an empty answer.');
+     answer.textContent=result.trim();
+     conversation.push({role:'assistant',content:result.trim()});
+     const bubble=answer.parentElement;
+     const listen=document.createElement('button');listen.type='button';listen.className='listen-btn';listen.textContent='🔊 Listen';
+     listen.addEventListener('click',()=>speakText(answer.textContent));
+     bubble.append(document.createElement('br'),listen);
+     status(true,'API connected');$('hint').textContent='Response received. Select Listen to hear it.';
+   }catch(error){
+     answer.textContent='I could not get a response from ARIES. '+(error&&error.message?error.message:String(error))+'\n\nLocal endpoint: '+base()+'\nHosted fallback: '+PUBLIC_API;
+     status(false,'Request failed');$('hint').textContent='Could not get a response. Check the connection and try again.';
+     if(conversation.length&&conversation[conversation.length-1].role==='user')conversation.pop();
+   }finally{$('send').disabled=false;$('check').disabled=false;prompt.focus();chat.scrollTop=chat.scrollHeight;}
+ }
+ $('check').addEventListener('click',check);
+ $('clear').addEventListener('click',()=>{if('speechSynthesis'in window)window.speechSynthesis.cancel();conversation.length=0;chat.querySelectorAll('.message').forEach(node=>node.remove());$('welcome').classList.remove('hidden');$('hint').textContent='Ready for a new conversation.';prompt.focus();});
+ $('send').addEventListener('click',()=>send());
+ function setupVoiceInput(){
+   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+   if(!SpeechRecognition){voiceButton.disabled=true;voiceButton.title='Voice input is not supported in this browser. Try Microsoft Edge or Chrome.';voiceButton.setAttribute('aria-label','Voice input unavailable');return;}
+   recognition=new SpeechRecognition();recognition.lang='en-US';recognition.interimResults=true;recognition.continuous=false;
+   recognition.onstart=()=>{listening=true;voiceButton.setAttribute('aria-pressed','true');voiceButton.textContent='⏺';$('hint').textContent='Listening… speak your question.';};
+   recognition.onresult=event=>{let finalText='';let interim='';for(let i=event.resultIndex;i<event.results.length;i++){const piece=event.results[i][0].transcript;if(event.results[i].isFinal)finalText+=piece;else interim+=piece;}if(finalText.trim())prompt.value=finalText.trim();else if(interim)prompt.placeholder=interim;};
+   recognition.onerror=event=>{$('hint').textContent=event.error==='not-allowed'?'Allow microphone access in your browser to use voice input.':'Voice input issue: '+event.error+'. You can still type your message.';};
+   recognition.onend=()=>{listening=false;voiceButton.setAttribute('aria-pressed','false');voiceButton.textContent='🎙';prompt.placeholder='Message ARIES AI…';if(prompt.value.trim())$('hint').textContent='Voice captured. Press Transmit to send it.';};
+   voiceButton.addEventListener('click',()=>{if(!recognition)return;if(listening){recognition.stop();return;}try{recognition.start();}catch(_){$('hint').textContent='Voice input is already starting. Try again in a moment.';}});
+ }
+ setupVoiceInput();
+ prompt.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}});
+ prompt.addEventListener('input',()=>{prompt.style.height='auto';prompt.style.height=Math.min(prompt.scrollHeight,150)+'px';});
+ document.querySelectorAll('.suggestion').forEach(button=>button.addEventListener('click',()=>send(button.textContent)));
+ if('speechSynthesis'in window)window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+ check();
+})();
+</script>
+</body>
+</html>

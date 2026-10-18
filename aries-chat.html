@@ -28,7 +28,7 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
  <div class="brand"><div class="logo">AR</div><div><h1>ARIES <span style="color:#d8b4fe">AI</span></h1><div class="sub">PURPLE CRAB NEBULA</div></div></div>
  <div class="status" role="status" aria-live="polite"><span id="dot" class="dot"></span><span id="statusText">Checking API…</span></div>
 </header>
-<div class="toolbar"><input id="endpoint" class="endpoint" aria-label="API base URL" value="https://aries-tier0-api-6qjh.onrender.com" spellcheck="false"><button id="check" class="btn" type="button">Check connection</button><button id="clear" class="btn" type="button">Clear chat</button></div>
+<div class="toolbar"><input id="endpoint" class="endpoint" aria-label="API base URL" value="https://aries-tier0-api-6qjh.onrender.com" spellcheck="false"><button id="voiceReplies" class="btn" type="button" aria-pressed="true" title="Toggle spoken ARIES replies">🔊 Voice replies: On</button><button id="check" class="btn" type="button">Check connection</button><button id="clear" class="btn" type="button">Clear chat</button></div>
 <main id="chat" aria-live="polite">
  <section id="welcome" class="welcome"><div class="orb" aria-hidden="true">✳</div><h2>Patience, my student.</h2><p>The mind, like code, is strengthened by clarity and precision. Ask your question and let us work through it together. Messages are sent to the configured ARIES API.</p><div class="suggestions"><button class="suggestion" type="button">What is 17 × 19?</button><button class="suggestion" type="button">What can ARIES do?</button><button class="suggestion" type="button">Explain how a benchmark works.</button></div></section>
 </main>
@@ -39,7 +39,7 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
  'use strict';
  const $=id=>document.getElementById(id);
  const chat=$('chat'),prompt=$('prompt');
- let recognition=null, listening=false;
+ let recognition=null, listening=false, voiceReplies=true;
  const voiceButton=$('voiceInput');
  const conversation=[];
  const PUBLIC_API='https://aries-tier0-api-6qjh.onrender.com';
@@ -111,14 +111,14 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
      const listen=document.createElement('button');listen.type='button';listen.className='listen-btn';listen.textContent='🔊 Listen';
      listen.addEventListener('click',()=>speakText(answer.textContent));
      bubble.append(document.createElement('br'),listen);
-     status(true,'API connected');$('hint').textContent='Response received. Select Listen to hear it.';
+     status(true,'API connected');$('hint').textContent=voiceReplies?'Response received. Speaking ARIES reply…':'Response received. Select Listen to hear it.';if(voiceReplies)speakText(result.trim());
    }catch(error){
      answer.textContent='I could not get a response from ARIES. '+(error&&error.message?error.message:String(error))+'\n\nLocal endpoint: '+base()+'\nHosted fallback: '+PUBLIC_API;
      status(false,'Request failed');$('hint').textContent='Could not get a response. Check the connection and try again.';
      if(conversation.length&&conversation[conversation.length-1].role==='user')conversation.pop();
    }finally{$('send').disabled=false;$('check').disabled=false;prompt.focus();chat.scrollTop=chat.scrollHeight;}
  }
- $('check').addEventListener('click',check);
+ $('check').addEventListener('click',check);\n  $('voiceReplies').addEventListener('click',()=>{voiceReplies=!voiceReplies;$('voiceReplies').textContent=voiceReplies?'🔊 Voice replies: On':'🔇 Voice replies: Off';$('voiceReplies').setAttribute('aria-pressed',String(voiceReplies));if(!voiceReplies&&'speechSynthesis'in window)window.speechSynthesis.cancel();$('hint').textContent=voiceReplies?'Spoken replies enabled.':'Spoken replies disabled.';});
  $('clear').addEventListener('click',()=>{if('speechSynthesis'in window)window.speechSynthesis.cancel();conversation.length=0;chat.querySelectorAll('.message').forEach(node=>node.remove());$('welcome').classList.remove('hidden');$('hint').textContent='Ready for a new conversation.';prompt.focus();});
  $('send').addEventListener('click',()=>send());
  function setupVoiceInput(){

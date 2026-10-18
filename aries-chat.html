@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#100326">
-<title>ARIES AI // Master Splinter Intelligence Interface</title>
+<title>ARIES AI — Master Splinter</title>
 <style>
 :root{color-scheme:dark;--bg:#05010a;--panel:rgba(18,5,38,.88);--panel2:rgba(5,1,10,.72);--line:rgba(157,78,221,.38);--accent:#a855f7;--accent2:#7e22ce;--text:#f3e8ff;--muted:#b6a4d2;--user:rgba(126,34,206,.24);--assistant:rgba(30,10,60,.82)}
 *{box-sizing:border-box}
@@ -25,14 +25,14 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
 <body>
 <div class="app">
 <header>
- <div class="brand"><div class="logo">AR</div><div><h1>ARIES <span style="color:#d8b4fe">AI</span></h1><div class="sub">MASTER SPLINTER · REASONING INTERFACE</div></div></div>
+ <div class="brand"><div class="logo">AR</div><div><h1>ARIES <span style="color:#d8b4fe">AI</span></h1><div class="sub">MASTER SPLINTER · PURPLE CRAB NEBULA</div></div></div>
  <div class="status" role="status" aria-live="polite"><span id="dot" class="dot"></span><span id="statusText">Checking API…</span></div>
 </header>
 <div class="toolbar"><input id="endpoint" class="endpoint" aria-label="API base URL" value="http://127.0.0.1:8000" spellcheck="false"><button id="check" class="btn" type="button">Check connection</button><button id="clear" class="btn" type="button">Clear chat</button></div>
 <main id="chat" aria-live="polite">
  <section id="welcome" class="welcome"><div class="orb" aria-hidden="true">✳</div><h2>Patience, my student.</h2><p>The mind, like code, is strengthened by clarity and precision. Ask your question and let us work through it together. Messages are sent to the configured ARIES API.</p><div class="suggestions"><button class="suggestion" type="button">What is 17 × 19?</button><button class="suggestion" type="button">What can ARIES do?</button><button class="suggestion" type="button">Explain how a benchmark works.</button></div></section>
 </main>
-<section class="composer"><div class="compose-row"><textarea id="prompt" class="prompt" rows="1" placeholder="Ask Master Splinter…" aria-label="Message ARIES"></textarea><button id="send" class="btn send" type="button">Transmit ↗</button></div><div class="foot"><span id="hint">Connect to your local ARIES API, or use the hosted fallback.</span><span>Enter to send · Shift+Enter for a new line</span></div></section>
+<section class="composer"><div class="compose-row"><textarea id="prompt" class="prompt" rows="1" placeholder="Ask Master Splinter…" aria-label="Message ARIES"></textarea><button id="send" class="btn send" type="button">Transmit ↗</button></div><div class="foot"><span id="hint">Ask Master Splinter anything.</span><span>Enter to send · Shift+Enter for a new line</span></div></section>
 </div>
 <script>
 (function(){
@@ -77,7 +77,7 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
    try{return await fetch(configured+path,options);}
    catch(localError){
      if(!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(configured))throw localError;
-     $('hint').textContent='Local API unreachable; trying the hosted ARIES endpoint…';
+     $('hint').textContent='Connecting to ARIES…';
      return await fetch(PUBLIC_API+path,options);
    }
  }
@@ -86,9 +86,9 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
    try{
      const response=await apiFetch('/health',{method:'GET'});
      if(!response.ok)throw new Error('Health check returned HTTP '+response.status);
-     status(true,'API reachable');$('hint').textContent='API is reachable. Ready to chat with ARIES.';
+     status(true,'API reachable');$('hint').textContent='API connected. Ready when you are.';
    }catch(error){
-     status(false,'API unavailable');$('hint').textContent='Could not reach the local or hosted API. Start the ARIES launcher and retry. '+(error&&error.message?error.message:'');
+     status(false,'API unavailable');$('hint').textContent='ARIES is offline. Start the ARIES app and try again.';
    }finally{$('check').disabled=false;}
  }
  async function send(text){
@@ -109,15 +109,15 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
      const listen=document.createElement('button');listen.type='button';listen.className='listen-btn';listen.textContent='🔊 Listen';
      listen.addEventListener('click',()=>speakText(answer.textContent));
      bubble.append(document.createElement('br'),listen);
-     status(true,'API connected');$('hint').textContent='Response received from the configured ARIES API. Voice playback is available with Listen.';
+     status(true,'API connected');$('hint').textContent='Response received. Select Listen to hear it.';
    }catch(error){
      answer.textContent='I could not get a response from ARIES. '+(error&&error.message?error.message:String(error))+'\\n\\nLocal endpoint: '+base()+'\\nHosted fallback: '+PUBLIC_API;
-     status(false,'Request failed');$('hint').textContent='Check the API connection, then retry. The message was not answered by the model.';
+     status(false,'Request failed');$('hint').textContent='Could not get a response. Check the connection and try again.';
      if(conversation.length&&conversation[conversation.length-1].role==='user')conversation.pop();
    }finally{$('send').disabled=false;$('check').disabled=false;prompt.focus();chat.scrollTop=chat.scrollHeight;}
  }
  $('check').addEventListener('click',check);
- $('clear').addEventListener('click',()=>{if('speechSynthesis'in window)window.speechSynthesis.cancel();conversation.length=0;chat.querySelectorAll('.message').forEach(node=>node.remove());$('welcome').classList.remove('hidden');$('hint').textContent='Chat cleared. The API connection setting was kept.';prompt.focus();});
+ $('clear').addEventListener('click',()=>{if('speechSynthesis'in window)window.speechSynthesis.cancel();conversation.length=0;chat.querySelectorAll('.message').forEach(node=>node.remove());$('welcome').classList.remove('hidden');$('hint').textContent='Ready for a new conversation.';prompt.focus();});
  $('send').addEventListener('click',()=>send());
  prompt.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}});
  prompt.addEventListener('input',()=>{prompt.style.height='auto';prompt.style.height=Math.min(prompt.scrollHeight,150)+'px';});

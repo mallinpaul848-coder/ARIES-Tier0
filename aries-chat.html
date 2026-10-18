@@ -3,68 +3,126 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ARIES AI — Local Chat</title>
+<meta name="theme-color" content="#100326">
+<title>ARIES AI // Master Splinter Intelligence Interface</title>
 <style>
-:root{color-scheme:dark;--bg:#080b12;--panel:#111723;--panel2:#0d131e;--line:#263347;--cyan:#42e8ff;--muted:#9aa9bd;--text:#edf6ff;--user:#123044;--assistant:#141d2a}
-*{box-sizing:border-box}body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(1px 1px at 7% 18%,#ffffffcc 99%,transparent 100%),radial-gradient(2px 2px at 19% 73%,#c9d7ffbb 99%,transparent 100%),radial-gradient(1px 1px at 33% 42%,#ffffffcc 99%,transparent 100%),radial-gradient(1px 1px at 47% 12%,#b6c8ffcc 99%,transparent 100%),radial-gradient(2px 2px at 63% 64%,#ffffffbb 99%,transparent 100%),radial-gradient(1px 1px at 78% 27%,#ffffffcc 99%,transparent 100%),radial-gradient(1px 1px at 91% 83%,#c7d6ffcc 99%,transparent 100%),radial-gradient(ellipse at 50% 48%,#7c3aed16 0,transparent 52%);background-size:100% 100%;opacity:.95}body{margin:0;background:radial-gradient(ellipse at 50% 8%,#39266f 0,transparent 44%),radial-gradient(ellipse at 82% 72%,#063b59 0,transparent 38%),radial-gradient(ellipse at 14% 68%,#281343 0,transparent 36%),var(--bg);color:var(--text);font:15px/1.5 Segoe UI,system-ui,-apple-system,sans-serif;min-height:100vh}
-.app{position:relative;z-index:1;max-width:980px;height:100dvh;min-height:560px;margin:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border:1px solid var(--line);border-radius:18px;background:#0c121ddd;box-shadow:0 10px 40px #0003}
-.brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;border:1px solid #42e8ff77;background:#42e8ff12;color:var(--cyan);font-weight:800;letter-spacing:-2px;font-size:18px}.brand h1{font-size:17px;margin:0;letter-spacing:.12em}.sub{font-size:12px;color:var(--muted)}.status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);white-space:nowrap}.dot{width:8px;height:8px;border-radius:50%;background:#758297}.dot.ok{background:#50e3a4;box-shadow:0 0 12px #50e3a477}.dot.bad{background:#ff6e7a}
-.toolbar{display:flex;gap:8px;align-items:center;padding:0 2px}.endpoint{flex:1;min-width:0;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:12px ui-monospace,Consolas,monospace}.btn{border:1px solid var(--line);border-radius:10px;padding:10px 13px;background:#172233;color:var(--text);cursor:pointer;font-weight:600}.btn:hover{border-color:#42e8ff99}.btn:disabled{opacity:.5;cursor:wait}
-main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#0d131edb,#0a0f18f2);padding:22px;scroll-behavior:smooth}
-.welcome{max-width:570px;margin:10vh auto;text-align:center}.orb{width:66px;height:66px;margin:0 auto 16px;border:1px solid #42e8ff70;border-radius:22px;display:grid;place-items:center;color:var(--cyan);font-size:25px;background:radial-gradient(circle,#42e8ff20,transparent)}.welcome h2{font-size:24px;margin:0 0 8px}.welcome p{color:var(--muted);margin:0 auto 20px;max-width:450px}.suggestions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.suggestion{background:#111d2a;color:#cfe7f7;border:1px solid var(--line);border-radius:999px;padding:9px 12px;cursor:pointer}
-.message{display:flex;margin:0 0 18px;gap:10px;align-items:flex-start}.avatar{flex:0 0 32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--cyan);background:#42e8ff13;border:1px solid #42e8ff44}.message.user .avatar{color:#c8e6ff;background:#19374b;border-color:#2a5871}.bubble{max-width:min(760px,calc(100% - 42px));padding:11px 14px;border:1px solid var(--line);border-radius:4px 14px 14px 14px;background:var(--assistant);white-space:pre-wrap;overflow-wrap:anywhere}.message.user .bubble{background:var(--user);border-color:#24516b;border-radius:14px 4px 14px 14px}.who{font-size:11px;color:var(--muted);margin-bottom:4px}.message.user{flex-direction:row-reverse}.message.user .who{text-align:right}
-.composer{border:1px solid var(--line);background:#0e1520;border-radius:18px;padding:10px}.compose-row{display:flex;align-items:flex-end;gap:10px}.prompt{resize:none;flex:1;min-height:46px;max-height:150px;padding:12px;border:0;outline:0;background:transparent;color:var(--text);font:15px/1.5 inherit}.send{min-width:84px;background:var(--cyan);color:#071018;border:0}.foot{display:flex;justify-content:space-between;gap:10px;padding:4px 4px 0;color:#8393a8;font-size:11px}.notice{color:#f4c779}.hidden{display:none!important}
-@media(max-width:600px){.app{padding:9px;gap:9px;min-height:500px}.brand h1{font-size:14px}.status{font-size:11px}header{padding:10px}.toolbar{flex-wrap:wrap}.endpoint{flex-basis:100%}main{padding:14px}.welcome{margin:7vh auto}.welcome h2{font-size:21px}.foot{font-size:10px}.send{min-width:64px}}
+:root{color-scheme:dark;--bg:#05010a;--panel:rgba(18,5,38,.88);--panel2:rgba(5,1,10,.72);--line:rgba(157,78,221,.38);--accent:#a855f7;--accent2:#7e22ce;--text:#f3e8ff;--muted:#b6a4d2;--user:rgba(126,34,206,.24);--assistant:rgba(30,10,60,.82)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 20%,#2b0c4f 0,#100326 48%,#05010a 100%);color:var(--text);font:15px/1.55 "Segoe UI",Tahoma,Geneva,Verdana,sans-serif}
+body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(white 1px,transparent 0),radial-gradient(#d8b4fe 1px,transparent 0),radial-gradient(#fff 1px,transparent 0);background-size:60px 60px,97px 97px,137px 137px;background-position:0 0,24px 41px,70px 18px;opacity:.17}
+.app{position:relative;z-index:1;width:min(960px,100%);height:100dvh;min-height:500px;margin:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:0 0 38px #80008033;backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}.logo{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:13px;border:1px solid #a855f777;background:#a855f71a;color:#e9d5ff;font-size:17px;font-weight:900;letter-spacing:-1px}.brand h1{margin:0;font-size:16px;letter-spacing:.1em}.sub{font-size:11px;color:var(--muted);letter-spacing:.1em}.status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);white-space:nowrap}.dot{width:8px;height:8px;border-radius:50%;background:#8f82a4}.dot.ok{background:#50e3a4;box-shadow:0 0 12px #50e3a477}.dot.bad{background:#ff718d}
+.toolbar{display:flex;gap:8px;align-items:center}.endpoint{flex:1;min-width:0;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:12px ui-monospace,Consolas,monospace}.btn{border:1px solid var(--line);border-radius:10px;padding:10px 13px;background:#2a1240;color:var(--text);cursor:pointer;font-weight:600}.btn:hover,.listen-btn:hover{border-color:#d8b4fe;background:#552080}.btn:disabled{opacity:.52;cursor:wait}
+main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#0d061be3,#08030ef5);padding:20px;scroll-behavior:smooth;backdrop-filter:blur(8px)}
+.welcome{max-width:570px;margin:8vh auto;text-align:center}.orb{width:66px;height:66px;margin:0 auto 16px;border:1px solid #a855f777;border-radius:22px;display:grid;place-items:center;color:#e9d5ff;font-size:26px;background:radial-gradient(circle,#a855f733,transparent);box-shadow:0 0 32px #8000802d}.welcome h2{font-size:23px;margin:0 0 8px;color:#e9d5ff}.welcome p{color:var(--muted);margin:0 auto 20px;max-width:450px}.suggestions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.suggestion{background:#1d0e2d;color:#e9d5ff;border:1px solid var(--line);border-radius:999px;padding:9px 12px;cursor:pointer}.suggestion:hover{background:#35134e}
+.message{display:flex;margin:0 0 18px;gap:10px;align-items:flex-start}.avatar{flex:0 0 32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:10px;font-weight:900;color:#e9d5ff;background:#a855f71a;border:1px solid #a855f766}.message.user .avatar{color:#fff;background:#54217b;border-color:#a855f7}.bubble{max-width:min(760px,calc(100% - 42px));min-width:0;padding:11px 14px;border:1px solid var(--line);border-radius:4px 14px 14px 14px;background:var(--assistant);white-space:pre-wrap;overflow-wrap:anywhere}.message.user .bubble{background:var(--user);border-color:#a855f766;border-radius:14px 4px 14px 14px}.who{font-size:11px;color:#c4addd;margin-bottom:4px}.message.user .who{text-align:right}.message.user{flex-direction:row-reverse}.listen-btn{margin-top:9px;background:#421761;border:1px solid #a855f7;color:#f3e8ff;padding:5px 10px;border-radius:7px;font-size:11px;cursor:pointer}.listen-btn[aria-pressed="true"]{background:#6b21a8}
+.composer{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:10px;box-shadow:0 0 25px #8000801c}.compose-row{display:flex;align-items:flex-end;gap:10px}.prompt{resize:none;flex:1;min-height:46px;max-height:150px;padding:12px;border:1px solid #7e22ce66;border-radius:10px;outline:0;background:#140528;color:var(--text);font:15px/1.5 "Segoe UI",sans-serif}.prompt:focus,.endpoint:focus{border-color:#c084fc;outline:2px solid #a855f722}.prompt::placeholder{color:#a78bfa}.send{min-width:94px;background:linear-gradient(135deg,#7e22ce,#581c87);color:#fff;border-color:#a855f766}.send:hover{background:linear-gradient(135deg,#9333ea,#6b21a8)}.foot{display:flex;justify-content:space-between;gap:10px;padding:7px 3px 0;color:#b6a4d2;font-size:11px}.hidden{display:none!important}.notice{color:#f4c779}
+@media(max-width:600px){.app{padding:8px;gap:8px;min-height:480px}.brand h1{font-size:13px}.sub{font-size:9px}.status{font-size:10px}header{padding:10px}.toolbar{flex-wrap:wrap}.endpoint{flex-basis:100%}main{padding:12px}.welcome{margin:6vh auto}.welcome h2{font-size:20px}.foot{font-size:10px;flex-direction:column;gap:2px}.send{min-width:68px;padding:10px}.bubble{max-width:calc(100% - 42px)}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 </style>
 </head>
 <body>
 <div class="app">
 <header>
- <div class="brand"><div class="logo">A<span style="color:#edf6ff">I</span></div><div><h1>ARIES <span style="color:var(--cyan)">AI</span></h1><div class="sub">TIER ZERO · LOCAL CHAT</div></div></div>
- <div class="status"><span id="dot" class="dot"></span><span id="statusText">Checking local engine…</span></div>
+ <div class="brand"><div class="logo">AR</div><div><h1>ARIES <span style="color:#d8b4fe">AI</span></h1><div class="sub">MASTER SPLINTER · REASONING INTERFACE</div></div></div>
+ <div class="status" role="status" aria-live="polite"><span id="dot" class="dot"></span><span id="statusText">Checking API…</span></div>
 </header>
-<div class="toolbar"><input id="endpoint" class="endpoint" aria-label="API base URL" value="http://127.0.0.1:8000" spellcheck="false"><button id="check" class="btn">Check connection</button><button id="clear" class="btn">Clear</button></div>
+<div class="toolbar"><input id="endpoint" class="endpoint" aria-label="API base URL" value="http://127.0.0.1:8000" spellcheck="false"><button id="check" class="btn" type="button">Check connection</button><button id="clear" class="btn" type="button">Clear chat</button></div>
 <main id="chat" aria-live="polite">
- <section id="welcome" class="welcome"><div class="orb">✳</div><h2>Ask ARIES a question.</h2><p>This chat connects to the ARIES native API running on your own computer. Start the local engine first, then send a message.</p><div class="suggestions"><button class="suggestion">What is 17 × 19?</button><button class="suggestion">What can ARIES do?</button><button class="suggestion">Explain how a benchmark works.</button></div></section>
+ <section id="welcome" class="welcome"><div class="orb" aria-hidden="true">✳</div><h2>Patience, my student.</h2><p>The mind, like code, is strengthened by clarity and precision. Ask your question and let us work through it together. Messages are sent to the configured ARIES API.</p><div class="suggestions"><button class="suggestion" type="button">What is 17 × 19?</button><button class="suggestion" type="button">What can ARIES do?</button><button class="suggestion" type="button">Explain how a benchmark works.</button></div></section>
 </main>
-<section class="composer"><div class="compose-row"><textarea id="prompt" class="prompt" rows="1" placeholder="Message ARIES…" aria-label="Message ARIES"></textarea><button id="send" class="btn send">Send ↗</button></div><div class="foot"><span id="hint">Connected to your configured local endpoint</span><span>Enter to send · Shift+Enter for new line</span></div></section>
+<section class="composer"><div class="compose-row"><textarea id="prompt" class="prompt" rows="1" placeholder="Ask Master Splinter…" aria-label="Message ARIES"></textarea><button id="send" class="btn send" type="button">Transmit ↗</button></div><div class="foot"><span id="hint">Connect to your local ARIES API, or use the hosted fallback.</span><span>Enter to send · Shift+Enter for a new line</span></div></section>
 </div>
 <script>
 (function(){
- const $=id=>document.getElementById(id), chat=$('chat'), prompt=$('prompt');
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const chat=$('chat'),prompt=$('prompt');
  const conversation=[];
+ const PUBLIC_API='https://aries-tier0-api-6qjh.onrender.com';
+ const GREETING='Patience, my student. The mind, like code, must be forged with clarity and precision. Ask your question, and let us solve it.';
  function base(){return $('endpoint').value.trim().replace(/\/+$/,'');}
  function status(ok,msg){$('dot').className='dot '+(ok?'ok':'bad');$('statusText').textContent=msg;}
- function addMessage(role,text){$('welcome').classList.add('hidden');const row=document.createElement('div');row.className='message '+role;const av=document.createElement('div');av.className='avatar';av.textContent=role==='user'?'YOU':'AI';const box=document.createElement('div');box.className='bubble';const who=document.createElement('div');who.className='who';who.textContent=role==='user'?'You':'ARIES';const body=document.createElement('div');body.textContent=text;box.append(who,body);row.append(av,box);chat.append(row);chat.scrollTop=chat.scrollHeight;return body;}
- const PUBLIC_API='https://aries-tier0-api-6qjh.onrender.com';
+ function addMessage(role,text,withVoice){
+   $('welcome').classList.add('hidden');
+   const row=document.createElement('div');row.className='message '+role;
+   const avatar=document.createElement('div');avatar.className='avatar';avatar.textContent=role==='user'?'YOU':'MS';
+   const bubble=document.createElement('div');bubble.className='bubble';
+   const who=document.createElement('div');who.className='who';who.textContent=role==='user'?'You':'Master Splinter · ARIES AI';
+   const body=document.createElement('div');body.className='message-text';body.textContent=text;
+   bubble.append(who,body);
+   if(role!=='user'&&withVoice){
+     const speak=document.createElement('button');speak.type='button';speak.className='listen-btn';speak.textContent='🔊 Listen';speak.setAttribute('aria-label','Listen to Master Splinter response');
+     speak.addEventListener('click',()=>speakText(body.textContent));
+     bubble.append(document.createElement('br'),speak);
+   }
+   row.append(avatar,bubble);chat.append(row);chat.scrollTop=chat.scrollHeight;
+   return body;
+ }
+ function speakText(text){
+   if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){
+     $('hint').textContent='Speech playback is not supported by this browser.';return;
+   }
+   window.speechSynthesis.cancel();
+   const utterance=new SpeechSynthesisUtterance(String(text||''));
+   utterance.pitch=.62;utterance.rate=.82;utterance.volume=1;
+   const voices=window.speechSynthesis.getVoices();
+   const preferred=voices.find(v=>/Microsoft David|Google UK English Male/i.test(v.name))||voices.find(v=>/^en(-|_)/i.test(v.lang));
+   if(preferred)utterance.voice=preferred;
+   window.speechSynthesis.speak(utterance);
+ }
  async function apiFetch(path,options){
    const configured=base();
-   try { return await fetch(configured+path,options); }
-   catch(localError) {
-     if(!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(configured)) throw localError;
-     $('hint').textContent='Local API is offline; trying the hosted ARIES API…';
+   try{return await fetch(configured+path,options);}
+   catch(localError){
+     if(!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(configured))throw localError;
+     $('hint').textContent='Local API unreachable; trying the hosted ARIES endpoint…';
      return await fetch(PUBLIC_API+path,options);
    }
  }
  async function check(){
-   $('check').disabled=true;
-   status(false,'Checking API…');
-   $('hint').textContent='Checking '+base();
-   try {
-     const r=await apiFetch('/health',{method:'GET'});
-     if(!r.ok) throw new Error('Health check returned HTTP '+r.status);
-     status(true,'API connected');
-     $('hint').textContent='API is reachable. Ask ARIES a question below.';
-   } catch(e) {
-     status(false,'API unavailable');
-     $('hint').textContent='Could not reach the local or hosted API. Start the local launcher or retry in a moment.';
-   } finally { $('check').disabled=false; }
+   $('check').disabled=true;status(false,'Checking API…');$('hint').textContent='Checking '+base();
+   try{
+     const response=await apiFetch('/health',{method:'GET'});
+     if(!response.ok)throw new Error('Health check returned HTTP '+response.status);
+     status(true,'API reachable');$('hint').textContent='API is reachable. The deployed native model is a limited baseline, not a modern large language model.';
+   }catch(error){
+     status(false,'API unavailable');$('hint').textContent='Could not reach the local or hosted API. Start the ARIES launcher and retry. '+(error&&error.message?error.message:'');
+   }finally{$('check').disabled=false;}
  }
- async function send(text){text=(text||prompt.value).trim();if(!text)return;prompt.value='';prompt.style.height='auto';conversation.push({role:'user',content:text});addMessage('user',text);$('send').disabled=true;$('check').disabled=true;const answer=addMessage('assistant','ARIES is thinking…');try{let r;try{r=await apiFetch('/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'aries-native-ngram',messages:conversation,max_tokens:180,temperature:0.2})});}catch(e){throw new Error('Both local and hosted API requests failed: '+(e.message||String(e)));}let data;try{data=await r.json()}catch{throw new Error('The API returned a non-JSON response (HTTP '+r.status+').')}if(!r.ok)throw new Error((data.error&&data.error.message)||data.detail||'HTTP '+r.status);const result=data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;if(typeof result!=='string'||!result.trim())throw new Error('The API returned an empty answer.');answer.textContent=result.trim();conversation.push({role:'assistant',content:result.trim()});status(true,'API connected');}catch(e){answer.textContent='Could not get a response. '+(e.message||String(e))+'\\n\\nLocal API: '+base()+'\\nHosted fallback: '+PUBLIC_API+'\\nUse Check connection to retry.';status(false,'Request failed');}finally{$('send').disabled=false;$('check').disabled=false;prompt.focus();chat.scrollTop=chat.scrollHeight;}}
- $('check').addEventListener('click',check);$('clear').addEventListener('click',()=>{conversation.length=0;chat.querySelectorAll('.message').forEach(n=>n.remove());$('welcome').classList.remove('hidden');prompt.focus();});
- $('send').addEventListener('click',()=>send());prompt.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});prompt.addEventListener('input',()=>{prompt.style.height='auto';prompt.style.height=Math.min(prompt.scrollHeight,150)+'px';});
- document.querySelectorAll('.suggestion').forEach(b=>b.addEventListener('click',()=>send(b.textContent)));
+ async function send(text){
+   text=String(text===undefined?prompt.value:text).trim();if(!text||$('send').disabled)return;
+   prompt.value='';prompt.style.height='auto';
+   conversation.push({role:'user',content:text});addMessage('user',text,false);
+   $('send').disabled=true;$('check').disabled=true;
+   const answer=addMessage('assistant','Master Splinter is consulting the ARIES engine…',false);
+   try{
+     const response=await apiFetch('/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'aries-native-ngram',messages:conversation,max_tokens:220,temperature:.2})});
+     let data;try{data=await response.json();}catch(_){throw new Error('The API returned a non-JSON response (HTTP '+response.status+').');}
+     if(!response.ok)throw new Error((data.error&&data.error.message)||data.detail||'HTTP '+response.status);
+     const result=data&&data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+     if(typeof result!=='string'||!result.trim())throw new Error('The API returned an empty answer.');
+     answer.textContent=result.trim();
+     conversation.push({role:'assistant',content:result.trim()});
+     const bubble=answer.parentElement;
+     const listen=document.createElement('button');listen.type='button';listen.className='listen-btn';listen.textContent='🔊 Listen';
+     listen.addEventListener('click',()=>speakText(answer.textContent));
+     bubble.append(document.createElement('br'),listen);
+     status(true,'API connected');$('hint').textContent='Response received from the configured ARIES API. Voice playback is available with Listen.';
+   }catch(error){
+     answer.textContent='I could not get a response from ARIES. '+(error&&error.message?error.message:String(error))+'\\n\\nLocal endpoint: '+base()+'\\nHosted fallback: '+PUBLIC_API;
+     status(false,'Request failed');$('hint').textContent='Check the API connection, then retry. The message was not answered by the model.';
+     if(conversation.length&&conversation[conversation.length-1].role==='user')conversation.pop();
+   }finally{$('send').disabled=false;$('check').disabled=false;prompt.focus();chat.scrollTop=chat.scrollHeight;}
+ }
+ $('check').addEventListener('click',check);
+ $('clear').addEventListener('click',()=>{if('speechSynthesis'in window)window.speechSynthesis.cancel();conversation.length=0;chat.querySelectorAll('.message').forEach(node=>node.remove());$('welcome').classList.remove('hidden');$('hint').textContent='Chat cleared. The API connection setting was kept.';prompt.focus();});
+ $('send').addEventListener('click',()=>send());
+ prompt.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}});
+ prompt.addEventListener('input',()=>{prompt.style.height='auto';prompt.style.height=Math.min(prompt.scrollHeight,150)+'px';});
+ document.querySelectorAll('.suggestion').forEach(button=>button.addEventListener('click',()=>send(button.textContent)));
+ if('speechSynthesis'in window)window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
  check();
 })();
 </script>

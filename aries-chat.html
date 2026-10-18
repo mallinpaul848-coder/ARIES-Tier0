@@ -86,7 +86,7 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
    try{
      const response=await apiFetch('/health',{method:'GET'});
      if(!response.ok)throw new Error('Health check returned HTTP '+response.status);
-     status(true,'API reachable');$('hint').textContent='API is reachable. The deployed native model is a limited baseline, not a modern large language model.';
+     status(true,'API reachable');$('hint').textContent='API is reachable. Ready to chat with ARIES.';
    }catch(error){
      status(false,'API unavailable');$('hint').textContent='Could not reach the local or hosted API. Start the ARIES launcher and retry. '+(error&&error.message?error.message:'');
    }finally{$('check').disabled=false;}

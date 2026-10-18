@@ -174,3 +174,16 @@ python -m http.server 8081 --bind 127.0.0.1
 ```
 
 Open `http://127.0.0.1:8081/aries-chat.html`. The page connects to `http://127.0.0.1:8000`. This UI uses the existing native character n-gram baseline; it does not turn that baseline into a modern LLM, and response quality may be limited. The browser chat is local to your PC and is not automatically published as a public website.
+
+
+## Experimental PyTorch Transformer prototype
+
+The isolated research prototype in `aries_math/aries_master_model.py` is inspired by the supplied ARIES master-engine draft. It adds causal self-attention, positional embeddings, bounded optional 3/6/9-inspired feature gating, tied token embeddings, next-token loss, and a basic generation method.
+
+It is deliberately separate from the production HTTP API. It starts with random weights and does not become a capable chat model without a tokenizer, real training data, a training pipeline, saved checkpoints, and quality evaluation. It does not establish a P-vs-NP result or sub-nanosecond generative inference.
+
+See [prototype documentation](aries_math/ARIES_MASTER_MODEL.md) and [automated tests](tests/test_aries_master_model.py). After installing a compatible PyTorch build, run from the repository root:
+
+```powershell
+python -m unittest tests.test_aries_master_model -v
+```

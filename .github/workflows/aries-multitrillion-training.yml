@@ -22,6 +22,16 @@ on:
         required: true
         default: "byte"
         type: string
+      processes_per_node:
+        description: Number of GPU worker processes for torchrun (must not exceed available GPUs)
+        required: true
+        default: "1"
+        type: string
+      resume_checkpoint_path:
+        description: Optional path to an existing compatible checkpoint on the self-hosted runner
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
@@ -39,8 +49,15 @@ jobs:
       - name: Check out ARIES
         uses: actions/checkout@v4
 
-      - name: Install optional training dependency
-        run: python -m pip install --upgrade "torch>=2.2,<3.0"
+      - name: Install training dependencies
+        env:
+          TOKENIZER: ${{ inputs.tokenizer }}
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade "torch>=2.2,<3.0"
+          if [[ "$TOKENIZER" == hf:* ]]; then
+            python -m pip install --upgrade transformers tokenizers
+          fi
 
       - name: Check training hardware and inputs
         env:
@@ -48,6 +65,8 @@ jobs:
           TARGET_TOKENS: ${{ inputs.target_training_tokens }}
           MAX_STEPS: ${{ inputs.max_steps }}
           TOKENIZER: ${{ inputs.tokenizer }}
+          PROCESSES_PER_NODE: ${{ inputs.processes_per_node }}
+          RESUME_CHECKPOINT: ${{ inputs.resume_checkpoint_path }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -59,16 +78,30 @@ jobs:
           if not corpus.is_file() or corpus.stat().st_size == 0:
               raise SystemExit(f"Corpus is missing or empty: {corpus}")
           if not torch.cuda.is_available():
-              raise SystemExit("A CUDA-capable GPU and CUDA-enabled PyTorch are required for this training workflow.")
+              raise SystemExit("A CUDA-capable GPU and CUDA-enabled PyTorch are required.")
           target = int(os.environ["TARGET_TOKENS"])
           steps = int(os.environ["MAX_STEPS"])
-          if target < 1 or steps < 0:
-              raise SystemExit("Target tokens must be positive; max steps must be 0 or greater.")
-          print(f"GPU: {torch.cuda.get_device_name(0)}")
+          workers = int(os.environ["PROCESSES_PER_NODE"])
+          if target < 1 or steps < 0 or workers < 1:
+              raise SystemExit("Target must be positive; max steps must be >= 0; processes per node must be >= 1.")
+          if workers > torch.cuda.device_count():
+              raise SystemExit(f"Requested {workers} GPU processes, but only {torch.cuda.device_count()} CUDA devices are available.")
+          tokenizer = os.environ["TOKENIZER"]
+          if tokenizer != "byte" and not tokenizer.startswith("hf:"):
+              raise SystemExit("Tokenizer must be 'byte' or 'hf:TOKENIZER_NAME'.")
+          if tokenizer.startswith("hf:") and not tokenizer[3:].strip():
+              raise SystemExit("Hugging Face tokenizer name is empty.")
+          resume = os.environ.get("RESUME_CHECKPOINT", "").strip()
+          if resume and not Path(resume).expanduser().is_file():
+              raise SystemExit(f"Resume checkpoint not found: {resume}")
+          print(f"GPUs: {torch.cuda.device_count()} | worker processes: {workers}")
+          for index in range(torch.cuda.device_count()):
+              print(f"GPU {index}: {torch.cuda.get_device_name(index)}")
           print(f"Corpus bytes: {corpus.stat().st_size:,}")
-          print(f"Corpus SHA-256 will be recorded by the trainer.")
           print(f"Target token exposures: {target:,}")
           print(f"Additional steps: {steps if steps else 'until target'}")
+          print(f"Tokenizer mode: {tokenizer}")
+          print(f"Resume checkpoint: {resume or 'new run'}")
           PY
 
       - name: Train and checkpoint ARIES
@@ -77,6 +110,8 @@ jobs:
           TARGET_TOKENS: ${{ inputs.target_training_tokens }}
           MAX_STEPS: ${{ inputs.max_steps }}
           TOKENIZER: ${{ inputs.tokenizer }}
+          PROCESSES_PER_NODE: ${{ inputs.processes_per_node }}
+          RESUME_CHECKPOINT: ${{ inputs.resume_checkpoint_path }}
         run: |
           set -euo pipefail
           ARGS=(
@@ -87,7 +122,14 @@ jobs:
             --max-steps "$MAX_STEPS"
             --checkpoint-every-steps 100
           )
-          python training/aries_trillion_token_trainer.py "${ARGS[@]}"
+          if [[ -n "$RESUME_CHECKPOINT" ]]; then
+            ARGS+=(--resume-from-checkpoint "$RESUME_CHECKPOINT")
+          fi
+          if [[ "$PROCESSES_PER_NODE" -gt 1 ]]; then
+            torchrun --standalone --nproc_per_node="$PROCESSES_PER_NODE" training/aries_trillion_token_trainer.py "${ARGS[@]}"
+          else
+            python training/aries_trillion_token_trainer.py "${ARGS[@]}"
+          fi
 
       - name: Upload checkpoint and measured training evidence
         if: always()

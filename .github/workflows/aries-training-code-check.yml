@@ -7,12 +7,16 @@ on:
       - "software/train_and_publish_aries_lm.py"
       - "scripts/build_and_publish.py"
       - "scripts/train_and_publish_enhanced.py"
+      - "training/aries_trillion_token_trainer.py"
+      - "tests/test_aries_trillion_token_trainer.py"
       - ".github/workflows/aries-training-code-check.yml"
   pull_request:
     paths:
       - "software/train_and_publish_aries_lm.py"
       - "scripts/build_and_publish.py"
       - "scripts/train_and_publish_enhanced.py"
+      - "training/aries_trillion_token_trainer.py"
+      - "tests/test_aries_trillion_token_trainer.py"
       - ".github/workflows/aries-training-code-check.yml"
   workflow_dispatch:
 
@@ -34,14 +38,22 @@ jobs:
           python -m py_compile \
             software/train_and_publish_aries_lm.py \
             scripts/build_and_publish.py \
-            scripts/train_and_publish_enhanced.py
+            scripts/train_and_publish_enhanced.py \
+            training/aries_trillion_token_trainer.py \
+            tests/test_aries_trillion_token_trainer.py
       - name: Verify command-line interfaces load
         run: |
           python software/train_and_publish_aries_lm.py --help > /tmp/aries-trainer-help.txt
           python scripts/build_and_publish.py --help > /tmp/aries-build-help.txt
           python scripts/train_and_publish_enhanced.py --help > /tmp/aries-enhanced-help.txt
+          python training/aries_trillion_token_trainer.py --help > /tmp/aries-streaming-trainer-help.txt
           grep -q -- "--target-training-tokens" /tmp/aries-trainer-help.txt
           grep -q -- "--checkpoint-every-steps" /tmp/aries-trainer-help.txt
           grep -q -- "--target-training-tokens" /tmp/aries-build-help.txt
           grep -q -- "--target-training-tokens" /tmp/aries-enhanced-help.txt
+          grep -q -- "--resume-from-checkpoint" /tmp/aries-streaming-trainer-help.txt
           echo "PASS: syntax and training CLI argument checks."
+      - name: Install CPU PyTorch for trainer smoke tests
+        run: python -m pip install "torch>=2.2,<3.0" --index-url https://download.pytorch.org/whl/cpu
+      - name: Run streaming training and checkpoint-resume smoke tests
+        run: python -m unittest discover -s tests -p "test_aries_trillion_token_trainer.py" -v

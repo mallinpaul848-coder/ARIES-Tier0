@@ -39,6 +39,9 @@ jobs:
       - name: Check out ARIES
         uses: actions/checkout@v4
 
+      - name: Install optional training dependency
+        run: python -m pip install --upgrade "torch>=2.2,<3.0"
+
       - name: Check training hardware and inputs
         env:
           CORPUS_PATH: ${{ inputs.corpus_path }}
@@ -67,9 +70,6 @@ jobs:
           print(f"Target token exposures: {target:,}")
           print(f"Additional steps: {steps if steps else 'until target'}")
           PY
-
-      - name: Install optional training dependency
-        run: python -m pip install --upgrade "torch>=2.2,<3.0"
 
       - name: Train and checkpoint ARIES
         env:

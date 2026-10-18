@@ -38,7 +38,9 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
 (function(){
  'use strict';
  const $=id=>document.getElementById(id);
- const chat=$('chat'),prompt=$('prompt');\n let recognition=null, listening=false;\n const voiceButton=$('voiceInput');
+ const chat=$('chat'),prompt=$('prompt');
+ let recognition=null, listening=false;
+ const voiceButton=$('voiceInput');
  const conversation=[];
  const PUBLIC_API='https://aries-tier0-api-6qjh.onrender.com';
  const GREETING='Welcome to ARIES AI. Ask a question to get started.';
@@ -111,14 +113,25 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
      bubble.append(document.createElement('br'),listen);
      status(true,'API connected');$('hint').textContent='Response received. Select Listen to hear it.';
    }catch(error){
-     answer.textContent='I could not get a response from ARIES. '+(error&&error.message?error.message:String(error))+'\\n\\nLocal endpoint: '+base()+'\\nHosted fallback: '+PUBLIC_API;
+     answer.textContent='I could not get a response from ARIES. '+(error&&error.message?error.message:String(error))+'\n\nLocal endpoint: '+base()+'\nHosted fallback: '+PUBLIC_API;
      status(false,'Request failed');$('hint').textContent='Could not get a response. Check the connection and try again.';
      if(conversation.length&&conversation[conversation.length-1].role==='user')conversation.pop();
    }finally{$('send').disabled=false;$('check').disabled=false;prompt.focus();chat.scrollTop=chat.scrollHeight;}
  }
  $('check').addEventListener('click',check);
  $('clear').addEventListener('click',()=>{if('speechSynthesis'in window)window.speechSynthesis.cancel();conversation.length=0;chat.querySelectorAll('.message').forEach(node=>node.remove());$('welcome').classList.remove('hidden');$('hint').textContent='Ready for a new conversation.';prompt.focus();});
- $('send').addEventListener('click',()=>send());\n function setupVoiceInput(){\n   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;\n   if(!SpeechRecognition){voiceButton.disabled=true;voiceButton.title='Voice input is not supported in this browser. Try Microsoft Edge or Chrome.';voiceButton.setAttribute('aria-label','Voice input unavailable');return;}\n   recognition=new SpeechRecognition();recognition.lang='en-US';recognition.interimResults=true;recognition.continuous=false;\n   recognition.onstart=()=>{listening=true;voiceButton.setAttribute('aria-pressed','true');voiceButton.textContent='⏺';$('hint').textContent='Listening… speak your question.';};\n   recognition.onresult=event=>{let finalText='';let interim='';for(let i=event.resultIndex;i<event.results.length;i++){const piece=event.results[i][0].transcript;if(event.results[i].isFinal)finalText+=piece;else interim+=piece;}if(finalText.trim())prompt.value=finalText.trim();else if(interim)prompt.placeholder=interim;};\n   recognition.onerror=event=>{$('hint').textContent=event.error==='not-allowed'?'Allow microphone access in your browser to use voice input.':'Voice input issue: '+event.error+'. You can still type your message.';};\n   recognition.onend=()=>{listening=false;voiceButton.setAttribute('aria-pressed','false');voiceButton.textContent='🎙';prompt.placeholder='Message ARIES AI…';if(prompt.value.trim())$('hint').textContent='Voice captured. Press Transmit to send it.';};\n   voiceButton.addEventListener('click',()=>{if(!recognition)return;if(listening){recognition.stop();return;}try{recognition.start();}catch(_){$('hint').textContent='Voice input is already starting. Try again in a moment.';}});\n }\n setupVoiceInput();
+ $('send').addEventListener('click',()=>send());
+ function setupVoiceInput(){
+   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+   if(!SpeechRecognition){voiceButton.disabled=true;voiceButton.title='Voice input is not supported in this browser. Try Microsoft Edge or Chrome.';voiceButton.setAttribute('aria-label','Voice input unavailable');return;}
+   recognition=new SpeechRecognition();recognition.lang='en-US';recognition.interimResults=true;recognition.continuous=false;
+   recognition.onstart=()=>{listening=true;voiceButton.setAttribute('aria-pressed','true');voiceButton.textContent='⏺';$('hint').textContent='Listening… speak your question.';};
+   recognition.onresult=event=>{let finalText='';let interim='';for(let i=event.resultIndex;i<event.results.length;i++){const piece=event.results[i][0].transcript;if(event.results[i].isFinal)finalText+=piece;else interim+=piece;}if(finalText.trim())prompt.value=finalText.trim();else if(interim)prompt.placeholder=interim;};
+   recognition.onerror=event=>{$('hint').textContent=event.error==='not-allowed'?'Allow microphone access in your browser to use voice input.':'Voice input issue: '+event.error+'. You can still type your message.';};
+   recognition.onend=()=>{listening=false;voiceButton.setAttribute('aria-pressed','false');voiceButton.textContent='🎙';prompt.placeholder='Message ARIES AI…';if(prompt.value.trim())$('hint').textContent='Voice captured. Press Transmit to send it.';};
+   voiceButton.addEventListener('click',()=>{if(!recognition)return;if(listening){recognition.stop();return;}try{recognition.start();}catch(_){$('hint').textContent='Voice input is already starting. Try again in a moment.';}});
+ }
+ setupVoiceInput();
  prompt.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}});
  prompt.addEventListener('input',()=>{prompt.style.height='auto';prompt.style.height=Math.min(prompt.scrollHeight,150)+'px';});
  document.querySelectorAll('.suggestion').forEach(button=>button.addEventListener('click',()=>send(button.textContent)));

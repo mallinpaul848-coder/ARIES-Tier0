@@ -1,0 +1,101 @@
+name: ARIES Multitrillion Token Training
+
+on:
+  workflow_dispatch:
+    inputs:
+      corpus_path:
+        description: Absolute path to a licensed text corpus on the self-hosted GPU runner
+        required: true
+        type: string
+      target_training_tokens:
+        description: Cumulative token exposures target (3 trillion by default)
+        required: true
+        default: "3000000000000"
+        type: string
+      max_steps:
+        description: Additional optimizer steps; use 0 to run until the token target is reached
+        required: true
+        default: "3"
+        type: string
+      tokenizer:
+        description: byte or hf:TOKENIZER_NAME
+        required: true
+        default: "byte"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aries-multitrillion-training
+  cancel-in-progress: false
+
+jobs:
+  train:
+    # Requires a GPU-equipped runner managed by the repository owner.
+    runs-on: [self-hosted, linux, x64, gpu]
+    timeout-minutes: 10080
+    steps:
+      - name: Check out ARIES
+        uses: actions/checkout@v4
+
+      - name: Check training hardware and inputs
+        env:
+          CORPUS_PATH: ${{ inputs.corpus_path }}
+          TARGET_TOKENS: ${{ inputs.target_training_tokens }}
+          MAX_STEPS: ${{ inputs.max_steps }}
+          TOKENIZER: ${{ inputs.tokenizer }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import torch
+
+          corpus = Path(os.environ["CORPUS_PATH"]).expanduser()
+          if not corpus.is_file() or corpus.stat().st_size == 0:
+              raise SystemExit(f"Corpus is missing or empty: {corpus}")
+          if not torch.cuda.is_available():
+              raise SystemExit("A CUDA-capable GPU and CUDA-enabled PyTorch are required for this training workflow.")
+          target = int(os.environ["TARGET_TOKENS"])
+          steps = int(os.environ["MAX_STEPS"])
+          if target < 1 or steps < 0:
+              raise SystemExit("Target tokens must be positive; max steps must be 0 or greater.")
+          print(f"GPU: {torch.cuda.get_device_name(0)}")
+          print(f"Corpus bytes: {corpus.stat().st_size:,}")
+          print(f"Corpus SHA-256 will be recorded by the trainer.")
+          print(f"Target token exposures: {target:,}")
+          print(f"Additional steps: {steps if steps else 'until target'}")
+          PY
+
+      - name: Install optional training dependency
+        run: python -m pip install --upgrade "torch>=2.2,<3.0"
+
+      - name: Train and checkpoint ARIES
+        env:
+          CORPUS_PATH: ${{ inputs.corpus_path }}
+          TARGET_TOKENS: ${{ inputs.target_training_tokens }}
+          MAX_STEPS: ${{ inputs.max_steps }}
+          TOKENIZER: ${{ inputs.tokenizer }}
+        run: |
+          set -euo pipefail
+          ARGS=(
+            --corpus "$CORPUS_PATH"
+            --tokenizer "$TOKENIZER"
+            --output-dir artifacts/aries-multitrillion
+            --target-training-tokens "$TARGET_TOKENS"
+            --max-steps "$MAX_STEPS"
+            --checkpoint-every-steps 100
+          )
+          python training/aries_trillion_token_trainer.py "${ARGS[@]}"
+
+      - name: Upload checkpoint and measured training evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-multitrillion-training-${{ github.run_id }}
+          path: |
+            artifacts/aries-multitrillion/checkpoint.pt
+            artifacts/aries-multitrillion/training_evidence.json
+          if-no-files-found: warn
+          retention-days: 30

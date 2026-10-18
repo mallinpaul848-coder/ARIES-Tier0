@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#100326">
-<title>ARIES AI — Master Splinter</title>
+<title>ARIES AI</title>
 <style>
 :root{color-scheme:dark;--bg:#05010a;--panel:rgba(18,5,38,.88);--panel2:rgba(5,1,10,.72);--line:rgba(157,78,221,.38);--accent:#a855f7;--accent2:#7e22ce;--text:#f3e8ff;--muted:#b6a4d2;--user:rgba(126,34,206,.24);--assistant:rgba(30,10,60,.82)}
 *{box-sizing:border-box}
@@ -25,14 +25,14 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
 <body>
 <div class="app">
 <header>
- <div class="brand"><div class="logo">AR</div><div><h1>ARIES <span style="color:#d8b4fe">AI</span></h1><div class="sub">MASTER SPLINTER · PURPLE CRAB NEBULA</div></div></div>
+ <div class="brand"><div class="logo">AR</div><div><h1>ARIES <span style="color:#d8b4fe">AI</span></h1><div class="sub">PURPLE CRAB NEBULA</div></div></div>
  <div class="status" role="status" aria-live="polite"><span id="dot" class="dot"></span><span id="statusText">Checking API…</span></div>
 </header>
 <div class="toolbar"><input id="endpoint" class="endpoint" aria-label="API base URL" value="http://127.0.0.1:8000" spellcheck="false"><button id="check" class="btn" type="button">Check connection</button><button id="clear" class="btn" type="button">Clear chat</button></div>
 <main id="chat" aria-live="polite">
  <section id="welcome" class="welcome"><div class="orb" aria-hidden="true">✳</div><h2>Patience, my student.</h2><p>The mind, like code, is strengthened by clarity and precision. Ask your question and let us work through it together. Messages are sent to the configured ARIES API.</p><div class="suggestions"><button class="suggestion" type="button">What is 17 × 19?</button><button class="suggestion" type="button">What can ARIES do?</button><button class="suggestion" type="button">Explain how a benchmark works.</button></div></section>
 </main>
-<section class="composer"><div class="compose-row"><textarea id="prompt" class="prompt" rows="1" placeholder="Ask Master Splinter…" aria-label="Message ARIES"></textarea><button id="send" class="btn send" type="button">Transmit ↗</button></div><div class="foot"><span id="hint">Ask Master Splinter anything.</span><span>Enter to send · Shift+Enter for a new line</span></div></section>
+<section class="composer"><div class="compose-row"><textarea id="prompt" class="prompt" rows="1" placeholder="Message ARIES AI…" aria-label="Message ARIES"></textarea><button id="send" class="btn send" type="button">Transmit ↗</button></div><div class="foot"><span id="hint">Ready to chat.</span><span>Enter to send · Shift+Enter for a new line</span></div></section>
 </div>
 <script>
 (function(){
@@ -49,11 +49,11 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
    const row=document.createElement('div');row.className='message '+role;
    const avatar=document.createElement('div');avatar.className='avatar';avatar.textContent=role==='user'?'YOU':'MS';
    const bubble=document.createElement('div');bubble.className='bubble';
-   const who=document.createElement('div');who.className='who';who.textContent=role==='user'?'You':'Master Splinter · ARIES AI';
+   const who=document.createElement('div');who.className='who';who.textContent=role==='user'?'You':'ARIES AI';
    const body=document.createElement('div');body.className='message-text';body.textContent=text;
    bubble.append(who,body);
    if(role!=='user'&&withVoice){
-     const speak=document.createElement('button');speak.type='button';speak.className='listen-btn';speak.textContent='🔊 Listen';speak.setAttribute('aria-label','Listen to Master Splinter response');
+     const speak=document.createElement('button');speak.type='button';speak.className='listen-btn';speak.textContent='🔊 Listen';speak.setAttribute('aria-label','Listen to ARIES response');
      speak.addEventListener('click',()=>speakText(body.textContent));
      bubble.append(document.createElement('br'),speak);
    }
@@ -96,7 +96,7 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
    prompt.value='';prompt.style.height='auto';
    conversation.push({role:'user',content:text});addMessage('user',text,false);
    $('send').disabled=true;$('check').disabled=true;
-   const answer=addMessage('assistant','Master Splinter is consulting the ARIES engine…',false);
+   const answer=addMessage('assistant','ARIES is preparing a response…',false);
    try{
      const response=await apiFetch('/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'aries-native-ngram',messages:conversation,max_tokens:220,temperature:.2})});
      let data;try{data=await response.json();}catch(_){throw new Error('The API returned a non-JSON response (HTTP '+response.status+').');}

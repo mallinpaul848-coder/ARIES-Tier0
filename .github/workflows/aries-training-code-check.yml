@@ -10,6 +10,7 @@ on:
       - "training/aries_trillion_token_trainer.py"
       - "tests/test_aries_trillion_token_trainer.py"
       - ".github/workflows/aries-training-code-check.yml"
+      - ".github/workflows/aries-multitrillion-training.yml"
   pull_request:
     paths:
       - "software/train_and_publish_aries_lm.py"
@@ -33,6 +34,26 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Validate multitrillion workflow configuration
+        run: |
+          python -m pip install pyyaml
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+
+          path = Path(".github/workflows/aries-multitrillion-training.yml")
+          workflow = yaml.load(path.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+          assert workflow["name"] == "ARIES Multitrillion Token Training"
+          assert workflow["jobs"]["train"]["runs-on"] == ["self-hosted", "linux", "x64", "gpu"]
+          inputs = workflow["on"]["workflow_dispatch"]["inputs"]
+          assert inputs["target_training_tokens"]["default"] == "3000000000000"
+          assert "processes_per_node" in inputs
+          assert "resume_checkpoint_path" in inputs
+          steps = workflow["jobs"]["train"]["steps"]
+          assert any("torchrun" in step.get("run", "") for step in steps)
+          assert any("training_evidence.json" in str(step.get("with", {})) for step in steps)
+          print("PASS: multitrillion workflow parses and includes GPU checks, distributed workers, resume input, and evidence artifacts.")
+          PY
       - name: Compile training scripts
         run: |
           python -m py_compile \

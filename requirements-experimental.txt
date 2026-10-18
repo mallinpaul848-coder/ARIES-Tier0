@@ -1,0 +1,2 @@
+# Optional dependencies for experiments/aries_master_model.py
+torch>=2.2,<3.0

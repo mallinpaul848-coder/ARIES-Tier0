@@ -174,3 +174,12 @@ python -m http.server 8081 --bind 127.0.0.1
 ```
 
 Open `http://127.0.0.1:8081/aries-chat.html`. The page connects to `http://127.0.0.1:8000`. This UI uses the existing native character n-gram baseline; it does not turn that baseline into a modern LLM, and response quality may be limited. The browser chat is local to your PC and is not automatically published as a public website.
+
+## Multitrillion-token ARIES training
+
+The resumable trainer is in [training/aries_trillion_token_trainer.py](training/aries_trillion_token_trainer.py). It uses causal next-token training on an actual UTF-8 corpus, supports checkpoints/resume, mixed precision on CUDA, distributed workers via `torchrun`, and writes `training_evidence.json` with the corpus hash, measured token exposures, step count, loss, throughput, and hardware details. The 3/6/9 feature is an experimental bounded embedding modulation; it is not a proof of P=NP.
+
+To launch the GPU training workflow, open **Actions → ARIES Multitrillion Token Training → Run workflow**. This workflow requires a Linux x64 self-hosted runner labeled `gpu` with a CUDA-capable GPU. The corpus path must point to a licensed text file available on that runner; it is not downloaded from an arbitrary URL. The default target is 3,000,000,000,000 token exposures, but the default run is deliberately limited to 3 optimizer steps as a safety smoke run. Set **max_steps** to `0` only when you intend to run until the target is reached. A successful workflow dispatch alone is not proof of completion: check the uploaded `training_evidence.json` for `status: TARGET_REACHED` and the measured cumulative count. Repeated passes over a small corpus count as repeated exposures, not unique tokens.
+
+The GitHub-hosted runner does not provide the dedicated GPU capacity needed for this training. This change adds the workflow and trainer path; it does not start or claim a multitrillion-token training run, create model weights, or guarantee the target can be completed. Training time and compute/storage requirements depend on the selected model size, corpus, hardware, and measured throughput.
+

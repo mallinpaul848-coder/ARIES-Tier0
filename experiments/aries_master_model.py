@@ -139,6 +139,10 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             f"Training file has {len(raw)} bytes; it must exceed seq_len={args.seq_len}"
         )
     data = torch.tensor(list(raw), dtype=torch.long)
+    random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
     device = torch.device(args.device if args.device != "auto" else (
         "cuda" if torch.cuda.is_available() else "cpu"
     ))
@@ -150,11 +154,6 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         dropout=args.dropout,
     ).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
-    rng = random.Random(args.seed)
-    torch.manual_seed(args.seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(args.seed)
-
     model.train()
     losses: list[float] = []
     start = time.perf_counter()

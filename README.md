@@ -183,3 +183,23 @@ To launch the GPU training workflow, open **Actions → ARIES Multitrillion Toke
 
 The GitHub-hosted runner does not provide the dedicated GPU capacity needed for this training. This change adds the workflow and trainer path; it does not start or claim a multitrillion-token training run, create model weights, or guarantee the target can be completed. Training time and compute/storage requirements depend on the selected model size, corpus, hardware, and measured throughput.
 
+## ARIES / MALLIN SAT research lab
+
+The `python/` directory includes a standard-library-only graph-spectral lab and a deterministic experiment runner:
+
+```bash
+cd python
+python -m unittest -v test_aries_sat_lab.py test_aries_sat_experiment_runner.py
+python aries_sat_lab.py --self-test
+python aries_sat_experiment_runner.py --self-test
+python aries_sat_experiment_runner.py --variables 8 --instances 30 --seed 7
+python aries_sat_experiment_runner.py --tool features --formula '[[1,-2],[2,3]]'
+python aries_sat_experiment_runner.py --tool exact --formula '[[1],[-1]]'
+```
+
+The runner calculates exact satisfiability labels by exhaustive enumeration only for small instances; it has a safety limit because this method scales exponentially. Its experiment fingerprint supports repeatability checks. The graph features are invariant under variable-ID renaming for the implemented graph encoding. The digital-root, Vortex, Phase-8, and harmonic summaries are proposal encodings and are not claimed to be mathematically canonical or useful SAT decision rules.
+
+These tools are empirical diagnostics. AUC measures classification performance on the sampled distribution, not worst-case algorithmic complexity. Neither these experiments nor the submatrices they analyze prove or disprove P vs NP. Helixo and PRISE require precise formal definitions before they can be evaluated.
+
+GitHub Actions runs both test modules and deterministic smoke checks when the SAT lab files change. Inspect the workflow result under the repository's Actions tab; commits and configured CI are not the same as a verified passing run.
+

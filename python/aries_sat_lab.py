@@ -206,7 +206,7 @@ def _self_test() -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-test", action="store_true", help="run deterministic smoke tests")
-    parser.add_argument("--formula", help='JSON CNF, e.g. '[[1,-2],[2,3]]'')
+    parser.add_argument("--formula", help="JSON CNF, e.g. [[1,-2],[2,3]]")
     args = parser.parse_args()
     if args.self_test:
         print(json.dumps(_self_test(), sort_keys=True, indent=2))

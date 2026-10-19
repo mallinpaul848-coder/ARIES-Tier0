@@ -1,0 +1,38 @@
+name: ARIES SAT Graph-Spectral Lab
+
+on:
+  push:
+    paths:
+      - "python/aries_sat_lab.py"
+      - "python/test_aries_sat_lab.py"
+      - ".github/workflows/aries-sat-lab.yml"
+  pull_request:
+    paths:
+      - "python/aries_sat_lab.py"
+      - "python/test_aries_sat_lab.py"
+      - ".github/workflows/aries-sat-lab.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run unit tests
+        working-directory: python
+        run: python -m unittest -v test_aries_sat_lab.py
+      - name: Run module smoke test
+        working-directory: python
+        run: python aries_sat_lab.py --self-test
+      - name: Check example formula
+        working-directory: python
+        run: python aries_sat_lab.py --formula '[[1,-2],[2,3]]'

@@ -1,15 +1,19 @@
-name: ARIES SAT Graph-Spectral Lab
+name: ARIES SAT Research Lab
 
 on:
   push:
     paths:
       - "python/aries_sat_lab.py"
       - "python/test_aries_sat_lab.py"
+      - "python/aries_sat_experiment_runner.py"
+      - "python/test_aries_sat_experiment_runner.py"
       - ".github/workflows/aries-sat-lab.yml"
   pull_request:
     paths:
       - "python/aries_sat_lab.py"
       - "python/test_aries_sat_lab.py"
+      - "python/aries_sat_experiment_runner.py"
+      - "python/test_aries_sat_experiment_runner.py"
       - ".github/workflows/aries-sat-lab.yml"
   workflow_dispatch:
 
@@ -19,7 +23,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -27,12 +31,15 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run unit tests
+      - name: Run SAT lab tests
         working-directory: python
-        run: python -m unittest -v test_aries_sat_lab.py
-      - name: Run module smoke test
+        run: python -m unittest -v test_aries_sat_lab.py test_aries_sat_experiment_runner.py
+      - name: Run graph-lab smoke test
         working-directory: python
         run: python aries_sat_lab.py --self-test
+      - name: Run experiment runner determinism check
+        working-directory: python
+        run: python aries_sat_experiment_runner.py --self-test
       - name: Check example formula
         working-directory: python
-        run: python aries_sat_lab.py --formula '[[1,-2],[2,3]]'
+        run: python aries_sat_experiment_runner.py --tool features --formula '[[1,-2],[2,3]]'

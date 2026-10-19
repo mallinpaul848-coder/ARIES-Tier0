@@ -1,0 +1,41 @@
+name: ARIES Unified Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "python/aries_smart_answering.py"
+      - "python/aries_unified_validation.py"
+      - ".github/workflows/aries-unified-validation.yml"
+  pull_request:
+    paths:
+      - "python/aries_smart_answering.py"
+      - "python/aries_unified_validation.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install validation dependencies
+        run: python -m pip install --upgrade pip fastapi "httpx<0.28"
+      - name: Run 50-request unified API validation
+        env:
+          PYTHONPATH: .
+        run: python python/aries_unified_validation.py
+      - name: Upload honest validation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-unified-validation-report
+          path: aries-unified-validation-report.json
+          if-no-files-found: error

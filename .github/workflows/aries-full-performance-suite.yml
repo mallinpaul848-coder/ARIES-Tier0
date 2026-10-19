@@ -1,0 +1,72 @@
+name: ARIES Full Performance Suite
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "python/**"
+      - "benchmarks/**"
+      - "include/**"
+      - "src/**"
+      - "CMakeLists.txt"
+      - "sim/**"
+      - ".github/workflows/aries-full-performance-suite.yml"
+  pull_request:
+    paths:
+      - "python/**"
+      - "benchmarks/**"
+      - "include/**"
+      - "src/**"
+      - "CMakeLists.txt"
+      - "sim/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-performance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install API test dependencies
+        run: python -m pip install --upgrade pip fastapi "httpx<0.28"
+      - name: Run comprehensive deterministic/API performance suite
+        env:
+          PYTHONPATH: .
+          ARIES_BENCH_ITERATIONS: "20000"
+          ARIES_BENCH_API_SAMPLES: "250"
+          GITHUB_SHA: ${{ github.sha }}
+        run: python benchmarks/aries_gateway_performance.py
+      - name: Upload performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-gateway-performance-report
+          path: aries-gateway-performance.json
+          if-no-files-found: error
+          retention-days: 90
+
+  cpp-gateway-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure C++ gateway
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build C++ gateway
+        run: cmake --build build --parallel 2
+      - name: Run gateway smoke test
+        run: |
+          ./build/aries_gateway | tee aries-cpp-gateway-smoke.txt
+          grep -q "illustrative arithmetic fields" aries-cpp-gateway-smoke.txt
+      - name: Upload C++ gateway smoke output
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-cpp-gateway-smoke
+          path: aries-cpp-gateway-smoke.txt
+          if-no-files-found: error
+          retention-days: 90

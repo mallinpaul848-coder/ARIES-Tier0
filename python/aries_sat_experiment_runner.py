@@ -220,7 +220,7 @@ def main() -> None:
     parser.add_argument("--clause-ratio", type=float, default=4.6)
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--tool", choices=("graph", "features", "exact", "experiment", "self-test"))
-    parser.add_argument("--formula", help='JSON CNF, e.g. '[[1,-2],[2,3]]'')
+    parser.add_argument("--formula", help="JSON CNF, e.g. [[1,-2],[2,3]]")
     args = parser.parse_args()
     if args.self_test or args.tool == "self-test":
         print(json.dumps(self_test(), sort_keys=True, indent=2))

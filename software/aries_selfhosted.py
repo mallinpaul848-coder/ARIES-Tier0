@@ -115,7 +115,6 @@ class Handler(BaseHTTPRequestHandler):
             started = time.perf_counter_ns()
             with MODEL_LOCK:
                 result = MODEL.create_chat_completion(
-                    model=MODEL_ID,
                     messages=clean,
                     max_tokens=max_tokens,
                     temperature=temperature,

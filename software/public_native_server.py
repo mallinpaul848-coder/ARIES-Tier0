@@ -69,7 +69,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200, {
                 "service":"ARIES AI API","api_version":"1.0.8",
                 "status":"configured","inference_ready":ready,
-                "backend":"aries-native-char-ngram",
+                "backend":"openai-compatible-upstream" if UPSTREAM_READY else ("local-llama-cpp" if LOCAL_MODEL_READY else "aries-native-char-ngram"),
                 "model_id":MODEL_ID,"native_reasoner_enabled":True,"native_reasoner_version":"0.2",
                 "general_chat_upstream_configured":UPSTREAM_READY,
                 "general_chat_ready":UPSTREAM_READY or LOCAL_MODEL_READY,

@@ -56,11 +56,12 @@ class LocalChatModel:
                 continue
             role, content = item.get("role"), item.get("content")
             if role in {"system", "user", "assistant"} and isinstance(content, str) and content.strip():
-                normalized.append({"role": role, "content": content[-4000:]})
+                normalized.append({"role": role, "content": content[-350:]})
         if not any(item["role"] == "user" for item in normalized):
             raise LocalInferenceError("A non-empty user message is required.")
-        if not any(item["role"] == "system" for item in normalized):
-            normalized.insert(0, {
+        system_message = next(
+            (item for item in normalized if item["role"] == "system"),
+            {
                 "role": "system",
                 "content": (
                     "You are ARIES AI, the assistant in the MALLIN platform. Answer the "
@@ -68,8 +69,10 @@ class LocalChatModel:
                     "carefully and show the result. If you are unsure, say so rather than "
                     "inventing details. Keep answers concise unless asked for detail."
                 ),
-            })
-        normalized = normalized[-12:]
+            },
+        )
+        recent_messages = [item for item in normalized if item["role"] != "system"][-8:]
+        normalized = [system_message, *recent_messages]
         started_ns = time.perf_counter_ns()
         try:
             with self._lock:

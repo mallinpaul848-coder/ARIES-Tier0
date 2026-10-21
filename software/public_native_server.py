@@ -158,11 +158,19 @@ class Handler(BaseHTTPRequestHandler):
                     continue
                 if content.strip():
                     normalized_messages.append({"role":role,"content":content})
+            if not any(item["role"] == "system" for item in normalized_messages):
+                normalized_messages.insert(0, {"role": "system", "content": (
+                    "You are ARIES AI, a capable general-purpose assistant. Answer the exact question, "
+                    "reason carefully, show the key steps for complex tasks, check calculations, and "
+                    "provide complete working solutions when asked to code. Use prior conversation context. "
+                    "Separate verified facts from assumptions, never fabricate sources or claim actions you "
+                    "did not perform, and state uncertainty when needed. Be direct and useful."
+                )})
             user_messages = [item["content"] for item in normalized_messages if item["role"] == "user"]
             if not user_messages:
                 return self.send_json(400, {"error":{"message":"At least one non-empty user message is required"}})
             prompt = user_messages[-1].strip()
-            max_tokens = max(1,min(int(body.get("max_tokens",128)),512))
+            max_tokens = max(1,min(int(body.get("max_tokens",768)),2048))
             temperature = max(0.0,min(float(body.get("temperature",0.7)),2.0))
             started_ns = time.perf_counter_ns()
             answer, fast_path_cache_hit, fast_path_elapsed_ns = FAST_PATH.solve_with_metadata(prompt)

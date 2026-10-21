@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MALLIN Platform</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,Segoe UI,system-ui,sans-serif;background:#050611;color:#f4f3ff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 72% 18%,#39206b 0,transparent 38%),radial-gradient(ellipse at 18% 75%,#142e5e 0,transparent 36%),#050611}
+main{max-width:1000px;margin:auto;padding:48px 22px}.eyebrow{color:#9b9aff;letter-spacing:.2em;font-size:12px;font-weight:800}
+h1{font-size:clamp(40px,8vw,76px);line-height:.98;margin:18px 0}p{color:#c6c7dd;line-height:1.7}.panel{border:1px solid #383653;background:#0d1023d9;border-radius:20px;padding:24px;margin-top:28px;box-shadow:0 20px 80px #0006}.status{display:flex;align-items:center;gap:10px;font-weight:700}.dot{width:10px;height:10px;border-radius:50%;background:#f0b34d}.dot.online{background:#54e5ad;box-shadow:0 0 14px #54e5ad88}.links{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}a{color:#a9c9ff} .button{display:inline-block;padding:12px 16px;border-radius:12px;background:#7658df;color:white;text-decoration:none;font-weight:700}pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#b9f7dc}
+</style></head>
+<body><main>
+<div class="eyebrow">MALLIN SYSTEMS · INDEPENDENT PLATFORM</div>
+<h1>One platform.<br>Built for ARIES.</h1>
+<p>MALLIN Platform is the self-hosted control surface for the ARIES AI service, with a public gateway and live health reporting.</p>
+<section class="panel"><div class="status"><span id="dot" class="dot"></span><span id="state">Checking platform services…</span></div><pre id="details">Loading live status…</pre><div class="links"><a class="button" href="/docs">Platform API</a><a class="button" href="/health">Health endpoint</a><a class="button" href="/api/status">Live service status</a></div></section>
+</main><script>
+fetch('/api/status').then(r=>r.json()).then(d=>{document.getElementById('dot').classList.toggle('online',d.platform==='operational'&&d.aries_api==='online');document.getElementById('state').textContent=d.aries_api==='online'?'Platform online · ARIES connected':'Platform online · ARIES '+d.aries_api;document.getElementById('details').textContent=JSON.stringify(d,null,2)}).catch(()=>{document.getElementById('state').textContent='Status unavailable';document.getElementById('details').textContent='The platform status endpoint could not be reached.'});
+</script></body></html>

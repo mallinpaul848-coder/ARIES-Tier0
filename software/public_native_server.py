@@ -6,9 +6,10 @@ import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
-from native_runtime import NativeModel
+from native_runtime import NativeModel, answer_known_question
 from native_reasoner import solve
 from latency_engine import FastPathEngine, LatencyMonitor
+from upstream_backend import UpstreamInferenceError, request_upstream_answer, upstream_configuration
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aries_math.prise_unified import (ARIESExecutionEngine, PRISEProblem, exact_sat_bruteforce)
 from aries_math.chat_router import route_math_prompt
@@ -17,7 +18,14 @@ MATH_ENGINE = ARIESExecutionEngine()
 
 MODEL_PATH = os.getenv("ARIES_NATIVE_MODEL", "/app/models/aries-native-ngram.json")
 MODEL = NativeModel(MODEL_PATH)
-MODEL_ID = "aries-native-ngram"
+NATIVE_MODEL_ID = "aries-native-ngram"
+UPSTREAM_BASE_URL, UPSTREAM_MODEL_ID, UPSTREAM_API_KEY = upstream_configuration()
+try:
+    UPSTREAM_TIMEOUT_SECONDS = max(1.0, min(float(os.getenv("ARIES_UPSTREAM_TIMEOUT_SECONDS", "90")), 300.0))
+except ValueError:
+    UPSTREAM_TIMEOUT_SECONDS = 90.0
+UPSTREAM_READY = bool(UPSTREAM_BASE_URL and UPSTREAM_MODEL_ID)
+MODEL_ID = UPSTREAM_MODEL_ID if UPSTREAM_READY else NATIVE_MODEL_ID
 FAST_PATH = FastPathEngine(solve, max_entries=int(os.getenv("ARIES_FAST_CACHE_SIZE", "2048")))
 LATENCY_MONITOR = LatencyMonitor(window_size=int(os.getenv("ARIES_LATENCY_WINDOW_SIZE", "2048")))
 PORT = int(os.getenv("PORT", "10000"))
@@ -52,23 +60,28 @@ class Handler(BaseHTTPRequestHandler):
                 "status":"configured","inference_ready":ready,
                 "backend":"aries-native-char-ngram",
                 "model_id":MODEL_ID,"native_reasoner_enabled":True,"native_reasoner_version":"0.2",
-                "note":"Standalone ARIES-owned character n-gram baseline. Functional inference is available; this is not a modern LLM."
+                "general_chat_upstream_configured":UPSTREAM_READY,
+                "note":"ARIES native task engine with optional OpenAI-compatible general chat backend."
             })
         if path == "/diagnostics":
             return self.send_json(200, {
                 "service":"ARIES AI API","api_version":"1.0.6",
                 "native_reasoner_version":"0.2",
-                "checks":{"upstream_base_url_configured":False,"model_id_configured":True,
-                          "api_key_configured":False,"native_model_loaded":True,"deterministic_reasoner_loaded":True},
-                "inference_configured":True,"backend":"native",
-                "model_format":"hybrid deterministic task engine plus character n-gram baseline",
+                "checks":{"upstream_base_url_configured":bool(UPSTREAM_BASE_URL),
+                          "model_id_configured":bool(UPSTREAM_MODEL_ID or NATIVE_MODEL_ID),
+                          "api_key_configured":bool(UPSTREAM_API_KEY),
+                          "native_model_loaded":True,"deterministic_reasoner_loaded":True},
+                "inference_configured":True,"backend":"native_with_optional_upstream" if UPSTREAM_READY else "native",
+                "general_chat_ready":UPSTREAM_READY,
+                "model_format":"ARIES native task engine with optional OpenAI-compatible chat backend",
                 "trained_characters":MODEL.trained_characters,
-                "next_step":"Run real response-quality tests; this baseline is not a modern LLM."
+                "next_step":"Configure ARIES_UPSTREAM_BASE_URL and ARIES_MODEL_ID for general chat; add ARIES_UPSTREAM_API_KEY when required."
             })
         if path == "/v1/models":
             return self.send_json(200, {"object":"list","data":[
                 {"id":MODEL_ID,"object":"model","owned_by":"aries"}],
-                "inference_ready":True,"model_type":"character n-gram baseline"})
+                "inference_ready":True,
+                "model_type":"OpenAI-compatible chat backend with ARIES native task engine" if UPSTREAM_READY else "character n-gram baseline"})
         if path == "/performance":
             return self.send_json(200, {
                 "service": "ARIES AI API",
@@ -118,27 +131,58 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(200, {"module":"ARIES PRISE unified mathematics", "result":result,
                                             "notice":"Exhaustive SAT baseline; exponential-time and not a P-vs-NP proof."})
             messages = body.get("messages")
-            if not isinstance(messages,list) or not messages:
-                return self.send_json(400, {"error":{"message":"messages must be a non-empty list"}})
-            prompt = "\n".join(str(m.get("content","")) for m in messages if isinstance(m,dict))
-            if not prompt.strip():
-                return self.send_json(400, {"error":{"message":"message content must not be empty"}})
+            if not isinstance(messages,list) or not messages or len(messages) > 256:
+                return self.send_json(400, {"error":{"message":"messages must be a non-empty list with at most 256 items"}})
+            normalized_messages = []
+            for item in messages:
+                if not isinstance(item,dict):
+                    continue
+                role = item.get("role")
+                content = item.get("content")
+                if role not in {"system","user","assistant"} or not isinstance(content,str):
+                    continue
+                if content.strip():
+                    normalized_messages.append({"role":role,"content":content})
+            user_messages = [item["content"] for item in normalized_messages if item["role"] == "user"]
+            if not user_messages:
+                return self.send_json(400, {"error":{"message":"At least one non-empty user message is required"}})
+            prompt = user_messages[-1].strip()
             max_tokens = max(1,min(int(body.get("max_tokens",128)),512))
-            temperature = max(0.05,min(float(body.get("temperature",0.7)),2.0))
+            temperature = max(0.0,min(float(body.get("temperature",0.7)),2.0))
             started_ns = time.perf_counter_ns()
             answer, fast_path_cache_hit, fast_path_elapsed_ns = FAST_PATH.solve_with_metadata(prompt)
             math_route = None
+            upstream_used = False
+            upstream_elapsed_ns = None
+            if answer is None:
+                answer = answer_known_question(prompt)
             if answer is None:
                 math_result = route_math_prompt(prompt)
                 if math_result is not None:
                     answer = math_result["answer"]
                     math_route = math_result["route"]
-                else:
-                    answer = MODEL.generate(prompt, max_tokens=max_tokens, temperature=temperature)
-            elapsed_ns = max(0, time.perf_counter_ns() - started_ns)
+            if answer is None and UPSTREAM_READY:
+                answer, upstream_elapsed_ns = request_upstream_answer(
+                    normalized_messages,
+                    base_url=UPSTREAM_BASE_URL,
+                    model_id=UPSTREAM_MODEL_ID,
+                    api_key=UPSTREAM_API_KEY,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    timeout_seconds=UPSTREAM_TIMEOUT_SECONDS,
+                )
+                upstream_used = True
+            if answer is None:
+                answer = (
+                    "I can handle supported calculations and built-in ARIES tasks, but general "
+                    "question answering is not connected yet. Configure ARIES_UPSTREAM_BASE_URL "
+                    "and ARIES_MODEL_ID for an OpenAI-compatible chat model, and set "
+                    "ARIES_UPSTREAM_API_KEY in the service environment if that provider requires a key."
+                )
+            elapsed_ns = max(1, time.perf_counter_ns() - started_ns)
             LATENCY_MONITOR.record("chat_completion", elapsed_ns)
-            if not answer.strip():
-                answer = "ARIES native n-gram inference ran but produced no text for this prompt. This baseline has limited capability."
+            if not isinstance(answer,str) or not answer.strip():
+                raise UpstreamInferenceError("The inference backend returned an empty answer.", 502)
             return self.send_json(200, {
                 "id":"chatcmpl-aries-native","object":"chat.completion",
                 "created":int(time.time()),"model":MODEL_ID,
@@ -147,16 +191,19 @@ class Handler(BaseHTTPRequestHandler):
                 "usage":{"prompt_tokens":len(prompt),"completion_tokens":len(answer),
                          "total_tokens":len(prompt)+len(answer)},
                 "aries_native":{
-                    "runtime":"stdlib-char-ngram",
+                    "runtime":"openai-compatible-upstream" if upstream_used else "stdlib-char-ngram+rules",
                     "inference_seconds":round(elapsed_ns / 1000000000, 9),
                     "inference_ns":elapsed_ns,
                     "fast_path_elapsed_ns":fast_path_elapsed_ns,
                     "fast_path_cache_hit":fast_path_cache_hit,
-                    "model_type":"baseline_not_modern_llm",
-                    "math_route":math_route,
-                    "latency_note":"Nanosecond-unit elapsed timing is not proof of sub-nanosecond execution."
+                    "upstream_used":upstream_used,
+                    "upstream_inference_ns":upstream_elapsed_ns,
+                    "model_type":"configured_chat_model" if upstream_used else "native_task_engine_or_baseline",
+                    "math_route":math_route
                 }
             })
+        except UpstreamInferenceError as exc:
+            return self.send_json(exc.status_code, {"error":{"message":str(exc),"type":"inference_backend_error"}})
         except (ValueError,TypeError,KeyError,json.JSONDecodeError) as exc:
             return self.send_json(400, {"error":{"message":"Invalid request: "+str(exc)}})
     def log_message(self, fmt, *args):

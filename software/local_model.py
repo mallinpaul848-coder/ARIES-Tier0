@@ -1,0 +1,93 @@
+"""Local GGUF instruction-model adapter for ARIES."""
+from __future__ import annotations
+
+import os
+import threading
+import time
+from pathlib import Path
+
+
+class LocalInferenceError(RuntimeError):
+    pass
+
+
+class LocalChatModel:
+    """Thread-safe CPU inference over an instruction-tuned GGUF model."""
+
+    def __init__(self, model_path: str | None = None):
+        path = Path(
+            model_path
+            or os.getenv(
+                "ARIES_GGUF_MODEL_PATH",
+                "/app/models/SmolLM2-360M-Instruct-Q4_K_M.gguf",
+            )
+        )
+        if not path.is_file():
+            raise FileNotFoundError(f"Local GGUF model file is missing: {path}")
+        try:
+            from llama_cpp import Llama
+        except ImportError as exc:
+            raise RuntimeError("llama-cpp-python is not installed.") from exc
+
+        try:
+            self._model = Llama(
+                model_path=str(path),
+                n_ctx=768,
+                n_threads=max(1, min(int(os.getenv("ARIES_LOCAL_MODEL_THREADS", "1")), 4)),
+                n_batch=64,
+                n_gpu_layers=0,
+                use_mmap=True,
+                verbose=False,
+            )
+        except Exception as exc:
+            raise RuntimeError(f"Could not load the local instruction model ({type(exc).__name__}).") from None
+        self.model_path = str(path)
+        self._lock = threading.Lock()
+
+    def generate(
+        self,
+        messages: list[dict],
+        max_tokens: int = 96,
+        temperature: float = 0.2,
+    ) -> tuple[str, int]:
+        normalized = []
+        for item in messages:
+            if not isinstance(item, dict):
+                continue
+            role, content = item.get("role"), item.get("content")
+            if role in {"system", "user", "assistant"} and isinstance(content, str) and content.strip():
+                normalized.append({"role": role, "content": content[-4000:]})
+        if not any(item["role"] == "user" for item in normalized):
+            raise LocalInferenceError("A non-empty user message is required.")
+        if not any(item["role"] == "system" for item in normalized):
+            normalized.insert(0, {
+                "role": "system",
+                "content": (
+                    "You are ARIES AI, the assistant in the MALLIN platform. Answer the "
+                    "question directly. Follow requested formats. For calculations, compute "
+                    "carefully and show the result. If you are unsure, say so rather than "
+                    "inventing details. Keep answers concise unless asked for detail."
+                ),
+            })
+        normalized = normalized[-12:]
+        started_ns = time.perf_counter_ns()
+        try:
+            with self._lock:
+                response = self._model.create_chat_completion(
+                    messages=normalized,
+                    max_tokens=max(1, min(int(max_tokens), 160)),
+                    temperature=max(0.0, min(float(temperature), 1.2)),
+                    top_p=0.9,
+                    repeat_penalty=1.08,
+                )
+        except Exception as exc:
+            raise LocalInferenceError(
+                f"Local model inference failed ({type(exc).__name__})."
+            ) from None
+
+        choices = response.get("choices", []) if isinstance(response, dict) else []
+        message = choices[0].get("message", {}) if choices else {}
+        answer = message.get("content") if isinstance(message, dict) else None
+        if not isinstance(answer, str) or not answer.strip():
+            raise LocalInferenceError("Local model returned an empty answer.")
+        return answer.strip(), max(1, time.perf_counter_ns() - started_ns)

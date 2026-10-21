@@ -1,0 +1,36 @@
+name: MALLIN Platform CI
+
+on:
+  push:
+    paths:
+      - "mallin-platform/**"
+      - ".github/workflows/mallin-platform-ci.yml"
+  pull_request:
+    paths:
+      - "mallin-platform/**"
+      - ".github/workflows/mallin-platform-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r mallin-platform/requirements.txt
+      - name: Compile platform
+        run: python -m py_compile mallin-platform/main.py
+      - name: Validate Docker Compose
+        working-directory: mallin-platform
+        run: |
+          cp .env.example .env
+          sed -i 's/platform.example.com/platform.example.com/; s/replace-with-a-long-random-secret/test-token-not-for-production/' .env
+          docker compose config --quiet
+      - name: Build platform image
+        run: docker build -t mallin-platform:ci mallin-platform

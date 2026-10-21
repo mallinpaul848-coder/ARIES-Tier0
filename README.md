@@ -1,8 +1,8 @@
 # ARIES Tier 0 — Native Inference, API, and External Tests
 
-ARIES serves an OpenAI-compatible chat API with deterministic handlers for arithmetic, simple logic, weekday arithmetic, exact-output formatting, and supported math tools. The Docker image bundles SmolLM2-360M-Instruct Q4_K_M for local general chat when no upstream is configured. The character n-gram model remains a lightweight fallback, not the primary general-chat engine.
+ARIES serves an OpenAI-compatible chat API with deterministic handlers for arithmetic, simple logic, weekday arithmetic, exact-output formatting, and supported math tools. The Docker image bundles SmolLM2-135M-Instruct Q4_K_M for local general chat when no upstream is configured. The character n-gram model remains a lightweight fallback, not the primary general-chat engine.
 
-**Local chat model:** ARIES uses SmolLM2-360M-Instruct, quantized to Q4_K_M and executed with llama.cpp on CPU. This compact instruction model is intended for ordinary questions without requiring an external model API key; it can still make mistakes and is not equivalent to larger frontier models. Exact arithmetic and other supported deterministic tasks continue to use ARIES's own handlers.
+**Local chat model:** ARIES uses SmolLM2-135M-Instruct, quantized to Q4_K_M and executed with llama.cpp on CPU. This compact instruction model is intended for ordinary questions without requiring an external model API key; it can still make mistakes and is not equivalent to larger frontier models. Exact arithmetic and other supported deterministic tasks continue to use ARIES's own handlers.
 
 ## Public API
 
@@ -33,7 +33,7 @@ Invoke-RestMethod "https://aries-tier0-api-6qjh.onrender.com/v1/chat/completions
 
 ## Local general-chat model
 
-- Model file: [SmolLM2-360M-Instruct-Q4_K_M.gguf](https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF)
+- Model file: [SmolLM2-135M-Instruct-Q4_K_M.gguf](https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF)
 - Runtime: `llama-cpp-python` on CPU, one thread by default
 - The build verifies the downloaded GGUF file by SHA-256 before using it.
 - Model license: Apache-2.0. The container includes the full license at `/app/licenses/Apache-2.0.txt`.

@@ -24,7 +24,7 @@ if errorlevel 1 (
   echo Installing local model runtime...
   %PY% -m pip install --upgrade pip
   if errorlevel 1 goto failed
-  %PY% -m pip install llama-cpp-python huggingface_hub
+  %PY% -m pip install --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu llama-cpp-python huggingface_hub
   if errorlevel 1 goto failed
 )
 echo.

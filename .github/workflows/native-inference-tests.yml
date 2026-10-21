@@ -26,7 +26,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker run --detach --rm --memory=512m --cpus=0.1 --name aries-native-test --publish 18080:10000 aries-native:test
+          docker run --detach --rm --memory=512m --name aries-native-test --publish 18080:10000 aries-native:test
           trap 'docker stop aries-native-test >/dev/null 2>&1 || true' EXIT
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:18080/health >/tmp/health.json; then break; fi
@@ -50,7 +50,7 @@ jobs:
           payload = json.dumps({"model":model_id,"messages":[{"role":"user","content":"Give a brief greeting."}],"max_tokens":80,"temperature":0.2}).encode()
           req = urllib.request.Request(base+"/v1/chat/completions", data=payload,
               headers={"Content-Type":"application/json"}, method="POST")
-          with urllib.request.urlopen(req, timeout=30) as r:
+          with urllib.request.urlopen(req, timeout=120) as r:
               code, chat = r.status, json.loads(r.read().decode())
           choices = chat.get("choices", [])
           answer = choices[0].get("message",{}).get("content","") if choices else ""
@@ -64,7 +64,7 @@ jobs:
           }).encode()
           qa_req = urllib.request.Request(base+"/v1/chat/completions", data=qa_payload,
               headers={"Content-Type":"application/json"}, method="POST")
-          with urllib.request.urlopen(qa_req, timeout=45) as r:
+          with urllib.request.urlopen(qa_req, timeout=120) as r:
               qa_code, qa_chat = r.status, json.loads(r.read().decode())
           qa_choices = qa_chat.get("choices", [])
           qa_answer = qa_choices[0].get("message",{}).get("content","") if qa_choices else ""

@@ -48,7 +48,7 @@ jobs:
           while time.monotonic() < deadline:
               try:
                   status, root = request("/")
-                  if status == 200 and root.get("backend") == "aries-native-char-ngram" and root.get("inference_ready") is True and root.get("native_reasoner_enabled") is True and root.get("native_reasoner_version") == "0.2":
+                  if status == 200 and root.get("api_version") == "1.0.7" and root.get("backend") == "aries-native-char-ngram" and root.get("inference_ready") is True and root.get("native_reasoner_enabled") is True and root.get("native_reasoner_version") == "0.2":
                       break
                   last_error = f"service has not switched to native image yet: {root}"
               except Exception as exc:
@@ -66,6 +66,8 @@ jobs:
           diag = request("/diagnostics")[1]
           models = request("/v1/models")[1]
           performance = request("/performance")[1]
+          assert root.get("general_chat_ready") is True, f"General chat model is not configured: {root}"
+          assert diag.get("general_chat_ready") is True, f"General chat backend is not ready: {diag}"
           assert isinstance(performance.get("fast_path_cache"), dict), f"Fast-path cache telemetry missing: {performance}"
           assert isinstance(performance.get("latency", {}).get("measurements"), dict), f"Latency telemetry missing: {performance}"
           assert performance.get("latency", {}).get("sub_nanosecond_latency_verified") is False, "Measurement report must not claim unverified sub-nanosecond latency."
@@ -87,7 +89,17 @@ jobs:
           print(json.dumps(report,indent=2))
           assert status == 200 and answer.strip(), "Native inference did not return a non-empty completion."
           assert isinstance(aries_metrics.get("inference_ns"), int) and aries_metrics.get("inference_ns") > 0, f"Missing measured inference_ns field: {aries_metrics}"
-          print("PASS: public native API is responding. This verifies service functionality, not LLM quality.")
+          status, qa = request("/v1/chat/completions", {
+              "model":model_id,
+              "messages":[{"role":"user","content":"Answer in one word: What is the capital of France?"}],
+              "max_tokens":24,"temperature":0
+          }, timeout=90)
+          qa_choices = qa.get("choices",[])
+          qa_answer = qa_choices[0].get("message",{}).get("content","") if qa_choices else ""
+          report["checks"].append({"path":"/v1/chat/completions general QA","http_status":status,
+                                   "expected":"Paris","response_preview":qa_answer[:180]})
+          assert status == 200 and "paris" in qa_answer.lower(), f"General question-answer test failed: {qa_answer}"
+          print("PASS: general chat answered the capital-of-France check.")
           PY
 
       - name: Run 10-case external diagnostic benchmark

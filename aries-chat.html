@@ -118,7 +118,8 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
      if(conversation.length&&conversation[conversation.length-1].role==='user')conversation.pop();
    }finally{$('send').disabled=false;$('check').disabled=false;prompt.focus();chat.scrollTop=chat.scrollHeight;}
  }
- $('check').addEventListener('click',check);\n  $('voiceReplies').addEventListener('click',()=>{voiceReplies=!voiceReplies;$('voiceReplies').textContent=voiceReplies?'🔊 Voice replies: On':'🔇 Voice replies: Off';$('voiceReplies').setAttribute('aria-pressed',String(voiceReplies));if(!voiceReplies&&'speechSynthesis'in window)window.speechSynthesis.cancel();$('hint').textContent=voiceReplies?'Spoken replies enabled.':'Spoken replies disabled.';});
+ $('check').addEventListener('click',check);
+  $('voiceReplies').addEventListener('click',()=>{voiceReplies=!voiceReplies;$('voiceReplies').textContent=voiceReplies?'🔊 Voice replies: On':'🔇 Voice replies: Off';$('voiceReplies').setAttribute('aria-pressed',String(voiceReplies));if(!voiceReplies&&'speechSynthesis'in window)window.speechSynthesis.cancel();$('hint').textContent=voiceReplies?'Spoken replies enabled.':'Spoken replies disabled.';});
  $('clear').addEventListener('click',()=>{if('speechSynthesis'in window)window.speechSynthesis.cancel();conversation.length=0;chat.querySelectorAll('.message').forEach(node=>node.remove());$('welcome').classList.remove('hidden');$('hint').textContent='Ready for a new conversation.';prompt.focus();});
  $('send').addEventListener('click',()=>send());
  function setupVoiceInput(){

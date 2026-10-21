@@ -28,10 +28,16 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Prepare public chat page
+        run: |
+          mkdir -p public-site
+          cp index.html public-site/index.html
       - name: Upload website
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "."
+          path: public-site
       - name: Deploy website
         id: deployment
         uses: actions/deploy-pages@v4

@@ -41,9 +41,9 @@ jobs:
           status, health = get("/health")
           assert status == 200 and health.get("status") == "ok", health
           status, root = get("/")
-          assert status == 200 and root.get("backend") == "aries-native-char-ngram", root
+          assert status == 200 and root.get("general_chat_ready") is True and (root.get("local_model_loaded") is True or root.get("general_chat_upstream_configured") is True), root
           status, diag = get("/diagnostics")
-          assert status == 200 and diag.get("inference_configured") is True, diag
+          assert status == 200 and diag.get("inference_configured") is True and diag.get("general_chat_ready") is True, diag
           status, models = get("/v1/models")
           assert status == 200 and models.get("data"), models
           model_id = models["data"][0]["id"]
@@ -55,7 +55,23 @@ jobs:
           choices = chat.get("choices", [])
           answer = choices[0].get("message",{}).get("content","") if choices else ""
           assert code == 200 and answer.strip(), chat
+
+          qa_payload = json.dumps({
+              "model": model_id,
+              "messages": [{"role": "user", "content": "What is the capital of France? Reply with the city name only."}],
+              "max_tokens": 24,
+              "temperature": 0
+          }).encode()
+          qa_req = urllib.request.Request(base+"/v1/chat/completions", data=qa_payload,
+              headers={"Content-Type":"application/json"}, method="POST")
+          with urllib.request.urlopen(qa_req, timeout=45) as r:
+              qa_code, qa_chat = r.status, json.loads(r.read().decode())
+          qa_choices = qa_chat.get("choices", [])
+          qa_answer = qa_choices[0].get("message",{}).get("content","") if qa_choices else ""
+          assert qa_code == 200 and "paris" in qa_answer.lower(), {"response": qa_answer, "payload": qa_chat}
+
           print(json.dumps({"health":health,"readiness":root,"diagnostics":diag,
-              "model":model_id,"nonempty_completion":True,"response_preview":answer[:160]},indent=2))
-          print("PASS: container build, native model load, and HTTP inference. This is not a model-quality certification.")
+              "model":model_id,"greeting_preview":answer[:160],
+              "general_question":"capital of France","general_answer":qa_answer},indent=2))
+          print("PASS: container build, local general chat, and HTTP inference.")
           PY

@@ -1,0 +1,10 @@
+{
+  email {
+    env MALLIN_TLS_EMAIL
+  }
+}
+
+{$MALLIN_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy mallin-control:8080
+}

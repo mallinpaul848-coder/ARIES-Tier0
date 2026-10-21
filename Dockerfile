@@ -15,11 +15,12 @@ COPY software/ ./software/
 COPY aries_math/ ./aries_math/
 COPY software/deployment_corpus.txt ./data/training.txt
 
-RUN mkdir -p models data \
+RUN mkdir -p models data /app/licenses \
     && curl --fail --location --retry 3 --retry-delay 2 \
        "https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF/resolve/main/SmolLM2-360M-Instruct-Q4_K_M.gguf?download=true" \
        --output /app/models/SmolLM2-360M-Instruct-Q4_K_M.gguf \
     && echo "2fa3f013dcdd7b99f9b237717fa0b12d75bbb89984cc1274be1471a465bac9c2  /app/models/SmolLM2-360M-Instruct-Q4_K_M.gguf" | sha256sum --check - \
+    && curl --fail --location --retry 3 https://www.apache.org/licenses/LICENSE-2.0.txt --output /app/licenses/Apache-2.0.txt \
     && python software/native_runtime.py train --corpus ./data/training.txt --model ./models/aries-native-ngram.json
 
 ENV ARIES_NATIVE_MODEL=/app/models/aries-native-ngram.json

@@ -3,140 +3,355 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#100326">
-<title>ARIES AI</title>
+<meta name="theme-color" content="#080512">
+<meta name="description" content="ARIES AI chat — MALLIN platform">
+<title>ARIES AI — MALLIN</title>
 <style>
-:root{color-scheme:dark;--bg:#05010a;--panel:rgba(18,5,38,.88);--panel2:rgba(5,1,10,.72);--line:rgba(157,78,221,.38);--accent:#a855f7;--accent2:#7e22ce;--text:#f3e8ff;--muted:#b6a4d2;--user:rgba(126,34,206,.24);--assistant:rgba(30,10,60,.82)}
+:root{color-scheme:dark;--bg:#080512;--panel:rgba(16,12,32,.83);--panel2:rgba(12,8,25,.82);--line:rgba(180,139,255,.19);--accent:#b679ff;--cyan:#7cecff;--text:#f5f0ff;--muted:#aaa1c5;--green:#66efc0;--red:#ff819e;--user:rgba(112,64,190,.25);--assistant:rgba(18,14,35,.9);--shadow:0 22px 80px rgba(0,0,0,.32)}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 18% 34%,rgba(168,85,247,.42),transparent 34%),radial-gradient(ellipse at 78% 24%,rgba(88,28,135,.5),transparent 32%),radial-gradient(ellipse at 55% 82%,rgba(76,29,149,.32),transparent 38%),linear-gradient(135deg,#03020a 0%,#100326 42%,#21083a 68%,#05010a 100%);background-attachment:fixed;color:var(--text);font:15px/1.55 "Segoe UI",Tahoma,Geneva,Verdana,sans-serif}
-body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(white 1px,transparent 0),radial-gradient(#d8b4fe 1px,transparent 0),radial-gradient(#fff 1px,transparent 0);background-size:60px 60px,97px 97px,137px 137px;background-position:0 0,24px 41px,70px 18px;opacity:.22}body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.45) 100%);}
-.app{position:relative;z-index:1;width:min(960px,100%);height:100dvh;min-height:500px;margin:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:0 0 38px #80008033;backdrop-filter:blur(12px)}
-.brand{display:flex;align-items:center;gap:12px;min-width:0}.logo{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:13px;border:1px solid #a855f777;background:#a855f71a;color:#e9d5ff;font-size:17px;font-weight:900;letter-spacing:-1px}.brand h1{margin:0;font-size:16px;letter-spacing:.1em}.sub{font-size:11px;color:var(--muted);letter-spacing:.1em}.status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);white-space:nowrap}.dot{width:8px;height:8px;border-radius:50%;background:#8f82a4}.dot.ok{background:#50e3a4;box-shadow:0 0 12px #50e3a477}.dot.bad{background:#ff718d}
-.toolbar{display:flex;gap:8px;align-items:center}.endpoint{flex:1;min-width:0;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:12px ui-monospace,Consolas,monospace}.btn{border:1px solid var(--line);border-radius:10px;padding:10px 13px;background:#2a1240;color:var(--text);cursor:pointer;font-weight:600}.btn:hover,.listen-btn:hover{border-color:#d8b4fe;background:#552080}.btn:disabled{opacity:.52;cursor:wait}
-main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#0d061be3,#08030ef5);padding:20px;scroll-behavior:smooth;backdrop-filter:blur(8px)}
-.welcome{max-width:570px;margin:8vh auto;text-align:center}.orb{width:66px;height:66px;margin:0 auto 16px;border:1px solid #a855f777;border-radius:22px;display:grid;place-items:center;color:#e9d5ff;font-size:26px;background:radial-gradient(circle,#a855f733,transparent);box-shadow:0 0 32px #8000802d}.welcome h2{font-size:23px;margin:0 0 8px;color:#e9d5ff}.welcome p{color:var(--muted);margin:0 auto 20px;max-width:450px}.suggestions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.suggestion{background:#1d0e2d;color:#e9d5ff;border:1px solid var(--line);border-radius:999px;padding:9px 12px;cursor:pointer}.suggestion:hover{background:#35134e}
-.message{display:flex;margin:0 0 18px;gap:10px;align-items:flex-start}.avatar{flex:0 0 32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:10px;font-weight:900;color:#e9d5ff;background:#a855f71a;border:1px solid #a855f766}.message.user .avatar{color:#fff;background:#54217b;border-color:#a855f7}.bubble{max-width:min(760px,calc(100% - 42px));min-width:0;padding:11px 14px;border:1px solid var(--line);border-radius:4px 14px 14px 14px;background:var(--assistant);white-space:pre-wrap;overflow-wrap:anywhere}.message.user .bubble{background:var(--user);border-color:#a855f766;border-radius:14px 4px 14px 14px}.who{font-size:11px;color:#c4addd;margin-bottom:4px}.message.user .who{text-align:right}.message.user{flex-direction:row-reverse}.listen-btn{margin-top:9px;background:#421761;border:1px solid #a855f7;color:#f3e8ff;padding:5px 10px;border-radius:7px;font-size:11px;cursor:pointer}.listen-btn[aria-pressed="true"]{background:#6b21a8}
-.composer{border:1px solid var(--line);background:var(--panel);border-radius:16px;padding:10px;box-shadow:0 0 25px #8000801c}.compose-row{display:flex;align-items:flex-end;gap:10px}.prompt{resize:none;flex:1;min-height:46px;max-height:150px;padding:12px;border:1px solid #7e22ce66;border-radius:10px;outline:0;background:#140528;color:var(--text);font:15px/1.5 "Segoe UI",sans-serif}.prompt:focus,.endpoint:focus{border-color:#c084fc;outline:2px solid #a855f722}.prompt::placeholder{color:#a78bfa}.send{min-width:94px;background:linear-gradient(135deg,#7e22ce,#581c87);color:#fff;border-color:#a855f766}.voice-btn{min-width:46px;padding:10px;background:#241039;border:1px solid #a855f7;color:#f3e8ff;border-radius:10px;cursor:pointer;font-size:18px}.voice-btn[aria-pressed="true"]{background:#7e22ce;box-shadow:0 0 16px #a855f766}.voice-btn:disabled{opacity:.5;cursor:not-allowed}.send:hover{background:linear-gradient(135deg,#9333ea,#6b21a8)}.foot{display:flex;justify-content:space-between;gap:10px;padding:7px 3px 0;color:#b6a4d2;font-size:11px}.hidden{display:none!important}.notice{color:#f4c779}
-@media(max-width:600px){.app{padding:8px;gap:8px;min-height:480px}.brand h1{font-size:13px}.sub{font-size:9px}.status{font-size:10px}header{padding:10px}.toolbar{flex-wrap:wrap}.endpoint{flex-basis:100%}main{padding:12px}.welcome{margin:6vh auto}.welcome h2{font-size:20px}.foot{font-size:10px;flex-direction:column;gap:2px}.send{min-width:68px;padding:10px}.bubble{max-width:calc(100% - 42px)}}
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+html,body{width:100%;height:100%;margin:0}
+body{background:radial-gradient(ellipse at 50% 42%,#21113c 0%,#10091e 41%,#080512 78%);color:var(--text);font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+button,input,textarea{font:inherit}
+button{color:inherit}
+.space{position:fixed;inset:0;overflow:hidden;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,rgba(80,38,135,.14),transparent 54%)}
+.space:before{content:"";position:absolute;width:125vmax;height:125vmax;left:50%;top:48%;transform:translate(-50%,-50%);border-radius:50%;background:conic-gradient(from 20deg,transparent 0deg,rgba(116,62,201,.04) 24deg,rgba(174,107,255,.35) 42deg,rgba(63,208,255,.15) 54deg,transparent 76deg,transparent 112deg,rgba(104,62,191,.3) 140deg,rgba(218,145,255,.18) 154deg,transparent 182deg,transparent 232deg,rgba(76,190,244,.13) 255deg,rgba(142,83,237,.3) 278deg,transparent 302deg,transparent 360deg);filter:blur(27px);mask-image:radial-gradient(ellipse,transparent 0%,#000 22%,#000 43%,transparent 66%);animation:galaxyTurn 130s linear infinite;opacity:.95}
+.space:after{content:"";position:absolute;inset:-5%;background-image:radial-gradient(1px 1px at 11% 16%,#fff 98%,transparent),radial-gradient(1px 1px at 33% 72%,#cbb8ff 98%,transparent),radial-gradient(2px 2px at 79% 24%,#fff 98%,transparent),radial-gradient(1px 1px at 89% 79%,#9fefff 98%,transparent),radial-gradient(1px 1px at 56% 13%,#fff 98%,transparent),radial-gradient(1px 1px at 64% 86%,#d8caff 98%,transparent),radial-gradient(1px 1px at 22% 48%,#fff 98%,transparent);background-size:100% 100%;opacity:.55}
+@keyframes galaxyTurn{to{rotate:360deg}}
+.layout{position:relative;z-index:1;height:100dvh;min-height:460px;max-width:1600px;margin:0 auto;padding:18px;display:grid;grid-template-columns:258px minmax(0,1fr);gap:16px}
+.sidebar,.workspace{min-height:0;border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(22px);box-shadow:var(--shadow)}
+.sidebar{border-radius:23px;padding:18px;display:flex;flex-direction:column;gap:18px}
+.brand{display:flex;align-items:center;gap:12px;padding:4px 2px 15px;border-bottom:1px solid var(--line)}
+.brandmark{width:45px;height:45px;display:grid;place-items:center;border:1px solid rgba(196,153,255,.48);border-radius:15px;background:radial-gradient(circle at 38% 30%,rgba(125,238,255,.35),transparent 36%),linear-gradient(145deg,rgba(160,97,255,.32),rgba(24,14,51,.95));box-shadow:0 0 28px rgba(151,87,255,.22);font-weight:900;letter-spacing:-1px;color:white}
+.brand h1{font-size:15px;letter-spacing:.16em;margin:0;font-weight:800}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:10px;letter-spacing:.19em}
+.primary,.secondary,.chip,.iconbtn,.sendbtn,.voicebtn{border:1px solid var(--line);cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.primary{width:100%;padding:12px 13px;border-radius:13px;text-align:left;background:linear-gradient(110deg,rgba(153,91,255,.22),rgba(105,71,185,.1));display:flex;align-items:center;gap:10px;font-weight:650}
+.primary:hover,.secondary:hover,.chip:hover,.iconbtn:hover,.voicebtn:hover{border-color:rgba(198,160,255,.62);background-color:rgba(165,111,255,.16)}
+.primary .plus{width:27px;height:27px;border-radius:9px;display:grid;place-items:center;background:rgba(181,123,255,.18);font-size:20px}
+.side-label{font-size:10px;letter-spacing:.18em;color:#9e92bf;text-transform:uppercase;margin:0 0 8px 2px}
+.side-card{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(8,5,20,.35)}
+.model-line{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:650}
+.model-gem{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 13px rgba(102,239,192,.75)}
+.side-muted{font-size:11px;color:var(--muted);margin:7px 0 0}
+.sidebar-bottom{margin-top:auto;display:grid;gap:10px}
+.connection-card{display:flex;align-items:center;gap:9px;padding:11px;border-radius:12px;border:1px solid var(--line);background:rgba(7,5,17,.33);font-size:11px;color:var(--muted)}
+.status-dot{display:inline-block;flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:#827a99}
+.status-dot.ok{background:var(--green);box-shadow:0 0 12px rgba(102,239,192,.7)}
+.status-dot.bad{background:var(--red);box-shadow:0 0 12px rgba(255,129,158,.38)}
+.secondary{background:rgba(255,255,255,.035);border-radius:11px;padding:9px 10px;font-size:12px;text-align:center}
+.workspace{border-radius:25px;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.topbar{min-height:76px;padding:17px 23px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;background:rgba(12,8,25,.25)}
+.top-title{display:flex;flex-direction:column;gap:3px;min-width:0}
+.top-title h2{font-size:16px;margin:0;font-weight:700;letter-spacing:.015em}
+.top-title p{font-size:11px;color:var(--muted);margin:0}
+.top-actions{display:flex;align-items:center;gap:8px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:7px 11px;font-size:11px;color:#d8c9f6;background:rgba(157,100,238,.08);white-space:nowrap}
+.iconbtn{width:37px;height:37px;border-radius:12px;background:rgba(255,255,255,.035);display:grid;place-items:center;font-size:16px}
+.settings{display:none;padding:12px 22px;border-bottom:1px solid var(--line);gap:9px;background:rgba(8,5,18,.72)}
+.settings.open{display:flex}
+.endpoint{width:100%;min-width:0;background:rgba(4,3,12,.55);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:11px ui-monospace,Consolas,monospace;outline:none}
+.endpoint:focus,.prompt:focus{border-color:rgba(182,121,255,.8);box-shadow:0 0 0 3px rgba(182,121,255,.1)}
+.settings .secondary{flex:0 0 auto}
+.transcript{flex:1;min-height:0;overflow-y:auto;padding:26px clamp(15px,4vw,54px) 24px;scroll-behavior:smooth}
+.welcome{max-width:670px;min-height:100%;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px 0 40px}
+.hero-orb{width:102px;height:102px;border-radius:50%;position:relative;margin-bottom:27px;background:radial-gradient(circle at 50% 50%,#f5d8ff 0%,#bb8aff 3%,#8551d3 9%,rgba(119,57,194,.46) 20%,rgba(42,145,204,.17) 34%,transparent 63%);filter:drop-shadow(0 0 25px rgba(171,104,255,.48))}
+.hero-orb:before{content:"";position:absolute;inset:9px -18px;border-radius:50%;border:2px solid rgba(195,143,255,.48);transform:rotate(-27deg) scaleY(.32);box-shadow:0 0 14px rgba(145,106,255,.45),inset 0 0 13px rgba(95,206,255,.18)}
+.hero-orb:after{content:"";position:absolute;inset:20px -8px;border-radius:50%;border:1px solid rgba(114,226,255,.42);transform:rotate(41deg) scaleY(.42)}
+.eyebrow{display:flex;align-items:center;gap:8px;color:#c3a1ff;font-size:10px;letter-spacing:.25em;text-transform:uppercase;margin-bottom:12px}
+.welcome h3{font-size:clamp(27px,3.6vw,43px);line-height:1.12;letter-spacing:-.045em;margin:0;font-weight:750}
+.welcome h3 span{background:linear-gradient(95deg,#e5d2ff 15%,#ad8aff 48%,#8ae8ff 88%);background-clip:text;-webkit-background-clip:text;color:transparent}
+.welcome .intro{max-width:490px;color:var(--muted);font-size:13px;margin:17px auto 26px}
+.chips{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;max-width:580px}
+.chip{padding:10px 14px;border-radius:999px;background:rgba(18,13,35,.76);font-size:11px;color:#e1d5f9}
+.chat-message{display:flex;gap:12px;align-items:flex-start;margin:0 auto 22px;max-width:850px;animation:arrive .22s ease both}
+@keyframes arrive{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.chat-message.user{flex-direction:row-reverse}
+.avatar{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:12px;border:1px solid rgba(180,139,255,.3);background:linear-gradient(145deg,rgba(176,111,255,.2),rgba(39,23,66,.8));font-size:10px;font-weight:850;letter-spacing:-.3px}
+.chat-message.user .avatar{background:linear-gradient(145deg,#7650bd,#372457);border-color:rgba(199,167,255,.42)}
+.message-column{max-width:min(760px,calc(100% - 46px));min-width:0}
+.message-label{color:#bcb0da;font-size:10px;letter-spacing:.08em;margin:1px 0 6px}
+.chat-message.user .message-label{text-align:right}
+.bubble{border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:13px 16px;background:var(--assistant);white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font-size:13px;box-shadow:0 7px 25px rgba(0,0,0,.13)}
+.chat-message.user .bubble{background:var(--user);border-color:rgba(177,133,255,.28);border-radius:16px 4px 16px 16px}
+.message-actions{display:flex;gap:8px;align-items:center;margin-top:7px}
+.mini-action{border:1px solid transparent;background:transparent;color:#b4a6d2;font-size:10px;padding:4px 7px;border-radius:7px;cursor:pointer}
+.mini-action:hover{color:white;background:rgba(167,119,255,.12)}
+.typing{display:inline-flex;gap:4px;padding:5px 1px}
+.typing i{width:5px;height:5px;border-radius:50%;background:#c5a7ff;animation:pulse 1s infinite ease-in-out}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes pulse{0%,60%,100%{opacity:.35;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+.composer-area{padding:12px clamp(13px,3vw,35px) 15px;background:linear-gradient(180deg,transparent,rgba(8,5,18,.36))}
+.composer{max-width:900px;margin:0 auto;border:1px solid rgba(180,139,255,.28);border-radius:19px;padding:10px 11px 9px;background:rgba(14,9,28,.94);box-shadow:0 12px 38px rgba(0,0,0,.24)}
+.composer:focus-within{border-color:rgba(180,139,255,.58);box-shadow:0 0 0 3px rgba(169,117,255,.055),0 12px 38px rgba(0,0,0,.24)}
+.compose-row{display:flex;align-items:flex-end;gap:10px}
+.prompt{resize:none;flex:1;min-width:0;min-height:44px;max-height:160px;border:1px solid transparent;border-radius:12px;padding:11px 12px;background:transparent;color:var(--text);font:13px/1.6 inherit;outline:none}
+.prompt::placeholder{color:#82769f}
+.sendbtn{width:43px;height:43px;flex:0 0 43px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,#ae72fa,#6e50c9);border-color:rgba(219,190,255,.28);color:white;font-size:20px;box-shadow:0 4px 17px rgba(130,77,212,.22)}
+.sendbtn:hover{transform:translateY(-1px);background:linear-gradient(145deg,#c394ff,#8468df)}
+.sendbtn:disabled{opacity:.5;cursor:wait;transform:none}
+.voicebtn{width:43px;height:43px;flex:0 0 43px;border-radius:13px;background:rgba(255,255,255,.035);display:grid;place-items:center;font-size:17px}
+.voicebtn[aria-pressed=true]{background:rgba(255,109,150,.18);border-color:rgba(255,129,158,.65)}
+.composer-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 3px 0;color:#817694;font-size:10px}
+.composer-foot .right{display:flex;gap:12px;align-items:center}
+.text-action{background:transparent;border:0;padding:2px;color:#a99bbf;font-size:10px;cursor:pointer}
+.text-action:hover{color:#e7dcff}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:780px){.layout{grid-template-columns:1fr;padding:9px;gap:8px}.sidebar{display:none}.workspace{border-radius:20px}.topbar{min-height:66px;padding:13px 15px}.transcript{padding:18px 14px}.welcome{padding-top:14px}.hero-orb{width:78px;height:78px;margin-bottom:20px}.welcome .intro{font-size:12px}.pill{font-size:10px;padding:6px 9px}.composer-area{padding:10px 10px 11px}.composer-foot .hint-key{display:none}}
+@media(max-width:420px){.top-title h2{font-size:14px}.top-title p{font-size:10px}.top-actions{gap:5px}.iconbtn{width:33px;height:33px}.topbar{gap:8px}.bubble{padding:11px 12px;font-size:12px}.avatar{width:30px;height:30px;flex-basis:30px}.welcome h3{font-size:29px}.composer-foot{font-size:9px}.pill{display:none}.settings.open{padding:10px;flex-wrap:wrap}.settings .endpoint{flex-basis:100%}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
 </style>
 </head>
 <body>
-<div class="app">
-<header>
- <div class="brand"><div class="logo">AR</div><div><h1>ARIES <span style="color:#d8b4fe">AI</span></h1><div class="sub">PURPLE CRAB NEBULA</div></div></div>
- <div class="status" role="status" aria-live="polite"><span id="dot" class="dot"></span><span id="statusText">Checking API…</span></div>
-</header>
-<div class="toolbar"><input id="endpoint" class="endpoint" aria-label="API base URL" value="https://aries-tier0-api-6qjh.onrender.com" spellcheck="false"><button id="voiceReplies" class="btn" type="button" aria-pressed="true" title="Toggle spoken ARIES replies">🔊 Voice replies: On</button><button id="check" class="btn" type="button">Check connection</button><button id="clear" class="btn" type="button">Clear chat</button></div>
-<main id="chat" aria-live="polite">
- <section id="welcome" class="welcome"><div class="orb" aria-hidden="true">✳</div><h2>Patience, my student.</h2><p>The mind, like code, is strengthened by clarity and precision. Ask your question and let us work through it together. Messages are sent to the configured ARIES API.</p><div class="suggestions"><button class="suggestion" type="button">What is 17 × 19?</button><button class="suggestion" type="button">What can ARIES do?</button><button class="suggestion" type="button">Explain how a benchmark works.</button></div></section>
-</main>
-<section class="composer"><div class="compose-row"><textarea id="prompt" class="prompt" rows="1" placeholder="Message ARIES AI…" aria-label="Message ARIES"></textarea><button id="voiceInput" class="voice-btn" type="button" aria-label="Start voice input" title="Speak to ARIES" aria-pressed="false">🎙</button><button id="send" class="btn send" type="button">Transmit ↗</button></div><div class="foot"><span id="hint">Ready to chat.</span><span>Enter to send · Shift+Enter for a new line</span></div></section>
+<div class="space" aria-hidden="true"></div>
+<div class="layout">
+  <aside class="sidebar" aria-label="ARIES navigation">
+    <div class="brand"><div class="brandmark" aria-hidden="true">AR</div><div><h1>ARIES AI</h1><p>MALLIN PLATFORM</p></div></div>
+    <button id="newChat" class="primary" type="button"><span class="plus" aria-hidden="true">+</span> New conversation</button>
+    <div><p class="side-label">Active engine</p><div class="side-card"><div class="model-line"><span class="model-gem"></span><span>ARIES Native</span></div><p class="side-muted">Connected chat · MALLIN workspace</p></div></div>
+    <div><p class="side-label">Quick start</p><div class="side-card"><p class="side-muted" style="margin-top:0">Choose a prompt to begin a session.</p><div style="display:grid;gap:7px;margin-top:10px"><button class="secondary quick" type="button" data-prompt="Help me plan my next project.">Project planning</button><button class="secondary quick" type="button" data-prompt="Calculate 17 × 19 and show the steps.">Math and reasoning</button><button class="secondary quick" type="button" data-prompt="Explain the ARIES API and how to test it.">System tools</button></div></div></div>
+    <div class="sidebar-bottom"><div class="connection-card"><span id="sideDot" class="status-dot"></span><span id="sideStatus">Checking ARIES connection…</span></div><button id="clearChat" class="secondary" type="button">Clear conversation</button><div class="side-muted" style="text-align:center;margin-top:0">ARIES AI · MALLIN</div></div>
+  </aside>
+  <section class="workspace" aria-label="ARIES AI chat">
+    <header class="topbar"><div class="top-title"><h2>ARIES <span style="color:var(--accent)">/</span> Chat</h2><p id="headerStatus" aria-live="polite">Your MALLIN AI workspace</p></div><div class="top-actions"><span class="pill"><span style="color:var(--green)">●</span> Native engine</span><button id="settingsToggle" class="iconbtn" type="button" aria-label="Connection settings" aria-expanded="false" title="Connection settings">⚙</button></div></header>
+    <div id="settings" class="settings"><label class="sr-only" for="endpoint">ARIES API URL</label><input id="endpoint" class="endpoint" value="https://aries-tier0-api-6qjh.onrender.com" spellcheck="false" autocomplete="url"><button id="checkConnection" class="secondary" type="button">Test connection</button></div>
+    <main id="transcript" class="transcript" aria-live="polite" aria-relevant="additions text">
+      <section id="welcome" class="welcome"><div class="hero-orb" aria-hidden="true"></div><div class="eyebrow"><span>✦</span> MALLIN INTELLIGENCE <span>✦</span></div><h3>Think beyond<br><span>the expected.</span></h3><p class="intro">Welcome to ARIES AI. Bring a question, a challenge, or an idea. Let’s work through it together.</p><div class="chips"><button class="chip" type="button" data-prompt="What can ARIES AI help me do?">Explore ARIES</button><button class="chip" type="button" data-prompt="Calculate 17 × 19 and show the steps.">Solve a problem</button><button class="chip" type="button" data-prompt="Help me structure a new software project.">Build something</button></div></section>
+    </main>
+    <section class="composer-area"><div class="composer"><div class="compose-row"><label class="sr-only" for="prompt">Message ARIES AI</label><textarea id="prompt" class="prompt" rows="1" placeholder="Message ARIES AI…" enterkeyhint="send"></textarea><button id="voiceInput" class="voicebtn" type="button" aria-label="Start voice input" title="Speak to ARIES" aria-pressed="false">🎙</button><button id="send" class="sendbtn" type="button" aria-label="Send message" title="Send message">↑</button></div><div class="composer-foot"><span id="hint" aria-live="polite">Ready when you are.</span><span class="right"><span class="hint-key">Enter to send</span><button id="voiceReplies" class="text-action" type="button" aria-pressed="true">Voice replies: On</button></span></div></div></section>
+  </section>
 </div>
 <script>
 (function(){
- 'use strict';
- const $=id=>document.getElementById(id);
- const chat=$('chat'),prompt=$('prompt');
- let recognition=null, listening=false, voiceReplies=true;
- const voiceButton=$('voiceInput');
- const conversation=[];
- const PUBLIC_API='https://aries-tier0-api-6qjh.onrender.com';
- const GREETING='Welcome to ARIES AI. Ask a question to get started.';
- function base(){return $('endpoint').value.trim().replace(/\/+$/,'');}
- function status(ok,msg){$('dot').className='dot '+(ok?'ok':'bad');$('statusText').textContent=msg;}
- function addMessage(role,text,withVoice){
-   $('welcome').classList.add('hidden');
-   const row=document.createElement('div');row.className='message '+role;
-   const avatar=document.createElement('div');avatar.className='avatar';avatar.textContent=role==='user'?'YOU':'AI';
-   const bubble=document.createElement('div');bubble.className='bubble';
-   const who=document.createElement('div');who.className='who';who.textContent=role==='user'?'You':'ARIES AI';
-   const body=document.createElement('div');body.className='message-text';body.textContent=text;
-   bubble.append(who,body);
-   if(role!=='user'&&withVoice){
-     const speak=document.createElement('button');speak.type='button';speak.className='listen-btn';speak.textContent='🔊 Listen';speak.setAttribute('aria-label','Listen to ARIES response');
-     speak.addEventListener('click',()=>speakText(body.textContent));
-     bubble.append(document.createElement('br'),speak);
-   }
-   row.append(avatar,bubble);chat.append(row);chat.scrollTop=chat.scrollHeight;
-   return body;
- }
- function speakText(text){
-   if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){
-     $('hint').textContent='Speech playback is not supported by this browser.';return;
-   }
-   window.speechSynthesis.cancel();
-   const utterance=new SpeechSynthesisUtterance(String(text||''));
-   utterance.pitch=.62;utterance.rate=.82;utterance.volume=1;
-   const voices=window.speechSynthesis.getVoices();
-   const preferred=voices.find(v=>/Microsoft David|Google UK English Male/i.test(v.name))||voices.find(v=>/^en(-|_)/i.test(v.lang));
-   if(preferred)utterance.voice=preferred;
-   window.speechSynthesis.speak(utterance);
- }
- async function apiFetch(path,options){
-   const configured=base();
-   try{return await fetch(configured+path,options);}
-   catch(localError){
-     if(!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(configured))throw localError;
-     $('hint').textContent='Connecting to ARIES…';
-     return await fetch(PUBLIC_API+path,options);
-   }
- }
- async function check(){
-   $('check').disabled=true;status(false,'Checking API…');$('hint').textContent='Checking '+base();
-   try{
-     const response=await apiFetch('/health',{method:'GET'});
-     if(!response.ok)throw new Error('Health check returned HTTP '+response.status);
-     status(true,'API reachable');$('hint').textContent='API connected. Ready when you are.';
-   }catch(error){
-     status(false,'API unavailable');$('hint').textContent='ARIES is offline. Start the ARIES app and try again.';
-   }finally{$('check').disabled=false;}
- }
- async function send(text){
-   text=String(text===undefined?prompt.value:text).trim();if(!text||$('send').disabled)return;
-   prompt.value='';prompt.style.height='auto';
-   conversation.push({role:'user',content:text});addMessage('user',text,false);
-   $('send').disabled=true;$('check').disabled=true;
-   const answer=addMessage('assistant','ARIES is preparing a response…',false);
-   try{
-     const response=await apiFetch('/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'aries-native-ngram',messages:conversation,max_tokens:220,temperature:.2})});
-     let data;try{data=await response.json();}catch(_){throw new Error('The API returned a non-JSON response (HTTP '+response.status+').');}
-     if(!response.ok)throw new Error((data.error&&data.error.message)||data.detail||'HTTP '+response.status);
-     const result=data&&data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
-     if(typeof result!=='string'||!result.trim())throw new Error('The API returned an empty answer.');
-     answer.textContent=result.trim();
-     conversation.push({role:'assistant',content:result.trim()});
-     const bubble=answer.parentElement;
-     const listen=document.createElement('button');listen.type='button';listen.className='listen-btn';listen.textContent='🔊 Listen';
-     listen.addEventListener('click',()=>speakText(answer.textContent));
-     bubble.append(document.createElement('br'),listen);
-     status(true,'API connected');$('hint').textContent=voiceReplies?'Response received. Speaking ARIES reply…':'Response received. Select Listen to hear it.';if(voiceReplies)speakText(result.trim());
-   }catch(error){
-     answer.textContent='I could not get a response from ARIES. '+(error&&error.message?error.message:String(error))+'\n\nLocal endpoint: '+base()+'\nHosted fallback: '+PUBLIC_API;
-     status(false,'Request failed');$('hint').textContent='Could not get a response. Check the connection and try again.';
-     if(conversation.length&&conversation[conversation.length-1].role==='user')conversation.pop();
-   }finally{$('send').disabled=false;$('check').disabled=false;prompt.focus();chat.scrollTop=chat.scrollHeight;}
- }
- $('check').addEventListener('click',check);\n  $('voiceReplies').addEventListener('click',()=>{voiceReplies=!voiceReplies;$('voiceReplies').textContent=voiceReplies?'🔊 Voice replies: On':'🔇 Voice replies: Off';$('voiceReplies').setAttribute('aria-pressed',String(voiceReplies));if(!voiceReplies&&'speechSynthesis'in window)window.speechSynthesis.cancel();$('hint').textContent=voiceReplies?'Spoken replies enabled.':'Spoken replies disabled.';});
- $('clear').addEventListener('click',()=>{if('speechSynthesis'in window)window.speechSynthesis.cancel();conversation.length=0;chat.querySelectorAll('.message').forEach(node=>node.remove());$('welcome').classList.remove('hidden');$('hint').textContent='Ready for a new conversation.';prompt.focus();});
- $('send').addEventListener('click',()=>send());
- function setupVoiceInput(){
-   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-   if(!SpeechRecognition){voiceButton.disabled=true;voiceButton.title='Voice input is not supported in this browser. Try Microsoft Edge or Chrome.';voiceButton.setAttribute('aria-label','Voice input unavailable');return;}
-   recognition=new SpeechRecognition();recognition.lang='en-US';recognition.interimResults=true;recognition.continuous=false;
-   recognition.onstart=()=>{listening=true;voiceButton.setAttribute('aria-pressed','true');voiceButton.textContent='⏺';$('hint').textContent='Listening… speak your question.';};
-   recognition.onresult=event=>{let finalText='';let interim='';for(let i=event.resultIndex;i<event.results.length;i++){const piece=event.results[i][0].transcript;if(event.results[i].isFinal)finalText+=piece;else interim+=piece;}if(finalText.trim())prompt.value=finalText.trim();else if(interim)prompt.placeholder=interim;};
-   recognition.onerror=event=>{$('hint').textContent=event.error==='not-allowed'?'Allow microphone access in your browser to use voice input.':'Voice input issue: '+event.error+'. You can still type your message.';};
-   recognition.onend=()=>{listening=false;voiceButton.setAttribute('aria-pressed','false');voiceButton.textContent='🎙';prompt.placeholder='Message ARIES AI…';if(prompt.value.trim())$('hint').textContent='Voice captured. Press Transmit to send it.';};
-   voiceButton.addEventListener('click',()=>{if(!recognition)return;if(listening){recognition.stop();return;}try{recognition.start();}catch(_){$('hint').textContent='Voice input is already starting. Try again in a moment.';}});
- }
- setupVoiceInput();
- prompt.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}});
- prompt.addEventListener('input',()=>{prompt.style.height='auto';prompt.style.height=Math.min(prompt.scrollHeight,150)+'px';});
- document.querySelectorAll('.suggestion').forEach(button=>button.addEventListener('click',()=>send(button.textContent)));
- if('speechSynthesis'in window)window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
- check();
+"use strict";
+const $=id=>document.getElementById(id);
+const transcript=$("transcript");
+const promptBox=$("prompt");
+const endpoint=$("endpoint");
+const PUBLIC_API="https://aries-tier0-api-6qjh.onrender.com";
+const history=[];
+let pending=false;
+let listening=false;
+let recognition=null;
+let voiceReplies=true;
+function base(){return endpoint.value.trim().replace(/\/+$/,"");}
+function setConnection(ok,label){
+  $("sideDot").className="status-dot "+(ok?"ok":"bad");
+  $("sideStatus").textContent=label;
+  $("headerStatus").textContent=ok?"ARIES API connected":"ARIES connection needs attention";
+}
+function scrollBottom(){transcript.scrollTop=transcript.scrollHeight;}
+function showWelcome(show){$("welcome").hidden=!show;}
+function newMessage(role,text){
+  showWelcome(false);
+  const row=document.createElement("article");
+  row.className="chat-message "+role;
+  const avatar=document.createElement("div");
+  avatar.className="avatar";
+  avatar.textContent=role==="user"?"YOU":"AR";
+  avatar.setAttribute("aria-hidden","true");
+  const column=document.createElement("div");
+  column.className="message-column";
+  const label=document.createElement("div");
+  label.className="message-label";
+  label.textContent=role==="user"?"YOU":"ARIES AI";
+  const bubble=document.createElement("div");
+  bubble.className="bubble";
+  bubble.textContent=text;
+  column.append(label,bubble);
+  row.append(avatar,column);
+  transcript.append(row);
+  scrollBottom();
+  return {row,column,bubble};
+}
+function speak(text){
+  if(!("speechSynthesis" in window)||typeof SpeechSynthesisUtterance==="undefined"){
+    $("hint").textContent="Speech playback is not available in this browser.";
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utterance=new SpeechSynthesisUtterance(String(text||""));
+  utterance.pitch=.76;
+  utterance.rate=.88;
+  utterance.volume=1;
+  const voices=window.speechSynthesis.getVoices();
+  const voice=voices.find(v=>/en-US/i.test(v.lang)&&/David|Mark|Guy|Google US English/i.test(v.name))||voices.find(v=>/^en(-|_)/i.test(v.lang));
+  if(voice)utterance.voice=voice;
+  window.speechSynthesis.speak(utterance);
+}
+function addMessageActions(message,text){
+  const actions=document.createElement("div");
+  actions.className="message-actions";
+  const listenButton=document.createElement("button");
+  listenButton.className="mini-action";
+  listenButton.type="button";
+  listenButton.textContent="▶ Listen";
+  listenButton.addEventListener("click",()=>speak(text));
+  const copyButton=document.createElement("button");
+  copyButton.className="mini-action";
+  copyButton.type="button";
+  copyButton.textContent="Copy";
+  copyButton.addEventListener("click",async()=>{
+    try{await navigator.clipboard.writeText(text);copyButton.textContent="Copied";setTimeout(()=>{copyButton.textContent="Copy";},1300);}
+    catch(_){copyButton.textContent="Copy unavailable";}
+  });
+  actions.append(listenButton,copyButton);
+  message.column.append(actions);
+}
+async function request(path,options){
+  const root=base();
+  return fetch(root+path,options);
+}
+async function checkConnection(){
+  const button=$("checkConnection");
+  if(button)button.disabled=true;
+  $("hint").textContent="Checking ARIES…";
+  try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),9000);
+    let response;
+    try{response=await request("/health",{method:"GET",cache:"no-store",signal:controller.signal});}
+    finally{clearTimeout(timeout);}
+    if(!response.ok)throw new Error("HTTP "+response.status);
+    setConnection(true,"ARIES connected");
+    $("hint").textContent="Connected. Ready to chat.";
+    return true;
+  }catch(error){
+    setConnection(false,"ARIES unavailable");
+    $("hint").textContent="Could not reach the API. Check connection settings and retry.";
+    return false;
+  }finally{if(button)button.disabled=false;}
+}
+async function send(text){
+  const value=String(text===undefined?promptBox.value:text).trim();
+  if(!value||pending)return;
+  pending=true;
+  $("send").disabled=true;
+  promptBox.value="";
+  promptBox.style.height="auto";
+  const userMessage={role:"user",content:value};
+  history.push(userMessage);
+  newMessage("user",value);
+  const assistant=newMessage("assistant","");
+  assistant.bubble.innerHTML='<span class="typing" aria-label="ARIES is responding"><i></i><i></i><i></i></span>';
+  $("hint").textContent="ARIES is thinking…";
+  try{
+    const response=await request("/v1/chat/completions",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      cache:"no-store",
+      body:JSON.stringify({model:"aries-native-ngram",messages:history.slice(-16),max_tokens:300,temperature:.2})
+    });
+    let data;
+    try{data=await response.json();}
+    catch(_){throw new Error("The API returned an unreadable response.");}
+    if(!response.ok)throw new Error((data.error&&data.error.message)||data.detail||("HTTP "+response.status));
+    const result=data&&data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
+    if(typeof result!=="string"||!result.trim())throw new Error("The API returned an empty response.");
+    const answer=result.trim();
+    assistant.bubble.textContent=answer;
+    history.push({role:"assistant",content:answer});
+    addMessageActions(assistant,answer);
+    setConnection(true,"ARIES connected");
+    $("hint").textContent=voiceReplies?"Reply received.":"Reply received.";
+    if(voiceReplies)speak(answer);
+  }catch(error){
+    assistant.bubble.textContent="ARIES could not complete that request. "+(error&&error.message?error.message:"Please check the connection and try again.");
+    history.pop();
+    setConnection(false,"ARIES unavailable");
+    $("hint").textContent="Request failed. Check the connection and retry.";
+  }finally{
+    pending=false;
+    $("send").disabled=false;
+    promptBox.focus();
+    scrollBottom();
+  }
+}
+function clearConversation(){
+  if(pending)return;
+  if("speechSynthesis" in window)window.speechSynthesis.cancel();
+  history.length=0;
+  transcript.querySelectorAll(".chat-message").forEach(node=>node.remove());
+  showWelcome(true);
+  $("hint").textContent="New conversation ready.";
+  promptBox.value="";
+  promptBox.focus();
+}
+$("send").addEventListener("click",()=>send());
+$("newChat").addEventListener("click",clearConversation);
+$("clearChat").addEventListener("click",clearConversation);
+$("checkConnection").addEventListener("click",checkConnection);
+$("settingsToggle").addEventListener("click",()=>{
+  const open=$("settings").classList.toggle("open");
+  $("settingsToggle").setAttribute("aria-expanded",String(open));
+  if(open)endpoint.focus();
+});
+endpoint.addEventListener("change",checkConnection);
+$("voiceReplies").addEventListener("click",()=>{
+  voiceReplies=!voiceReplies;
+  $("voiceReplies").textContent=voiceReplies?"Voice replies: On":"Voice replies: Off";
+  $("voiceReplies").setAttribute("aria-pressed",String(voiceReplies));
+  if(!voiceReplies&&"speechSynthesis" in window)window.speechSynthesis.cancel();
+  $("hint").textContent=voiceReplies?"Spoken replies enabled.":"Spoken replies disabled.";
+});
+$("prompt").addEventListener("keydown",event=>{
+  if(event.key==="Enter"&&!event.shiftKey&&!event.isComposing){event.preventDefault();send();}
+});
+promptBox.addEventListener("input",()=>{
+  promptBox.style.height="auto";
+  promptBox.style.height=Math.min(promptBox.scrollHeight,160)+"px";
+});
+document.querySelectorAll("[data-prompt]").forEach(button=>button.addEventListener("click",()=>send(button.dataset.prompt)));
+function setupVoice(){
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const button=$("voiceInput");
+  if(!SpeechRecognition){
+    button.title="Voice input is not supported in this browser. Try Chrome or Edge.";
+    button.addEventListener("click",()=>$("hint").textContent="Voice input is unavailable in this browser. You can type your message.");
+    return;
+  }
+  recognition=new SpeechRecognition();
+  recognition.lang="en-US";
+  recognition.interimResults=true;
+  recognition.continuous=false;
+  recognition.onstart=()=>{
+    listening=true;
+    button.textContent="■";
+    button.setAttribute("aria-pressed","true");
+    $("hint").textContent="Listening… speak now.";
+  };
+  recognition.onresult=event=>{
+    let finalText="";
+    let interimText="";
+    for(let i=event.resultIndex;i<event.results.length;i++){
+      const words=event.results[i][0].transcript;
+      if(event.results[i].isFinal)finalText+=words;
+      else interimText+=words;
+    }
+    if(finalText.trim())promptBox.value=finalText.trim();
+    else if(interimText.trim())promptBox.placeholder=interimText.trim();
+    promptBox.style.height="auto";
+    promptBox.style.height=Math.min(promptBox.scrollHeight,160)+"px";
+  };
+  recognition.onerror=event=>{
+    $("hint").textContent=event.error==="not-allowed"?"Allow microphone access to use voice input.":"Voice input stopped. You can type your message.";
+  };
+  recognition.onend=()=>{
+    listening=false;
+    button.textContent="🎙";
+    button.setAttribute("aria-pressed","false");
+    promptBox.placeholder="Message ARIES AI…";
+    if(promptBox.value.trim())$("hint").textContent="Voice captured. Press send when ready.";
+  };
+  button.addEventListener("click",()=>{
+    if(!recognition)return;
+    if(listening){recognition.stop();return;}
+    try{recognition.start();}
+    catch(_){$("hint").textContent="Voice input is starting. Try again in a moment.";}
+  });
+}
+setupVoice();
+if("speechSynthesis" in window)window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();
+checkConnection();
 })();
 </script>
 </body>

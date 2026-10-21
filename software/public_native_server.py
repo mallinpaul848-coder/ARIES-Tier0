@@ -34,7 +34,7 @@ except Exception as exc:
 LOCAL_MODEL_READY = LOCAL_MODEL is not None
 MODEL_ID = (
     UPSTREAM_MODEL_ID if UPSTREAM_READY
-    else "aries-local-smollm2-360m" if LOCAL_MODEL_READY
+    else "aries-local-smollm2-135m" if LOCAL_MODEL_READY
     else NATIVE_MODEL_ID
 )
 FAST_PATH = FastPathEngine(solve, max_entries=int(os.getenv("ARIES_FAST_CACHE_SIZE", "2048")))
@@ -96,7 +96,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200, {"object":"list","data":[
                 {"id":MODEL_ID,"object":"model","owned_by":"aries"}],
                 "inference_ready":True,
-                "model_type":"OpenAI-compatible chat backend with ARIES native task engine" if UPSTREAM_READY else ("local SmolLM2-360M-Instruct" if LOCAL_MODEL_READY else "character n-gram baseline")})
+                "model_type":"OpenAI-compatible chat backend with ARIES native task engine" if UPSTREAM_READY else ("local SmolLM2-135M-Instruct" if LOCAL_MODEL_READY else "character n-gram baseline")})
         if path == "/performance":
             return self.send_json(200, {
                 "service": "ARIES AI API",

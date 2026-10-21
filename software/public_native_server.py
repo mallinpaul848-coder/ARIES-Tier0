@@ -32,7 +32,7 @@ PORT = int(os.getenv("PORT", "10000"))
 HOST = "0.0.0.0"
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "ARIES-Native-Gateway/1.0"
+    server_version = "ARIES-Native-Gateway/1.0.7"
     def send_json(self, status, value):
         body = json.dumps(value, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
@@ -56,16 +56,16 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200, {"status":"ok","service":"aries-ai-api"})
         if path == "/":
             return self.send_json(200, {
-                "service":"ARIES AI API","api_version":"1.0.6",
+                "service":"ARIES AI API","api_version":"1.0.7",
                 "status":"configured","inference_ready":ready,
                 "backend":"aries-native-char-ngram",
                 "model_id":MODEL_ID,"native_reasoner_enabled":True,"native_reasoner_version":"0.2",
-                "general_chat_upstream_configured":UPSTREAM_READY,
+                "general_chat_upstream_configured":UPSTREAM_READY,"general_chat_ready":UPSTREAM_READY,
                 "note":"ARIES native task engine with optional OpenAI-compatible general chat backend."
             })
         if path == "/diagnostics":
             return self.send_json(200, {
-                "service":"ARIES AI API","api_version":"1.0.6",
+                "service":"ARIES AI API","api_version":"1.0.7",
                 "native_reasoner_version":"0.2",
                 "checks":{"upstream_base_url_configured":bool(UPSTREAM_BASE_URL),
                           "model_id_configured":bool(UPSTREAM_MODEL_ID or NATIVE_MODEL_ID),

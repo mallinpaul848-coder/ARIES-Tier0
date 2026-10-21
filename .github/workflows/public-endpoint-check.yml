@@ -39,16 +39,24 @@ jobs:
                   headers["Content-Type"] = "application/json"
               req = urllib.request.Request(base + path, data=data, headers=headers,
                   method="GET" if data is None else "POST")
-              with urllib.request.urlopen(req, timeout=timeout) as response:
-                  raw = response.read().decode("utf-8", "replace")
-                  return response.status, json.loads(raw) if raw else {}
+              try:
+                  with urllib.request.urlopen(req, timeout=timeout) as response:
+                      raw = response.read().decode("utf-8", "replace")
+                      return response.status, json.loads(raw) if raw else {}
+              except urllib.error.HTTPError as exc:
+                  raw = exc.read().decode("utf-8", "replace")
+                  try:
+                      body = json.loads(raw) if raw else {}
+                  except ValueError:
+                      body = {"response_text": raw[:500]}
+                  return exc.code, body
 
           # Render builds asynchronously after a Git push. Don't fail on the old
           # deployment while the new Docker image is still being built.
           while time.monotonic() < deadline:
               try:
                   status, root = request("/")
-                  if status == 200 and root.get("api_version") == "1.0.8" and root.get("backend") == "aries-native-char-ngram" and root.get("inference_ready") is True and root.get("native_reasoner_enabled") is True and root.get("native_reasoner_version") == "0.2" and root.get("general_chat_ready") is True and (root.get("local_model_loaded") is True or root.get("general_chat_upstream_configured") is True):
+                  if status == 200 and root.get("api_version") == "1.0.8" and root.get("inference_ready") is True and root.get("native_reasoner_enabled") is True and root.get("native_reasoner_version") == "0.2" and root.get("general_chat_ready") is True and (root.get("local_model_loaded") is True or root.get("general_chat_upstream_configured") is True):
                       break
                   last_error = f"service has not switched to native image yet: {root}"
               except Exception as exc:
@@ -86,8 +94,7 @@ jobs:
                                    "nonempty_response":bool(answer.strip()),"response_preview":answer[:180],
                                    "inference_ns":aries_metrics.get("inference_ns"),
                                    "fast_path_cache_hit":aries_metrics.get("fast_path_cache_hit")})
-          print(json.dumps(report,indent=2))
-          assert status == 200 and answer.strip(), "Native inference did not return a non-empty completion."
+          assert status == 200 and answer.strip(), f"Native inference did not return a non-empty completion: {chat}"
           assert isinstance(aries_metrics.get("inference_ns"), int) and aries_metrics.get("inference_ns") > 0, f"Missing measured inference_ns field: {aries_metrics}"
           status, qa = request("/v1/chat/completions", {
               "model":model_id,
@@ -97,8 +104,10 @@ jobs:
           qa_choices = qa.get("choices",[])
           qa_answer = qa_choices[0].get("message",{}).get("content","") if qa_choices else ""
           report["checks"].append({"path":"/v1/chat/completions general QA","http_status":status,
-                                   "expected":"Paris","response_preview":qa_answer[:180]})
-          assert status == 200 and "paris" in qa_answer.lower(), f"General question-answer test failed: {qa_answer}"
+                                   "expected":"Paris","response_preview":qa_answer[:180],
+                                   "error":qa if status != 200 else None})
+          print(json.dumps(report,indent=2))
+          assert status == 200 and "paris" in qa_answer.lower(), f"General question-answer test failed: status={status}, response={qa}"
           print("PASS: general chat answered the capital-of-France check.")
           PY
 

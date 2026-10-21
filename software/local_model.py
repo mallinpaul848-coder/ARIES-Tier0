@@ -19,7 +19,7 @@ class LocalChatModel:
             model_path
             or os.getenv(
                 "ARIES_GGUF_MODEL_PATH",
-                "/app/models/SmolLM2-360M-Instruct-Q4_K_M.gguf",
+                "/app/models/SmolLM2-135M-Instruct-Q4_K_M.gguf",
             )
         )
         if not path.is_file():
@@ -32,9 +32,9 @@ class LocalChatModel:
         try:
             self._model = Llama(
                 model_path=str(path),
-                n_ctx=768,
+                n_ctx=512,
                 n_threads=max(1, min(int(os.getenv("ARIES_LOCAL_MODEL_THREADS", "1")), 4)),
-                n_batch=64,
+                n_batch=32,
                 n_gpu_layers=0,
                 use_mmap=True,
                 verbose=False,
@@ -78,7 +78,7 @@ class LocalChatModel:
             with self._lock:
                 response = self._model.create_chat_completion(
                     messages=normalized,
-                    max_tokens=max(1, min(int(max_tokens), 160)),
+                    max_tokens=max(1, min(int(max_tokens), 128)),
                     temperature=max(0.0, min(float(temperature), 1.2)),
                     top_p=0.9,
                     repeat_penalty=1.08,

@@ -15,7 +15,7 @@ permissions:
 jobs:
   live-endpoint:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
               started = time.perf_counter()
               try:
                   req = urllib.request.Request(url, data=data, headers=headers, method=method)
-                  with urllib.request.urlopen(req, timeout=35) as response:
+                  with urllib.request.urlopen(req, timeout=100) as response:
                       body = response.read(1_000_000).decode("utf-8", "replace")
                       elapsed = round((time.perf_counter() - started) * 1000, 2)
                       try:

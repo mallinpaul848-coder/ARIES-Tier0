@@ -40,6 +40,17 @@ Invoke-RestMethod "https://aries-tier0-api-6qjh.onrender.com/v1/chat/completions
 
 The live service's `/diagnostics` and `/` endpoints report whether local inference loaded successfully. The deployment must pass the public endpoint check, including a general question-answer test, before the updated chat backend should be considered live.
 
+## Self-hosted ARIES inference on Windows
+
+ARIES can also run its own local chat inference without sending prompts to an external chat API. This separate runtime uses llama.cpp on your computer and downloads the Qwen2.5-1.5B-Instruct Q4_K_M model from its public model repository on first launch (roughly 1 GB; the download size can vary).
+
+1. Download or clone this repository to your Windows PC.
+2. Double-click `software\\START_ARIES_SELF_HOSTED.bat`. Keep the terminal open. The first launch installs the runtime and downloads model weights.
+3. Open the ARIES chat page, open the gear/settings menu, set **ARIES API URL** to `http://127.0.0.1:8765`, then select **Test connection**.
+4. Chat normally. To stop the local engine, press Ctrl+C in its terminal. Run the launcher again to restart it.
+
+This mode runs inference on the computer where it is started and does not require a provider API key. It does require internet access for the initial package/model download and a Windows system with Python 3.10+ and enough RAM (8 GB or more recommended). The 1.5B model is a meaningful step up from the bundled 135M model, but it is still a compact model and can make mistakes. The local API listens only on `127.0.0.1` by default, so it is not exposed to the public internet. Keep the endpoint on localhost unless you intentionally configure a secure private network.
+
 ## Run the same native software on Windows
 
 From the repository root in PowerShell:

@@ -10,6 +10,7 @@ from native_runtime import NativeModel, answer_known_question
 from native_reasoner import solve
 from latency_engine import FastPathEngine, LatencyMonitor
 from upstream_backend import UpstreamInferenceError, request_upstream_answer, upstream_configuration
+from local_model import LocalChatModel, LocalInferenceError
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aries_math.prise_unified import (ARIESExecutionEngine, PRISEProblem, exact_sat_bruteforce)
 from aries_math.chat_router import route_math_prompt
@@ -25,7 +26,17 @@ try:
 except ValueError:
     UPSTREAM_TIMEOUT_SECONDS = 90.0
 UPSTREAM_READY = bool(UPSTREAM_BASE_URL and UPSTREAM_MODEL_ID)
-MODEL_ID = UPSTREAM_MODEL_ID if UPSTREAM_READY else NATIVE_MODEL_ID
+try:
+    LOCAL_MODEL = LocalChatModel()
+except Exception as exc:
+    print("ARIES local model unavailable: " + type(exc).__name__, flush=True)
+    LOCAL_MODEL = None
+LOCAL_MODEL_READY = LOCAL_MODEL is not None
+MODEL_ID = (
+    UPSTREAM_MODEL_ID if UPSTREAM_READY
+    else "aries-local-smollm2-360m" if LOCAL_MODEL_READY
+    else NATIVE_MODEL_ID
+)
 FAST_PATH = FastPathEngine(solve, max_entries=int(os.getenv("ARIES_FAST_CACHE_SIZE", "2048")))
 LATENCY_MONITOR = LatencyMonitor(window_size=int(os.getenv("ARIES_LATENCY_WINDOW_SIZE", "2048")))
 PORT = int(os.getenv("PORT", "10000"))
@@ -60,7 +71,9 @@ class Handler(BaseHTTPRequestHandler):
                 "status":"configured","inference_ready":ready,
                 "backend":"aries-native-char-ngram",
                 "model_id":MODEL_ID,"native_reasoner_enabled":True,"native_reasoner_version":"0.2",
-                "general_chat_upstream_configured":UPSTREAM_READY,"general_chat_ready":UPSTREAM_READY,
+                "general_chat_upstream_configured":UPSTREAM_READY,
+                "general_chat_ready":UPSTREAM_READY or LOCAL_MODEL_READY,
+                "local_model_loaded":LOCAL_MODEL_READY,
                 "note":"ARIES native task engine with optional OpenAI-compatible general chat backend."
             })
         if path == "/diagnostics":
@@ -70,18 +83,20 @@ class Handler(BaseHTTPRequestHandler):
                 "checks":{"upstream_base_url_configured":bool(UPSTREAM_BASE_URL),
                           "model_id_configured":bool(UPSTREAM_MODEL_ID or NATIVE_MODEL_ID),
                           "api_key_configured":bool(UPSTREAM_API_KEY),
-                          "native_model_loaded":True,"deterministic_reasoner_loaded":True},
-                "inference_configured":True,"backend":"native_with_optional_upstream" if UPSTREAM_READY else "native",
-                "general_chat_ready":UPSTREAM_READY,
-                "model_format":"ARIES native task engine with optional OpenAI-compatible chat backend",
+                          "native_model_loaded":True,"deterministic_reasoner_loaded":True,
+                          "local_model_loaded":LOCAL_MODEL_READY},
+                "inference_configured":True,
+                "backend":"openai-compatible-upstream" if UPSTREAM_READY else ("local-llama-cpp" if LOCAL_MODEL_READY else "native"),
+                "general_chat_ready":UPSTREAM_READY or LOCAL_MODEL_READY,
+                "model_format":"ARIES deterministic task engine with local SmolLM2 instruction model and optional OpenAI-compatible backend",
                 "trained_characters":MODEL.trained_characters,
-                "next_step":"Configure ARIES_UPSTREAM_BASE_URL and ARIES_MODEL_ID for general chat; add ARIES_UPSTREAM_API_KEY when required."
+                "next_step":"Local instruction model is ready." if LOCAL_MODEL_READY or UPSTREAM_READY else "Configure a local GGUF model or ARIES_UPSTREAM_BASE_URL and ARIES_MODEL_ID; add ARIES_UPSTREAM_API_KEY when required."
             })
         if path == "/v1/models":
             return self.send_json(200, {"object":"list","data":[
                 {"id":MODEL_ID,"object":"model","owned_by":"aries"}],
                 "inference_ready":True,
-                "model_type":"OpenAI-compatible chat backend with ARIES native task engine" if UPSTREAM_READY else "character n-gram baseline"})
+                "model_type":"OpenAI-compatible chat backend with ARIES native task engine" if UPSTREAM_READY else ("local SmolLM2-360M-Instruct" if LOCAL_MODEL_READY else "character n-gram baseline")})
         if path == "/performance":
             return self.send_json(200, {
                 "service": "ARIES AI API",
@@ -154,6 +169,8 @@ class Handler(BaseHTTPRequestHandler):
             math_route = None
             upstream_used = False
             upstream_elapsed_ns = None
+            local_model_used = False
+            local_model_elapsed_ns = None
             if answer is None:
                 answer = answer_known_question(prompt)
             if answer is None:
@@ -172,6 +189,13 @@ class Handler(BaseHTTPRequestHandler):
                     timeout_seconds=UPSTREAM_TIMEOUT_SECONDS,
                 )
                 upstream_used = True
+            elif answer is None and LOCAL_MODEL_READY:
+                answer, local_model_elapsed_ns = LOCAL_MODEL.generate(
+                    normalized_messages,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                )
+                local_model_used = True
             if answer is None:
                 answer = (
                     "I can handle supported calculations and built-in ARIES tasks, but general "
@@ -191,19 +215,22 @@ class Handler(BaseHTTPRequestHandler):
                 "usage":{"prompt_tokens":len(prompt),"completion_tokens":len(answer),
                          "total_tokens":len(prompt)+len(answer)},
                 "aries_native":{
-                    "runtime":"openai-compatible-upstream" if upstream_used else "stdlib-char-ngram+rules",
+                    "runtime":"openai-compatible-upstream" if upstream_used else ("llama-cpp-local" if local_model_used else "stdlib-char-ngram+rules"),
                     "inference_seconds":round(elapsed_ns / 1000000000, 9),
                     "inference_ns":elapsed_ns,
                     "fast_path_elapsed_ns":fast_path_elapsed_ns,
                     "fast_path_cache_hit":fast_path_cache_hit,
                     "upstream_used":upstream_used,
                     "upstream_inference_ns":upstream_elapsed_ns,
-                    "model_type":"configured_chat_model" if upstream_used else "native_task_engine_or_baseline",
+                    "local_model_inference_ns":local_model_elapsed_ns,
+                    "model_type":"configured_chat_model" if upstream_used else ("local_instruct_model" if local_model_used else "native_task_engine_or_baseline"),
                     "math_route":math_route
                 }
             })
         except UpstreamInferenceError as exc:
             return self.send_json(exc.status_code, {"error":{"message":str(exc),"type":"inference_backend_error"}})
+        except LocalInferenceError as exc:
+            return self.send_json(502, {"error":{"message":str(exc),"type":"local_inference_error"}})
         except (ValueError,TypeError,KeyError,json.JSONDecodeError) as exc:
             return self.send_json(400, {"error":{"message":"Invalid request: "+str(exc)}})
     def log_message(self, fmt, *args):

@@ -1,8 +1,8 @@
 # ARIES Tier 0 — Native Inference, API, and External Tests
 
-ARIES now includes an independently authored, provider-free inference service. The Docker deployment trains a small character n-gram baseline from `software/deployment_corpus.txt` during image build, plus a transparent deterministic task engine for basic arithmetic, simple logic, weekday arithmetic, exact-output formatting, and a tiny verified fact table. It serves an OpenAI-compatible chat endpoint. It does not require a third-party model API key or upstream URL.
+ARIES serves an OpenAI-compatible chat API with deterministic handlers for arithmetic, simple logic, weekday arithmetic, exact-output formatting, and supported math tools. The Docker image bundles SmolLM2-360M-Instruct Q4_K_M for local general chat when no upstream is configured. The character n-gram model remains a lightweight fallback, not the primary general-chat engine.
 
-**Important capability limit:** this built-in model is a tiny character n-gram baseline, not a modern large language model. It proves that ARIES's own software can train, load, and serve a model without a hosted inference provider. It is not evidence of Tier-0 capability, strong reasoning, or leaderboard-level performance. Responses may be incoherent and quality tests may score poorly. Do not advertise it as equivalent to a modern LLM.
+**Local chat model:** ARIES uses SmolLM2-360M-Instruct, quantized to Q4_K_M and executed with llama.cpp on CPU. This compact instruction model is intended for ordinary questions without requiring an external model API key; it can still make mistakes and is not equivalent to larger frontier models. Exact arithmetic and other supported deterministic tasks continue to use ARIES's own handlers.
 
 ## Public API
 
@@ -16,7 +16,7 @@ After Render deploys the latest commit, use the service URL shown in Render. The
 - `GET /v1/models` — model listing
 - `POST /v1/chat/completions` — generated response
 
-No `ARIES_UPSTREAM_BASE_URL`, `ARIES_MODEL_ID`, or provider API key is required for this native baseline. Render must finish rebuilding the Docker image before the new routes and model are live.
+No upstream or API key is required for local general chat. To use an external OpenAI-compatible provider instead, configure `ARIES_UPSTREAM_BASE_URL` and `ARIES_MODEL_ID`; set `ARIES_UPSTREAM_API_KEY` only if that provider requires one. Render must rebuild the Docker image before the local model is live.
 
 Example PowerShell request:
 
@@ -30,6 +30,15 @@ $body = @{
 
 Invoke-RestMethod "https://aries-tier0-api-6qjh.onrender.com/v1/chat/completions" -Method Post -ContentType "application/json" -Body $body
 ```
+
+## Local general-chat model
+
+- Model file: [SmolLM2-360M-Instruct-Q4_K_M.gguf](https://huggingface.co/bartowski/SmolLM2-360M-Instruct-GGUF)
+- Runtime: `llama-cpp-python` on CPU, one thread by default
+- The build verifies the downloaded GGUF file by SHA-256 before using it.
+- Model license: Apache-2.0. The container includes the full license at `/app/licenses/Apache-2.0.txt`.
+
+The live service's `/diagnostics` and `/` endpoints report whether local inference loaded successfully. The deployment must pass the public endpoint check, including a general question-answer test, before the updated chat backend should be considered live.
 
 ## Run the same native software on Windows
 

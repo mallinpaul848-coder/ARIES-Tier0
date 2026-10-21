@@ -48,7 +48,7 @@ jobs:
           while time.monotonic() < deadline:
               try:
                   status, root = request("/")
-                  if status == 200 and root.get("api_version") == "1.0.7" and root.get("backend") == "aries-native-char-ngram" and root.get("inference_ready") is True and root.get("native_reasoner_enabled") is True and root.get("native_reasoner_version") == "0.2" and root.get("general_chat_ready") is True and (root.get("local_model_loaded") is True or root.get("general_chat_upstream_configured") is True):
+                  if status == 200 and root.get("api_version") == "1.0.8" and root.get("backend") == "aries-native-char-ngram" and root.get("inference_ready") is True and root.get("native_reasoner_enabled") is True and root.get("native_reasoner_version") == "0.2" and root.get("general_chat_ready") is True and (root.get("local_model_loaded") is True or root.get("general_chat_upstream_configured") is True):
                       break
                   last_error = f"service has not switched to native image yet: {root}"
               except Exception as exc:

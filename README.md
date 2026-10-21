@@ -223,3 +223,24 @@ These tools are empirical diagnostics. AUC measures classification performance o
 
 GitHub Actions runs both test modules and deterministic smoke checks when the SAT lab files change. Inspect the workflow result under the repository's Actions tab; commits and configured CI are not the same as a verified passing run.
 
+
+
+## ARIES performance metrics
+
+The **ARIES Performance Metrics** GitHub Actions workflow runs on pushes that change the benchmark, can be started manually, and runs every 12 hours. It probes the configured public API, selects the first advertised model when `--model auto` is used, executes the 10-case diagnostic suite, and saves a JSON report as a downloadable Actions artifact.
+
+Measured report fields include:
+- API health and model-list response status and latency
+- Completion request success rate and non-empty response count
+- Exact-match score overall and by diagnostic category (arithmetic, reasoning, instruction following, and basic knowledge)
+- Minimum, mean, P50, P90, P95, P99, and maximum request latency
+- Total benchmark wall time and completed requests per second
+- Per-case HTTP status, response text, latency, and token counts when the API returns usage data
+
+Run the same test locally:
+
+```powershell
+python tools/aries_bench.py --base-url https://aries-tier0-api-6qjh.onrender.com --model auto --limit 10 --concurrency 1 --output reports/aries-public-performance.json
+```
+
+Workflow: [ARIES Performance Metrics](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/aries-performance.yml). Open the latest run and download the `aries-performance-*` artifact to inspect the JSON measurements. Latency and throughput are endpoint measurements under that run's network, host, model, and load conditions; they are not hardware-independent guarantees. The 10-case accuracy score is a small project-owned diagnostic, not an official academic benchmark or independent certification.

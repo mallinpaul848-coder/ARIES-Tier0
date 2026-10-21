@@ -133,6 +133,8 @@ let pending=false;
 let listening=false;
 let recognition=null;
 let voiceReplies=true;
+let activeModel="aries-native-ngram";
+let generalChatReady=false;
 function base(){return endpoint.value.trim().replace(/\/+$/,"");}
 function setConnection(ok,label){
   $("sideDot").className="status-dot "+(ok?"ok":"bad");
@@ -204,20 +206,35 @@ async function request(path,options){
 async function checkConnection(){
   const button=$("checkConnection");
   if(button)button.disabled=true;
-  $("hint").textContent="Checking ARIES…";
+  $("hint").textContent="Checking ARIES API and inference engine…";
   try{
     const controller=new AbortController();
-    const timeout=setTimeout(()=>controller.abort(),9000);
-    let response;
-    try{response=await request("/health",{method:"GET",cache:"no-store",signal:controller.signal});}
-    finally{clearTimeout(timeout);}
-    if(!response.ok)throw new Error("HTTP "+response.status);
-    setConnection(true,"ARIES connected");
-    $("hint").textContent="Connected. Ready to chat.";
+    const timeout=setTimeout(()=>controller.abort(),12000);
+    let health,info,models;
+    try{
+      health=await request("/health",{method:"GET",cache:"no-store",signal:controller.signal});
+      if(!health.ok)throw new Error("Health check HTTP "+health.status);
+      const results=await Promise.all([
+        request("/",{method:"GET",cache:"no-store",signal:controller.signal}),
+        request("/v1/models",{method:"GET",cache:"no-store",signal:controller.signal})
+      ]);
+      info=results[0].ok?await results[0].json():{};
+      models=results[1].ok?await results[1].json():{};
+    }finally{clearTimeout(timeout);}
+    const advertised=models&&Array.isArray(models.data)?models.data:[];
+    if(advertised.length&&typeof advertised[0].id==="string")activeModel=advertised[0].id;
+    generalChatReady=!!(info&&info.general_chat_ready);
+    if(generalChatReady){
+      setConnection(true,"ARIES ready · "+activeModel);
+      $("hint").textContent="Connected to "+activeModel+". Ready to chat.";
+    }else{
+      setConnection(true,"API online · limited engine");
+      $("hint").textContent="API is online, but a general-chat model is not ready. Answers may be limited until local inference or a chat model is enabled.";
+    }
     return true;
   }catch(error){
     setConnection(false,"ARIES unavailable");
-    $("hint").textContent="Could not reach the API. Check connection settings and retry.";
+    $("hint").textContent="Could not verify the ARIES API and model. Check connection settings and retry.";
     return false;
   }finally{if(button)button.disabled=false;}
 }
@@ -235,12 +252,16 @@ async function send(text){
   assistant.bubble.innerHTML='<span class="typing" aria-label="ARIES is responding"><i></i><i></i><i></i></span>';
   $("hint").textContent="ARIES is thinking…";
   try{
-    const response=await request("/v1/chat/completions",{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),90000);
+    let response;
+    try{response=await request("/v1/chat/completions",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       cache:"no-store",
-      body:JSON.stringify({model:"aries-chat",messages:[{role:"system",content:"You are ARIES AI, a highly capable general-purpose assistant in the MALLIN platform. Solve the actual task rather than giving generic advice. Think carefully before answering; break complex tasks into clear steps; verify calculations; write complete, working code when requested; preserve relevant conversation context; distinguish facts from assumptions; never fabricate results, sources, actions, or capabilities. If the request involves current information and no live search tool is available, say what cannot be verified. Be concise for simple questions and thorough for complex ones. Follow the user’s requested format and tone."},...history.slice(-24)],max_tokens:1200,temperature:.25})
-    });
+      signal:controller.signal,
+      body:JSON.stringify({model:activeModel,messages:[{role:"system",content:"You are ARIES AI, a highly capable general-purpose assistant in the MALLIN platform. Solve the actual task rather than giving generic advice. Think carefully before answering; break complex tasks into clear steps; verify calculations; write complete, working code when requested; preserve relevant conversation context; distinguish facts from assumptions; never fabricate results, sources, actions, or capabilities. If the request involves current information and no live search tool is available, say what cannot be verified. Be concise for simple questions and thorough for complex ones. Follow the user’s requested format and tone."},...history.slice(-24)],max_tokens:1200,temperature:.25})
+    });}finally{clearTimeout(timeout);}
     let data;
     try{data=await response.json();}
     catch(_){throw new Error("The API returned an unreadable response.");}

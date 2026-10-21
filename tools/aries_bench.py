@@ -30,7 +30,7 @@ CASES = [
 ]
 
 def normalize(value):
-    return " ".join(str(value).strip().lower().split()).strip(" .!\\t\\n")
+    return " ".join(str(value).strip().lower().split()).strip(" .!\\t\n")
 
 def percentile(values, pct):
     if not values:
@@ -170,8 +170,8 @@ def main():
     }
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False)+"\\n", encoding="utf-8")
-    print("\\nPERFORMANCE SUMMARY")
+    output.write_text(json.dumps(report, indent=2, ensure_ascii=False)+"\n", encoding="utf-8")
+    print("\nPERFORMANCE SUMMARY")
     print(json.dumps(report["summary"], indent=2))
     print("Saved report:", output)
     if not completed:

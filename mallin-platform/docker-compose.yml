@@ -1,0 +1,32 @@
+services:
+  mallin-control:
+    build: .
+    restart: unless-stopped
+    environment:
+      MALLIN_ADMIN_TOKEN: ${MALLIN_ADMIN_TOKEN:?Set MALLIN_ADMIN_TOKEN in .env}
+      ARIES_API_URL: ${ARIES_API_URL:-https://aries-tier0-api-6qjh.onrender.com}
+    expose:
+      - "8080"
+    networks:
+      - mallin
+  gateway:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      MALLIN_DOMAIN: ${MALLIN_DOMAIN:?Set MALLIN_DOMAIN in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - mallin-control
+    networks:
+      - mallin
+networks:
+  mallin:
+volumes:
+  caddy_data:
+  caddy_config:

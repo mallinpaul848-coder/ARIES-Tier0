@@ -32,7 +32,7 @@ class LocalChatModel:
         try:
             self._model = Llama(
                 model_path=str(path),
-                n_ctx=512,
+                n_ctx=max(512, min(int(os.getenv("ARIES_LOCAL_CONTEXT_SIZE", "1024")), 2048)),
                 n_threads=max(1, min(int(os.getenv("ARIES_LOCAL_MODEL_THREADS", "1")), 4)),
                 n_batch=32,
                 n_gpu_layers=0,
@@ -56,7 +56,7 @@ class LocalChatModel:
                 continue
             role, content = item.get("role"), item.get("content")
             if role in {"system", "user", "assistant"} and isinstance(content, str) and content.strip():
-                normalized.append({"role": role, "content": content[-350:]})
+                normalized.append({"role": role, "content": content[-6000:]})
         if not any(item["role"] == "user" for item in normalized):
             raise LocalInferenceError("A non-empty user message is required.")
         system_message = next(
@@ -64,21 +64,25 @@ class LocalChatModel:
             {
                 "role": "system",
                 "content": (
-                    "You are ARIES AI, the assistant in the MALLIN platform. Answer the "
-                    "question directly. Follow requested formats. For calculations, compute "
-                    "carefully and show the result. If you are unsure, say so rather than "
-                    "inventing details. Keep answers concise unless asked for detail."
+                    "You are ARIES AI, the assistant in the MALLIN platform. First identify what the user "
+                    "is actually asking, then answer that question directly. Use the full "
+                    "conversation context and do not repeat generic introductions. Follow "
+                    "requested formats exactly. For calculations, show a short checkable "
+                    "working when useful. Distinguish facts from estimates; never invent "
+                    "sources, capabilities, actions, or current events. If a question needs "
+                    "current information you do not have, say what is uncertain. Be useful, "
+                    "specific, and concise unless the user asks for detail."
                 ),
             },
         )
-        recent_messages = [item for item in normalized if item["role"] != "system"][-8:]
+        recent_messages = [item for item in normalized if item["role"] != "system"][-12:]
         normalized = [system_message, *recent_messages]
         started_ns = time.perf_counter_ns()
         try:
             with self._lock:
                 response = self._model.create_chat_completion(
                     messages=normalized,
-                    max_tokens=max(1, min(int(max_tokens), 128)),
+                    max_tokens=max(1, min(int(max_tokens), 256)),
                     temperature=max(0.0, min(float(temperature), 1.2)),
                     top_p=0.9,
                     repeat_penalty=1.08,

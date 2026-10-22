@@ -3,9 +3,10 @@ setlocal
 cd /d "%~dp0.."
 title ARIES AI - Self-Hosted Local Engine
 echo.
-echo  ARIES AI - SELF-HOSTED LOCAL ENGINE
+echo  ARIES AI - INDEPENDENT WEBSITE + LOCAL ENGINE
 echo  First launch downloads the open model weights (about 1 GB).
-echo  Chat inference runs on this computer; no external chat API key is used.
+echo  Website and chat inference run on this computer.
+echo  No hosted AI API or external chat API key is used.
 echo.
 where py >nul 2>nul
 if %errorlevel%==0 (
@@ -28,8 +29,9 @@ if errorlevel 1 (
   if errorlevel 1 goto failed
 )
 echo.
-echo Starting private local ARIES API at http://127.0.0.1:8765
-echo Open ARIES Chat, open Settings, and set API URL to http://127.0.0.1:8765
+echo Starting ARIES website at http://127.0.0.1:8081
+echo Local inference API: http://127.0.0.1:8765
+echo Your browser will open automatically after the model loads.
 echo Keep this window open while chatting. Press Ctrl+C to stop.
 %PY% software\aries_selfhosted.py
 if errorlevel 1 goto failed

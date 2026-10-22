@@ -10,6 +10,8 @@ on:
       - "benchmarks/INDEPENDENT_EVALUATION_PROTOCOL.md"
       - "benchmarks/BUYER_DUE_DILIGENCE.md"
       - ".github/workflows/independent-validation.yml"
+      - ".github/workflows/alternative-comparison.yml"
+      - "README.md"
   workflow_dispatch:
     inputs:
       rounds:

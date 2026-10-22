@@ -1,0 +1,55 @@
+name: ARIES Unified Kernel Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/core/aries_unified_kernel.h"
+      - "src/routing/vortex_router.py"
+      - "tests/test_vortex_router.py"
+      - ".github/workflows/aries-unified-kernel.yml"
+  pull_request:
+    paths:
+      - "src/core/aries_unified_kernel.h"
+      - "src/routing/vortex_router.py"
+      - "tests/test_vortex_router.py"
+      - ".github/workflows/aries-unified-kernel.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run Python unit tests
+        run: python -m unittest discover -s tests -p "test_vortex_router.py" -v
+      - name: Compile and run C++ kernel checks
+        run: |
+          cat > /tmp/aries_kernel_smoke.cpp <<'CPP'
+          #include <cassert>
+          #include <cmath>
+          #include <vector>
+          #include "src/core/aries_unified_kernel.h"
+          int main() {
+            AriesCore::StaticMemoryPool<int, 2> pool;
+            *pool.allocate() = 7;
+            assert(pool.used() == 1);
+            pool.reset();
+            assert(pool.used() == 0);
+            const auto transformed = AriesCore::UnifiedExecutionEngine::harmonic_transform({-8.0f, 0.0f, 27.0f});
+            assert(transformed.size() == 3);
+            assert(std::abs(transformed[0] + 4.0f / 3.0f) < 1e-5f);
+            assert(AriesCore::UnifiedExecutionEngine::validate_finite_state(transformed));
+            const auto smooth = AriesCore::UnifiedExecutionEngine::smooth_field({0.0f, 1.0f, 0.0f});
+            assert(smooth.size() == 3);
+            return 0;
+          }
+          CPP
+          g++ -std=c++17 -O2 -Wall -Wextra -Werror -I. /tmp/aries_kernel_smoke.cpp -o /tmp/aries_kernel_smoke
+          /tmp/aries_kernel_smoke

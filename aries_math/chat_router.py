@@ -96,7 +96,7 @@ def route_math_prompt(prompt: str) -> dict[str, str] | None:
         return {"route": "binary_feature_analysis", "answer": _json(result)}
 
     # Explicit finite audit of the candidate q3/q6/q9 SAT compression.
-    match = re.search(r"\\bsat\\s+projection\\s+audit\\s+json\\s*:\\s*(\\{.*\\})\\s*$", text, re.I | re.S)
+    match = re.search(r"\bsat\s+projection\s+audit\s+json\s*:\s*(\{.*\})\s*$", text, re.I | re.S)
     if match:
         payload = json.loads(match.group(1))
         formulas = payload.get("formulas")

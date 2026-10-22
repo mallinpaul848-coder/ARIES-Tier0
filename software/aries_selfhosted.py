@@ -7,7 +7,6 @@ import os
 import time
 import uuid
 from http.server import BaseHTTPRequestHandler, SimpleHTTPRequestHandler, ThreadingHTTPServer
-from functools import partial
 import threading
 import webbrowser
 from pathlib import Path
@@ -174,7 +173,7 @@ if __name__ == "__main__":
         webbrowser.open(site_url)
         web_server.serve_forever()
     except KeyboardInterrupt:
-        print("\\nStopping ARIES website and local API...", flush=True)
+        print("\nStopping ARIES website and local API...", flush=True)
     finally:
         web_server.shutdown()
         api_server.shutdown()

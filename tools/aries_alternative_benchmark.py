@@ -67,6 +67,9 @@ def request_one(base_url: str, model: str, prompt: str, timeout: float, api_key:
             if isinstance(content, list):
                 content = " ".join(str(x.get("text", "")) for x in content if isinstance(x, dict))
             return {"status": resp.status, "latency_ms": elapsed, "text": str(content), "error": None}
+    except urllib.error.HTTPError as exc:
+        return {"status": exc.code, "latency_ms": (time.perf_counter() - started) * 1000,
+                "text": "", "error": "HTTPError: " + str(exc)[:240]}
     except (urllib.error.URLError, TimeoutError, ValueError, OSError) as exc:
         return {"status": None, "latency_ms": (time.perf_counter() - started) * 1000,
                 "text": "", "error": type(exc).__name__ + ": " + str(exc)[:240]}

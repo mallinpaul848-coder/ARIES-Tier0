@@ -1,0 +1,53 @@
+name: ARIES Third-Party Alternative Comparison
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_url:
+        description: "Authorized OpenAI-compatible API base URL, without /v1/chat/completions"
+        required: true
+        type: string
+      candidate_model:
+        description: "Exact model ID served by the candidate endpoint"
+        required: true
+        type: string
+      rounds:
+        description: "Repeat each prompt 1-10 times"
+        required: true
+        default: "3"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run same prompt set against ARIES and candidate
+        env:
+          CANDIDATE_URL: ${{ inputs.candidate_url }}
+          CANDIDATE_MODEL: ${{ inputs.candidate_model }}
+          ROUNDS: ${{ inputs.rounds }}
+          ARIES_BENCH_KEY_CANDIDATE: ${{ secrets.ARIES_BENCH_KEY_CANDIDATE }}
+        run: |
+          python -m py_compile tools/aries_alternative_benchmark.py
+          python tools/aries_alternative_benchmark.py \
+            --target "aries=https://aries-tier0-api-6qjh.onrender.com,aries-native-ngram" \
+            --target "candidate=${CANDIDATE_URL},${CANDIDATE_MODEL}" \
+            --rounds "${ROUNDS}" \
+            --timeout 60 \
+            --output reports/aries-third-party-comparison.json
+      - name: Upload raw comparison report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-third-party-comparison-${{ github.run_number }}
+          path: reports/aries-third-party-comparison.json
+          if-no-files-found: warn
+          retention-days: 90

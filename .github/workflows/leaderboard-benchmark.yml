@@ -1,0 +1,91 @@
+name: ARIES Standard Leaderboard Evaluation
+
+on:
+  workflow_dispatch:
+    inputs:
+      model_id:
+        description: "Public Hugging Face model repository ID (must contain model weights and tokenizer)"
+        required: true
+        type: string
+      revision:
+        description: "Immutable Hugging Face revision/commit SHA for reproducibility"
+        required: true
+        type: string
+      dtype:
+        description: "Model precision supported by the model and runner"
+        required: true
+        type: choice
+        options:
+          - auto
+          - float
+          - bfloat16
+          - float16
+        default: auto
+      tasks:
+        description: "Use leaderboard for all six Open LLM Leaderboard tasks, or a task/group for a smoke test"
+        required: true
+        type: string
+        default: leaderboard
+      limit:
+        description: "Examples per task for a smoke test; leave 0 for full evaluation"
+        required: true
+        type: number
+        default: 0
+      chat_template:
+        description: "Apply the model's chat template (enable for instruction/chat models)"
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - name: Check out ARIES benchmark configuration
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Hugging Face leaderboard evaluation harness
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "accelerate>=0.34" "hf_transfer"
+          python -m pip install "git+https://github.com/huggingface/lm-evaluation-harness.git"
+
+      - name: Run standardized evaluation
+        env:
+          MODEL_ID: ${{ inputs.model_id }}
+          MODEL_REVISION: ${{ inputs.revision }}
+          MODEL_DTYPE: ${{ inputs.dtype }}
+          TASKS: ${{ inputs.tasks }}
+          LIMIT: ${{ inputs.limit }}
+          CHAT_TEMPLATE: ${{ inputs.chat_template }}
+        run: |
+          set -euo pipefail
+          mkdir -p reports/leaderboard
+          args=(--model hf --model_args "pretrained=${MODEL_ID},revision=${MODEL_REVISION},dtype=${MODEL_DTYPE}" --tasks "${TASKS}" --batch_size 1 --output_path reports/leaderboard --log_samples)
+          if [ "${LIMIT}" != "0" ]; then
+            args+=(--limit "${LIMIT}")
+          fi
+          if [ "${CHAT_TEMPLATE}" = "true" ]; then
+            args+=(--apply_chat_template --fewshot_as_multiturn)
+          fi
+          printf 'Model: %s\nRevision: %s\nTasks: %s\nDtype: %s\nLimit: %s\n' "${MODEL_ID}" "${MODEL_REVISION}" "${TASKS}" "${MODEL_DTYPE}" "${LIMIT}" | tee reports/leaderboard/run-metadata.txt
+          lm-eval "${args[@]}" 2>&1 | tee reports/leaderboard/evaluation.log
+
+      - name: Upload raw scores, samples, and run metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-standard-leaderboard-${{ github.run_id }}
+          path: reports/leaderboard/
+          if-no-files-found: warn
+          retention-days: 90

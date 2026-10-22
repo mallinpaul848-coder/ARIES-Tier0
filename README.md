@@ -259,3 +259,8 @@ python tools/aries_bench.py --base-url https://aries-tier0-api-6qjh.onrender.com
 ```
 
 Workflow: [ARIES Performance Metrics](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/aries-performance.yml). Open the latest run and download the `aries-performance-*` artifact to inspect the JSON measurements. Latency and throughput are endpoint measurements under that run's network, host, model, and load conditions; they are not hardware-independent guarantees. The 10-case accuracy score is a small project-owned diagnostic, not an official academic benchmark or independent certification.
+
+
+## Revenue readiness
+
+See [ARIES revenue readiness](docs/ARIES_REVENUE_READINESS.md) for a staged path to supporter payments, future Pro/Team tiers, spend controls, and independent validation. The optional hosted-chat package with a Support / Plans panel is provided separately as `aries-monetization-build.zip`; it must be copied into the repository and deployed before its checkout panel is available. Payment links do not grant paid-feature access by themselves.

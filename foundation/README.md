@@ -39,7 +39,11 @@ pytest -q foundation/tests
 
 ## Run the chat interface
 
-Open `foundation/web/index.html` in a browser. It calls the existing ARIES-compatible public API by default. To change the API endpoint, set `window.MALLIN_API_BASE` before the application script runs or edit the default in the HTML. A reachable chat API and a configured model runtime are still required for general-purpose generated answers.
+Open `foundation/web/index.html` in a browser. The deployment image also bundles this page at `/app` on the existing ARIES API service. Once the foundation PR is merged and the Render service finishes its automatic deployment, the public app route is:
+
+`https://aries-tier0-api-6qjh.onrender.com/app`
+
+The interface calls the existing ARIES-compatible API by default. To change the API endpoint, set `window.MALLIN_API_BASE` before the application script runs or edit the default in the HTML. A reachable chat API and a configured model runtime are still required for general-purpose generated answers.
 
 ## Security and operations
 

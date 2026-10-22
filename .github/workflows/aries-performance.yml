@@ -11,7 +11,7 @@ on:
       - ".github/workflows/aries-performance.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   performance:
@@ -42,6 +42,20 @@ jobs:
           ARIES_MODEL_ID: auto
         run: |
           python tools/aries_bench.py --base-url "$ARIES_BASE_URL" --model "$ARIES_MODEL_ID" --timeout 75 --limit 10 --concurrency 1 --output reports/aries-public-performance.json
+      - name: Persist benchmark report in Git
+        if: always()
+        run: |
+          if [ -f reports/aries-public-performance.json ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add reports/aries-public-performance.json
+            if ! git diff --cached --quiet; then
+              git commit -m "Record ARIES public performance benchmark"
+              git push
+            fi
+          else
+            echo "No JSON report was produced; see benchmark step logs for the failure."
+          fi
       - name: Upload measured performance report
         if: always()
         uses: actions/upload-artifact@v4

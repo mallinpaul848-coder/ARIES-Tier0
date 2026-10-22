@@ -41,7 +41,7 @@ def route_math_prompt(prompt: str) -> dict[str, str] | None:
             "YANG_MILLS": ("yang-mills", "yang mills"),
             "HODGE_CONJECTURE": ("hodge conjecture",),
             "BIRCH_SWINNERTON_DYER": (
-                "birch-swinderton-dyer", "birch and swinnerton-dyer",
+                "birch-swinnerton-dyer", "birch and swinnerton-dyer",
                 "birch swinnerton dyer", "bsd conjecture",
             ),
         }

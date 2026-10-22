@@ -49,6 +49,33 @@ def test_unsupported_chat_still_requires_real_inference_backend():
     assert "not fully configured" in response.json()["detail"]
 
 
+def test_mallin_research_api_lists_all_six_prize_problem_routes():
+    response = client.get("/v8/research/problems")
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["problems"]) == 6
+    assert "PRISE" in body["operators"]
+    assert "digital_root_369" in body["operators"]
+
+
+def test_mallin_research_analysis_returns_auditable_exploratory_result():
+    response = client.post("/v8/research/analyze", json={
+        "problem": "P vs NP",
+        "values": [3, 6, 9, 12],
+        "priority": 1,
+        "risk": 1,
+        "impact": 1,
+        "systemic": 1,
+        "emergent": 1
+    })
+    assert response.status_code == 200
+    body = response.json()
+    assert body["problem"] == "P_VS_NP"
+    assert body["proof_claim"] is False
+    assert body["evidence_status"] == "exploratory_only"
+    assert len(body["fingerprint_sha256"]) == 64
+
+
 def test_chat_url_does_not_duplicate_v1():
     assert chat_completions_url("https://provider.example/v1") == (
         "https://provider.example/v1/chat/completions"

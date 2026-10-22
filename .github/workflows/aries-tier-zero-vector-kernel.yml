@@ -13,6 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Compile benchmark
-        run: gcc -std=c11 -O3 -Wall -Wextra -Werror -pedantic -I. benchmarks/aries_tier0_vector_kernel_bench.c -o /tmp/aries-vector-bench -lm
+        run: gcc -std=c11 -O3 -Wall -Wextra -Werror -pedantic -I. -Imath_core benchmarks/aries_tier0_vector_kernel_bench.c -o /tmp/aries-vector-bench -lm
       - name: Run correctness and latency comparison
         run: /tmp/aries-vector-bench

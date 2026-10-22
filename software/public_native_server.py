@@ -2,6 +2,7 @@
 """ARIES-owned public HTTP gateway for its native character n-gram baseline."""
 import json
 import os
+from pathlib import Path
 import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -54,6 +55,19 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()
         self.wfile.write(body)
+    def send_html(self, path):
+        page = Path(os.getenv("ARIES_WEB_ROOT", "/app/public")) / "index.html"
+        try:
+            body = page.read_bytes()
+        except OSError:
+            return self.send_json(503, {"error": "MALLIN web interface is not installed."})
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+        self.end_headers()
+        self.wfile.write(body)
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -63,6 +77,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         ready = True
+        if path in ("/app", "/app/"):
+            return self.send_html(path)
         if path == "/health":
             return self.send_json(200, {"status":"ok","service":"aries-ai-api"})
         if path == "/":

@@ -16,6 +16,7 @@ from .prise_unified import (
     exact_sat_bruteforce,
 )
 from .prise_research_engine import DigitalRootSystem as ResearchDigitalRoot, phase8, vortex369, helixo_features
+from .prise_research_engine import ARIESPRISEResearchEngine, PRIZE_PROBLEM_ROUTES
 
 _BINARY_ENGINE = ARIESExecutionEngine()
 
@@ -28,6 +29,34 @@ def route_math_prompt(prompt: str) -> dict[str, str] | None:
     """Route supported explicit math prompts; otherwise return None."""
     text = str(prompt).strip()
     lower = text.lower()
+
+    # Explicit Mallin research request for a named Millennium Prize problem.
+    if any(term in lower for term in (
+        "mallin", "prise", "analyze", "analyse", "proof obligation", "research route"
+    )):
+        aliases = {
+            "P_VS_NP": ("p vs np", "p versus np", "p-vs-np", "sat complexity"),
+            "RIEMANN_HYPOTHESIS": ("riemann hypothesis", "riemann"),
+            "NAVIER_STOKES": ("navier-stokes", "navier stokes"),
+            "YANG_MILLS": ("yang-mills", "yang mills"),
+            "HODGE_CONJECTURE": ("hodge conjecture",),
+            "BIRCH_SWINNERTON_DYER": (
+                "birch-swinderton-dyer", "birch and swinnerton-dyer",
+                "birch swinnerton dyer", "bsd conjecture",
+            ),
+        }
+        selected = next(
+            (key for key, names in aliases.items() if any(name in lower for name in names)),
+            None,
+        )
+        if selected:
+            values_match = re.search(
+                r"\b(?:values|series|samples)\s*[:=]\s*(-?\d+(?:\.\d+)?(?:\s*,\s*-?\d+(?:\.\d+)?)+)",
+                lower,
+            )
+            values = [float(part.strip()) for part in values_match.group(1).split(",")] if values_match else []
+            result = ARIESPRISEResearchEngine().analyze(selected, values)
+            return {"route": "mallin_prise_research", "answer": _json(result)}
 
     # Exact digital-root arithmetic.
     match = re.search(r"\b(?:digital\s+root|digitalroot)\s+(?:of\s+)?(-?\d+)\b", lower)

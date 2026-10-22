@@ -13,7 +13,7 @@ CASES=[
 ("logic","A is taller than B. B is taller than C. Who is shortest?",["c"]),
 ("arithmetic","What is 81 divided by 9?",["9"]),
 ("instruction","List exactly three items separated by commas: red, green, blue.",["red","green","blue"])]
-def norm(s): return re.sub(r"\\s+"," ",s.casefold()).strip()
+def norm(s): return re.sub(r"\s+"," ",s.casefold()).strip()
 def pct(a,p):
  if not a:return None
  a=sorted(a); x=(len(a)-1)*p/100; i=int(x); j=min(i+1,len(a)-1)

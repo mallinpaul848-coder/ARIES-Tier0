@@ -68,6 +68,21 @@ python .\tools\aries_bench.py --base-url http://127.0.0.1:8000 --model aries-nat
 
 The public workflow runs the 10-case ARIES-authored diagnostic suite and stores measured responses, exact-match scores, and latency as a downloadable GitHub Actions artifact. The rule engine handles some narrow cases directly, so its score measures this authored software test suite—not general LLM intelligence. It is not an official academic benchmark or independent certification.
 
+## Standard leaderboard evaluation
+
+The `.github/workflows/leaderboard-benchmark.yml` workflow runs the Hugging Face Open LLM Leaderboard task group through the Hugging Face evaluation harness. The full `leaderboard` group covers IFEval, BBH, MATH Level 5, GPQA, MuSR, and MMLU-Pro. Results are saved as a downloadable Actions artifact with raw outputs, samples, model revision, and run metadata.
+
+To run it, open **Actions → ARIES Standard Leaderboard Evaluation → Run workflow** and supply:
+- **Model ID:** a public Hugging Face repository containing the actual model weights and tokenizer.
+- **Revision:** the immutable Hugging Face commit SHA to evaluate.
+- **Dtype:** a precision supported by the model.
+- **Tasks:** use `leaderboard` for the full suite; a supported task/group and a nonzero limit can be used for a smoke test.
+- **Chat template:** enable for instruction/chat models.
+
+The current ARIES public API benchmark is not a substitute for this evaluation. The public API currently serves a quantized GGUF model; the Open LLM Leaderboard submission flow requires a public, loadable Hugging Face model repository with compatible model weights and tokenizer. Do not submit the upstream SmolLM2 model under the ARIES name. First publish the actual ARIES model artifact and immutable revision, then evaluate that exact repository. A successful local evaluation is not itself acceptance onto the public leaderboard; submit through the [official Open LLM Leaderboard instructions](https://huggingface.co/docs/leaderboards/open_llm_leaderboard/submitting).
+
+Official task definitions and reproducibility guidance: [Open LLM Leaderboard](https://huggingface.co/docs/leaderboards/open_llm_leaderboard/about).
+
 ## External verification
 
 - [Public endpoint workflow](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/public-endpoint-check.yml)

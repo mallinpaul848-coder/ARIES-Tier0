@@ -31,6 +31,27 @@ class TestChatMathRouter(unittest.TestCase):
         self.assertEqual(result["route"], "prise_scoring")
         self.assertGreater(json.loads(result["answer"])["score"], 0)
 
+    def test_mallin_prise_research_routes_named_millennium_problem(self):
+        result = route_math_prompt("Analyze P vs NP using Mallin PRISE and 3-6-9 logic.")
+        self.assertEqual(result["route"], "mallin_prise_research")
+        payload = json.loads(result["answer"])
+        self.assertEqual(payload["problem"], "P_VS_NP")
+        self.assertFalse(payload["proof_claim"])
+        self.assertEqual(payload["evidence_status"], "exploratory_only")
+
+    def test_mallin_prise_routes_other_prize_problems(self):
+        for prompt, expected in (
+            ("Analyze the Riemann Hypothesis using Mallin PRISE", "RIEMANN_HYPOTHESIS"),
+            ("Research Navier-Stokes with Mallin", "NAVIER_STOKES"),
+            ("Analyze Yang-Mills using PRISE", "YANG_MILLS"),
+            ("Analyze Hodge conjecture with Mallin", "HODGE_CONJECTURE"),
+            ("Analyze Birch Swinnerton Dyer with Mallin", "BIRCH_SWINNERTON_DYER"),
+        ):
+            with self.subTest(prompt=prompt):
+                result = route_math_prompt(prompt)
+                self.assertEqual(result["route"], "mallin_prise_research")
+                self.assertEqual(json.loads(result["answer"])["problem"], expected)
+
     def test_unmatched_prompt_falls_through(self):
         self.assertIsNone(route_math_prompt("Tell me a joke."))
 

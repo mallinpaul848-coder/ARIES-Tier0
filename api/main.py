@@ -13,6 +13,7 @@ from aries_math.chat_router import route_math_prompt
 from software.native_reasoner import solve as solve_native_prompt
 from aries_math.prise_research_engine import ARIESPRISEResearchEngine, PRISEProfile, PRIZE_PROBLEM_ROUTES
 from aries_math.mallin_universal import audit_sat_projection
+from aries_math.tool_agent import run_tool_loop
 
 app = FastAPI(title="ARIES AI API", version="1.0.5")
 
@@ -343,28 +344,40 @@ async def chat_completions(request: ChatRequest) -> dict[str, Any]:
     if UPSTREAM_API_KEY:
         headers["Authorization"] = f"Bearer {UPSTREAM_API_KEY}"
 
-    try:
-        async with httpx.AsyncClient(timeout=UPSTREAM_TIMEOUT_SECONDS) as client:
-            response = await client.post(
-                chat_completions_url(UPSTREAM_BASE_URL),
-                json=payload,
-                headers=headers,
+    async def post_json(body: dict[str, Any]) -> dict[str, Any]:
+        try:
+            async with httpx.AsyncClient(timeout=UPSTREAM_TIMEOUT_SECONDS) as client:
+                response = await client.post(
+                    chat_completions_url(UPSTREAM_BASE_URL),
+                    json=body,
+                    headers=headers,
+                )
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=504, detail="The model backend timed out.")
+        except httpx.RequestError:
+            raise HTTPException(status_code=502, detail="Could not connect to the configured model backend.")
+        if response.status_code >= 400:
+            raise HTTPException(
+                status_code=502,
+                detail=(
+                    f"Model backend returned HTTP {response.status_code}. "
+                    "Check backend URL, model ID, and credentials."
+                ),
             )
-    except httpx.TimeoutException:
-        raise HTTPException(status_code=504, detail="The model backend timed out.")
-    except httpx.RequestError:
-        raise HTTPException(status_code=502, detail="Could not connect to the configured model backend.")
+        try:
+            return response.json()
+        except ValueError:
+            raise HTTPException(status_code=502, detail="Model backend returned a non-JSON response.")
 
-    if response.status_code >= 400:
-        # Avoid returning upstream error bodies, which may contain private details.
-        raise HTTPException(
-            status_code=502,
-            detail=(
-                f"Model backend returned HTTP {response.status_code}. "
-                "Check backend URL, model ID, and credentials."
-            ),
-        )
-    try:
-        return response.json()
-    except ValueError:
-        raise HTTPException(status_code=502, detail="Model backend returned a non-JSON response.")
+    enabled = os.getenv("ARIES_TOOL_CALLING_ENABLED", "false").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+    if enabled:
+        try:
+            return await run_tool_loop(
+                payload, post_json, execute_aries_operation, max_rounds=3
+            )
+        except HTTPException:
+            # Provider may not support function calling. Preserve standard chat as fallback.
+            return await post_json(payload)
+    return await post_json(payload)

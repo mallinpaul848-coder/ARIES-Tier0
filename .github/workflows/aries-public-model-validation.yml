@@ -1,0 +1,49 @@
+name: ARIES Public-Model Third-Party Validation
+on:
+  push:
+    branches: [external-validation-qwen]
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: Repeat each prompt 1-5 times
+        required: true
+        default: "2"
+        type: string
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      HF_MODEL_ID: Qwen/Qwen2.5-0.5B-Instruct
+      ARIES_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
+      ARIES_MODEL_ID: aries-native-ngram
+      ROUNDS: ${{ inputs.rounds || '2' }}
+      REQUEST_TIMEOUT: "90"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install CPU inference dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install "transformers>=4.45,<5" "accelerate>=0.34"
+      - name: Run identical prompts against independent model and ARIES
+        run: python tools/aries_public_model_validation.py
+      - name: Publish summary
+        if: always()
+        run: |
+          if [ -f reports/aries-public-model-validation.json ]; then
+            python -c 'import json,os; p=json.load(open("reports/aries-public-model-validation.json")); f=open(os.environ["GITHUB_STEP_SUMMARY"],"a"); f.write("# ARIES public-model validation\\n\\n"); f.write("Model: "+p["independent_model"]["id"]+" (CPU)\\n\\n"); f.write("| Target | Successful | Correct | P50 ms | P95 ms | P99 ms | RPS |\\n|---|---:|---:|---:|---:|---:|---:|\\n"); [f.write("| {} | {}/{} | {}/{} | {:.1f} | {:.1f} | {:.1f} | {:.3f} |\\n".format(t["target"],t["successful_nonempty"],t["requests"],t["correct_smoke_cases"],t["requests"],t["latency_ms"]["p50"],t["latency_ms"]["p95"],t["latency_ms"]["p99"],t["requests_per_second"])) for t in p["targets"]]; f.write("\\nCaveat: small smoke test, not an official leaderboard or independent certification. ARIES API timing includes network/server effects; Qwen timing is local CPU inference.\\n"); f.close()'
+          fi
+      - name: Upload raw results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-public-model-validation-${{ github.run_number }}
+          path: reports/aries-public-model-validation.json
+          if-no-files-found: warn
+          retention-days: 90

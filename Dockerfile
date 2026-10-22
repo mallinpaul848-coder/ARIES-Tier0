@@ -12,6 +12,7 @@ RUN CMAKE_ARGS="-DGGML_NATIVE=OFF" CMAKE_BUILD_PARALLEL_LEVEL=2 \
     llama-cpp-python==0.3.36
 
 COPY software/ ./software/
+COPY foundation/web/ ./public/
 COPY aries_math/ ./aries_math/
 COPY software/deployment_corpus.txt ./data/training.txt
 

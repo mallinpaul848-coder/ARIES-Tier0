@@ -23,13 +23,13 @@ def resolver(tmp_path):
 
 
 def query(r, name, qtype):
-    request = DNSRecord.question(name, qtype)
-    return r.resolve(request, None)
+    return r.resolve(DNSRecord.question(name, qtype), None)
 
 
-def test_a_record():
-    response = query(resolver_dummy, "mallin.test", "A")
+def test_a_record(tmp_path):
+    response = query(resolver(tmp_path), "mallin.test", "A")
     assert response.header.rcode == RCODE.NOERROR
+    assert response.header.aa == 1
     assert str(response.rr[0].rdata) == "192.0.2.10"
 
 
@@ -59,11 +59,7 @@ def test_txt_record(tmp_path):
     assert response.rr and "owned-zone" in str(response.rr[0].rdata)
 
 
-# Shared fixture initialized after helper definitions.
-import pytest
-
-
-@pytest.fixture(autouse=True)
-def _set_dummy_resolver(tmp_path, monkeypatch):
-    global resolver_dummy
-    resolver_dummy = resolver(tmp_path)
+def test_existing_name_without_requested_type_is_nodata(tmp_path):
+    response = query(resolver(tmp_path), "mallin.test", "AAAA")
+    assert response.header.rcode == RCODE.NOERROR
+    assert not response.rr

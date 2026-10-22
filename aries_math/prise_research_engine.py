@@ -91,9 +91,30 @@ class ARIESPRISEResearchEngine:
         key = problem.strip().upper().replace(" ","_").replace("-","_")
         routes = PRIZE_PROBLEM_ROUTES.get(key, ("general_reasoning","counterexample_search","proof_obligations"))
         p = profile or PRISEProfile()
+        targets = {}
+        if key == "P_VS_NP":
+            targets["sat_compression_obligations"] = {
+                "goal": "Find a deterministic polynomial-time encoder E and decoder G such that phi is satisfiable iff G(E(phi)) accepts.",
+                "equivalence": "phi in SAT iff G(E(phi)) == 1",
+                "required_bounds": [
+                    "time(E(phi)) is polynomial in input length",
+                    "size(E(phi)) is polynomial in input length",
+                    "time(G(E(phi))) is polynomial in encoded input length",
+                ],
+                "certificate_alternative": [
+                    "construct a certificate C_phi deterministically in polynomial time",
+                    "certificate size is polynomial in input length",
+                    "verify C_phi in polynomial time",
+                    "acceptance is sound and complete for SAT",
+                ],
+                "q3_q6_q9_test": "Compare modular projection signatures against exact SAT labels on bounded CNFs; any equal-signature SAT/UNSAT pair refutes that candidate projection as a SAT-preserving encoding.",
+                "status": "open_research_obligations",
+                "proof_claim": False,
+            }
         payload = {"engine":"ARIES PRISE Research Math Engine","version":self.version,
           "problem":key,"route":list(routes),"prise":{**asdict(p),"score":p.score()},
-          "features":helixo_features(values),"evidence_status":"exploratory_only","proof_claim":False,
+          "features":helixo_features(values),"research_targets":targets,
+          "evidence_status":"exploratory_only","proof_claim":False,
           "warning":"Digital-root, vortex, Phase-8, and Helixo features are experimental descriptors. They do not prove P vs NP or any Millennium Prize problem."}
         canonical = json.dumps(payload,sort_keys=True,separators=(",",":"),allow_nan=False)
         payload["fingerprint_sha256"] = sha256(canonical.encode("utf-8")).hexdigest()

@@ -1,5 +1,7 @@
 import unittest
-from tools.aries_alternative_benchmark import CASES, normalize, parse_target, percentile
+from unittest.mock import patch
+import urllib.error
+from tools.aries_alternative_benchmark import CASES, normalize, parse_target, percentile, request_one
 
 
 class TestAlternativeBenchmark(unittest.TestCase):
@@ -15,6 +17,13 @@ class TestAlternativeBenchmark(unittest.TestCase):
         self.assertEqual(parse_target("local=http://127.0.0.1:8000,aries-native"), ("local", "http://127.0.0.1:8000", "aries-native"))
         with self.assertRaises(Exception):
             parse_target("bad target")
+
+    def test_http_error_status_is_preserved(self):
+        error = urllib.error.HTTPError("https://example.invalid/v1/chat/completions", 401, "Unauthorized", {}, None)
+        with patch("tools.aries_alternative_benchmark.urllib.request.urlopen", side_effect=error):
+            result = request_one("https://example.invalid", "model", "hello", 1.0, "fake")
+        self.assertEqual(result["status"], 401)
+        self.assertIn("HTTPError", result["error"])
 
     def test_smoke_cases_have_expected_tokens(self):
         self.assertGreaterEqual(len(CASES), 8)

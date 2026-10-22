@@ -120,7 +120,7 @@ class AuthoritativeResolver(BaseResolver):
             if qtype not in (rtype, "ANY"):
                 continue
             reply.add_answer(RR(
-                rname=DNSLabel(qname), rtype=QTYPE.get(rtype), ttl=ttl,
+                rname=DNSLabel(qname), rtype=QTYPE.reverse[rtype], ttl=ttl,
                 rdata=self._record(rtype, value)
             ))
         if not reply.rr and qtype not in ("ANY",):

@@ -259,3 +259,28 @@ python tools/aries_bench.py --base-url https://aries-tier0-api-6qjh.onrender.com
 ```
 
 Workflow: [ARIES Performance Metrics](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/workflows/aries-performance.yml). Open the latest run and download the `aries-performance-*` artifact to inspect the JSON measurements. Latency and throughput are endpoint measurements under that run's network, host, model, and load conditions; they are not hardware-independent guarantees. The 10-case accuracy score is a small project-owned diagnostic, not an official academic benchmark or independent certification.
+
+
+## Independent validation and buyer evaluation
+
+- [Buyer due-diligence pack](benchmarks/BUYER_DUE_DILIGENCE.md) — deployment checks, evaluation matrix, licensing checklist, and evidence requirements.
+- [Independent evaluation protocol](benchmarks/INDEPENDENT_EVALUATION_PROTOCOL.md) — controlled comparison method for ARIES and authorized OpenAI-compatible alternatives.
+- [Alternative endpoint benchmark harness](tools/aries_alternative_benchmark.py) — same prompts across configured endpoints; captures success/error counts, smoke accuracy, P50/P95/P99, maximum latency, wall-clock throughput, and raw per-case results.
+- [Prize-problem finite diagnostics](aries_math/prize_problem_lab.py) — bounded SAT oracle, sampled Navier–Stokes field diagnostics, finite Yang–Mills spectrum checks, and explicit proof obligations.
+- [Independent validation CI](.github/workflows/independent-validation.yml) — compilation, unit tests, and research smoke tests.
+- [Manual alternative comparison workflow](.github/workflows/alternative-comparison.yml) — run a reproducible API comparison and download its JSON report.
+
+Run tests locally:
+
+```bash
+python -m unittest discover -s tests -p 'test_prize_problem_lab.py' -v
+python -m unittest discover -s tests -p 'test_aries_alternative_benchmark.py' -v
+```
+
+Run the public ARIES smoke comparison:
+
+```bash
+python tools/aries_alternative_benchmark.py --target aries=https://aries-tier0-api-6qjh.onrender.com,aries-native-ngram --rounds 3 --output reports/aries-alternative-comparison.json
+```
+
+These tests are finite diagnostics and project-authored smoke checks. They do not establish P = NP, global Navier–Stokes regularity, a Yang–Mills mass gap, independent certification, or an official leaderboard ranking. For a credible buyer evaluation, preserve raw reports, pinned revisions, model identifiers, licensing/provenance, and the actual test environment.

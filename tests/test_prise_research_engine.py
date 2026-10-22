@@ -24,6 +24,14 @@ class TestPRISEResearchMath(unittest.TestCase):
         self.assertEqual(a["fingerprint_sha256"], b["fingerprint_sha256"])
         self.assertFalse(a["proof_claim"])
         self.assertIn("SAT", a["route"])
+    def test_p_vs_np_analysis_exposes_polynomial_sat_compression_obligations(self):
+        result = ARIESPRISEResearchEngine().analyze("P vs NP", [3, 6, 9])
+        target = result["research_targets"]["sat_compression_obligations"]
+        self.assertIn("phi in SAT iff G(E(phi)) == 1", target["equivalence"])
+        self.assertIn("q3_q6_q9_test", target)
+        self.assertFalse(target["proof_claim"])
+        self.assertEqual(target["status"], "open_research_obligations")
+
     def test_verified_requires_evidence(self):
         item = ProofObligation("P != NP","formal proof")
         with self.assertRaises(ValueError): item.update("verified")

@@ -18,10 +18,32 @@ def test_models_endpoint_does_not_fabricate_model():
     assert response.json()["inference_ready"] is False
 
 
-def test_chat_requires_real_backend():
+def test_supported_arithmetic_works_without_upstream_backend():
     response = client.post("/v1/chat/completions", json={
         "model": "aries",
         "messages": [{"role": "user", "content": "2+2?"}]
+    })
+    assert response.status_code == 200
+    body = response.json()
+    assert body["choices"][0]["message"]["content"] == "4"
+    assert body["aries_runtime"]["deterministic"] is True
+
+
+def test_mallin_369_math_routes_through_chat():
+    response = client.post("/v1/chat/completions", json={
+        "model": "aries",
+        "messages": [{"role": "user", "content": "What is the digital root of 18?"}]
+    })
+    assert response.status_code == 200
+    body = response.json()
+    assert body["aries_runtime"]["route"] == "digital_root_369"
+    assert '"digital_root": 9' in body["choices"][0]["message"]["content"]
+
+
+def test_unsupported_chat_still_requires_real_inference_backend():
+    response = client.post("/v1/chat/completions", json={
+        "model": "aries",
+        "messages": [{"role": "user", "content": "Explain the history of the Roman Empire."}]
     })
     assert response.status_code == 503
     assert "not fully configured" in response.json()["detail"]

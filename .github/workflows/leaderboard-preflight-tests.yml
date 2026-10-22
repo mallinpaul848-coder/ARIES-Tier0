@@ -1,0 +1,33 @@
+name: ARIES Leaderboard Preflight Tests
+
+on:
+  pull_request:
+    paths:
+      - "tools/leaderboard_preflight.py"
+      - "tests/test_leaderboard_preflight.py"
+      - ".github/workflows/leaderboard-benchmark.yml"
+      - ".github/workflows/leaderboard-preflight-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/leaderboard_preflight.py"
+      - "tests/test_leaderboard_preflight.py"
+      - ".github/workflows/leaderboard-benchmark.yml"
+      - ".github/workflows/leaderboard-preflight-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile preflight validator
+        run: python -m py_compile tools/leaderboard_preflight.py
+      - name: Run preflight regression tests
+        run: python -m unittest discover -s tests -p test_leaderboard_preflight.py -v

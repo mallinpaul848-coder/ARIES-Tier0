@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       model_id:
-        description: "Public Hugging Face model repository ID (must contain model weights and tokenizer)"
+        description: "Hugging Face model repository ID with model weights and tokenizer"
         required: true
         type: string
       revision:
-        description: "Immutable Hugging Face revision/commit SHA for reproducibility"
+        description: "Immutable 40-character Hugging Face commit SHA"
         required: true
         type: string
       dtype:
@@ -22,17 +22,17 @@ on:
           - float16
         default: auto
       tasks:
-        description: "Use leaderboard for all six Open LLM Leaderboard tasks, or a task/group for a smoke test"
+        description: "Standard task or task group supported by the installed lm-evaluation-harness"
         required: true
         type: string
         default: leaderboard
       limit:
-        description: "Examples per task for a smoke test; leave 0 for full evaluation"
+        description: "Examples per task for smoke testing; 0 runs the full selected task set"
         required: true
         type: number
         default: 0
       chat_template:
-        description: "Apply the model's chat template (enable for instruction/chat models)"
+        description: "Apply the model chat template for instruction/chat models"
         required: true
         type: boolean
         default: true
@@ -54,7 +54,23 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - name: Install Hugging Face leaderboard evaluation harness
+      - name: Test leaderboard preflight validation
+        run: python -m unittest discover -s tests -p test_leaderboard_preflight.py
+
+      - name: Validate pinned model artifacts before evaluation
+        env:
+          MODEL_ID: ${{ inputs.model_id }}
+          MODEL_REVISION: ${{ inputs.revision }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p reports/leaderboard
+          python tools/leaderboard_preflight.py \
+            --model-id "$MODEL_ID" \
+            --revision "$MODEL_REVISION" \
+            --output reports/leaderboard/preflight.json
+
+      - name: Install Hugging Face evaluation harness
         run: |
           python -m pip install --upgrade pip
           python -m pip install "accelerate>=0.34" "hf_transfer"
@@ -81,7 +97,7 @@ jobs:
           printf 'Model: %s\nRevision: %s\nTasks: %s\nDtype: %s\nLimit: %s\n' "${MODEL_ID}" "${MODEL_REVISION}" "${TASKS}" "${MODEL_DTYPE}" "${LIMIT}" | tee reports/leaderboard/run-metadata.txt
           lm-eval "${args[@]}" 2>&1 | tee reports/leaderboard/evaluation.log
 
-      - name: Upload raw scores, samples, and run metadata
+      - name: Upload preflight report, raw scores, samples, and metadata
         if: always()
         uses: actions/upload-artifact@v4
         with:

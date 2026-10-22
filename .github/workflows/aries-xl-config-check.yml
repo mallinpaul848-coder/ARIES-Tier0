@@ -1,0 +1,50 @@
+name: ARIES XL Configuration Check
+
+on:
+  push:
+    branches: [main, "feature/aries-xl-billion-parameter-training"]
+    paths:
+      - "training/aries_xl_config.json"
+      - "training/train_aries_xl.py"
+      - "training/aries_trillion_token_trainer.py"
+      - ".github/workflows/aries-xl-config-check.yml"
+  pull_request:
+    paths:
+      - "training/aries_xl_config.json"
+      - "training/train_aries_xl.py"
+      - "training/aries_trillion_token_trainer.py"
+      - ".github/workflows/aries-xl-config-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  config-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile launchers
+        run: python -m py_compile training/train_aries_xl.py training/aries_trillion_token_trainer.py
+      - name: Validate XL configuration
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          c = json.loads(Path("training/aries_xl_config.json").read_text())
+          assert c["d_model"] % c["heads"] == 0
+          assert c["layers"] > 0 and c["d_model"] > 0
+          assert c["default_sequence_length"] <= c["maximum_configured_sequence_length"]
+          assert c["target_parameters_approx"] >= 1_000_000_000
+          d, n = c["d_model"], c["layers"]
+          blocks = n * (13 * d * d + 17 * d)
+          embeddings = (257 + c["default_sequence_length"]) * d
+          norm = 2 * d
+          estimate = blocks + embeddings + norm
+          print(f"Architecture estimate at default context: {estimate:,} parameters")
+          assert estimate >= 1_000_000_000
+          print("Config checks passed; this is not a training run.")
+          PY

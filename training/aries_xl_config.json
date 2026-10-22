@@ -1,0 +1,23 @@
+{
+  "model_name": "ARIES XL Tier Zero",
+  "architecture": "Custom decoder-only causal Transformer with tied token embeddings and experimental bounded 3-6-9 embedding modulation",
+  "target_parameters_approx": 1005000000,
+  "d_model": 1792,
+  "layers": 24,
+  "heads": 14,
+  "default_sequence_length": 1024,
+  "maximum_configured_sequence_length": 4096,
+  "dropout": 0.1,
+  "learning_rate": 0.0003,
+  "weight_decay": 0.01,
+  "seed": 369,
+  "default_tokenizer": "byte",
+  "default_smoke_steps": 3,
+  "default_target_training_tokens": 1000000000,
+  "notes": [
+    "Parameter count is an architecture estimate and must be checked against the instantiated model.",
+    "Byte-token mode is offline-friendly but is not equivalent to a standard BPE tokenizer.",
+    "The 3-6-9 modulation is experimental and is not evidence of a mathematical breakthrough.",
+    "No trained checkpoint is included in this source-code change."
+  ]
+}

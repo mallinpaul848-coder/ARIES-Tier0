@@ -1,0 +1,25 @@
+name: MALLIN Foundation Tests
+
+on:
+  push:
+    branches: [mallin-platform-foundation]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  dns-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install DNS test dependencies
+        run: python -m pip install -r foundation/dns/requirements.txt pytest
+      - name: Run authoritative DNS tests
+        run: pytest -q foundation/tests
+      - name: Validate example zone JSON
+        run: python -m json.tool foundation/dns/zones.example.json > /dev/null
+      - name: Validate chat page is present
+        run: test -s foundation/web/index.html

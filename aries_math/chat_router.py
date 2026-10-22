@@ -17,6 +17,7 @@ from .prise_unified import (
 )
 from .prise_research_engine import DigitalRootSystem as ResearchDigitalRoot, phase8, vortex369, helixo_features
 from .prise_research_engine import ARIESPRISEResearchEngine, PRIZE_PROBLEM_ROUTES
+from .mallin_universal import audit_sat_projection
 
 _BINARY_ENGINE = ARIESExecutionEngine()
 
@@ -93,6 +94,15 @@ def route_math_prompt(prompt: str) -> dict[str, str] | None:
     if match:
         result = _BINARY_ENGINE.analyze_binary_stream(match.group(1).encode("utf-8"))
         return {"route": "binary_feature_analysis", "answer": _json(result)}
+
+    # Explicit finite audit of the candidate q3/q6/q9 SAT compression.
+    match = re.search(r"\\bsat\\s+projection\\s+audit\\s+json\\s*:\\s*(\\{.*\\})\\s*$", text, re.I | re.S)
+    if match:
+        payload = json.loads(match.group(1))
+        formulas = payload.get("formulas")
+        max_variables = payload.get("max_variables", 20)
+        result = audit_sat_projection(formulas, max_variables)
+        return {"route": "mallin_sat_projection_audit", "answer": _json(result)}
 
     # Explicit SAT JSON command, e.g. "SAT JSON: {\"clauses\":[[1,-2],[2]],\"variable_count\":2}"
     match = re.search(r"\bsat\s+json\s*:\s*(\{.*\})\s*$", text, re.I | re.S)

@@ -1,0 +1,55 @@
+name: ARIES Independent Validation Pack
+
+on:
+  pull_request:
+    paths:
+      - "aries_math/prize_problem_lab.py"
+      - "tests/test_prize_problem_lab.py"
+      - "tools/aries_alternative_benchmark.py"
+      - "tests/test_aries_alternative_benchmark.py"
+      - "benchmarks/INDEPENDENT_EVALUATION_PROTOCOL.md"
+      - "benchmarks/BUYER_DUE_DILIGENCE.md"
+      - ".github/workflows/independent-validation.yml"
+      - ".github/workflows/alternative-comparison.yml"
+      - "README.md"
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: "Repeated benchmark rounds (1-10)"
+        required: true
+        default: "3"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile research and benchmark modules
+        run: |
+          python -m py_compile aries_math/prize_problem_lab.py tools/aries_alternative_benchmark.py
+      - name: Run finite-math and benchmark-harness tests
+        run: |
+          python -m unittest discover -s tests -p 'test_prize_problem_lab.py' -v
+          python -m unittest discover -s tests -p 'test_aries_alternative_benchmark.py' -v
+      - name: Run research diagnostic smoke test
+        run: |
+          python - <<'PY'
+          from aries_math.prize_problem_lab import (
+              sat_bruteforce, navier_stokes_sample_diagnostics,
+              yang_mills_finite_spectrum_diagnostic, proof_obligation_template)
+          assert sat_bruteforce([[1], [-1]])["satisfiable"] is False
+          assert sat_bruteforce([[1, -2], [2]])["satisfiable"] is True
+          grid = [[1.0] * 3 for _ in range(3)]
+          assert navier_stokes_sample_diagnostics(grid, [[0.0] * 3 for _ in range(3)])["max_abs_divergence"] == 0.0
+          assert yang_mills_finite_spectrum_diagnostic([0.0, 0.25])["lowest_positive_eigenvalue"] == 0.25
+          assert all(not proof_obligation_template(k)["claim_of_solution"] for k in ("P_VS_NP", "NAVIER_STOKES", "YANG_MILLS"))
+          print("Research diagnostic smoke tests passed.")
+          PY

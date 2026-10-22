@@ -130,7 +130,7 @@ class AuthoritativeResolver(BaseResolver):
 
 
 def main() -> None:
-    zone_path = os.getenv("MALLIN_DNS_ZONE_FILE", "foundation/dns/zones.json")
+    zone_path = os.getenv("MALLIN_DNS_ZONE_FILE", "foundation/dns/zones.example.json")
     zones = load_zones(zone_path)
     host = os.getenv("MALLIN_DNS_HOST", "127.0.0.1")
     port = int(os.getenv("MALLIN_DNS_PORT", "8053"))

@@ -6,7 +6,9 @@ import json
 import os
 import time
 import uuid
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, SimpleHTTPRequestHandler, ThreadingHTTPServer
+import threading
+import webbrowser
 from pathlib import Path
 from threading import Lock
 from urllib.parse import urlparse
@@ -145,6 +147,35 @@ class Handler(BaseHTTPRequestHandler):
         print("%s - %s" % (self.address_string(), fmt % args), flush=True)
 
 
+ROOT = Path(__file__).resolve().parent.parent
+WEB_HOST = "127.0.0.1"
+WEB_PORT = int(os.getenv("ARIES_WEB_PORT", "8081"))
+
+
+class WebsiteHandler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=str(ROOT), **kwargs)
+
+    def log_message(self, fmt, *args):
+        print("WEBSITE %s - %s" % (self.address_string(), fmt % args), flush=True)
+
+
 if __name__ == "__main__":
-    print(f"ARIES self-hosted API listening at http://{HOST}:{PORT}", flush=True)
-    ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()
+    api_server = ThreadingHTTPServer((HOST, PORT), Handler)
+    api_thread = threading.Thread(target=api_server.serve_forever, name="aries-api", daemon=True)
+    api_thread.start()
+    web_server = ThreadingHTTPServer((WEB_HOST, WEB_PORT), WebsiteHandler)
+    site_url = f"http://{WEB_HOST}:{WEB_PORT}/"
+    print(f"ARIES local API: http://{HOST}:{PORT}", flush=True)
+    print(f"ARIES independent website: {site_url}", flush=True)
+    print("Inference runs locally. No external chat API is used.", flush=True)
+    try:
+        webbrowser.open(site_url)
+        web_server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nStopping ARIES website and local API...", flush=True)
+    finally:
+        web_server.shutdown()
+        api_server.shutdown()
+        web_server.server_close()
+        api_server.server_close()

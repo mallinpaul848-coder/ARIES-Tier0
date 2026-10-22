@@ -1,6 +1,17 @@
 name: ARIES Independent Validation Pack
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "aries_math/prize_problem_lab.py"
+      - "tests/test_prize_problem_lab.py"
+      - "tools/aries_alternative_benchmark.py"
+      - "tests/test_aries_alternative_benchmark.py"
+      - "benchmarks/**"
+      - ".github/workflows/independent-validation.yml"
+      - ".github/workflows/alternative-comparison.yml"
+      - "README.md"
   pull_request:
     paths:
       - "aries_math/prize_problem_lab.py"

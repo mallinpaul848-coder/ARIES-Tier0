@@ -1,0 +1,1 @@
+"""MALLIN software foundation package."""

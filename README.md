@@ -263,6 +263,7 @@ Workflow: [ARIES Performance Metrics](https://github.com/mallinpaul848-coder/ARI
 
 ## Independent validation and buyer evaluation
 
+- [Buyer brief](benchmarks/BUYER_BRIEF.md) — concise product overview, demo path, evidence inventory, and commercial evaluation options.
 - [Buyer due-diligence pack](benchmarks/BUYER_DUE_DILIGENCE.md) — deployment checks, evaluation matrix, licensing checklist, and evidence requirements.
 - [Independent evaluation protocol](benchmarks/INDEPENDENT_EVALUATION_PROTOCOL.md) — controlled comparison method for ARIES and authorized OpenAI-compatible alternatives.
 - [Alternative endpoint benchmark harness](tools/aries_alternative_benchmark.py) — same prompts across configured endpoints; captures success/error counts, smoke accuracy, P50/P95/P99, maximum latency, wall-clock throughput, and raw per-case results.

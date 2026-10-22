@@ -9,6 +9,9 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from aries_math.chat_router import route_math_prompt
+from software.native_reasoner import solve as solve_native_prompt
+
 app = FastAPI(title="ARIES AI API", version="1.0.5")
 
 MODEL_ID = os.getenv("ARIES_MODEL_ID", "").strip()
@@ -225,8 +228,50 @@ def models() -> dict[str, Any]:
     }
 
 
+def _deterministic_completion(answer: str, route: str) -> dict[str, Any]:
+    return {
+        "id": "chatcmpl-aries-" + str(time.time_ns()),
+        "object": "chat.completion",
+        "created": int(time.time()),
+        "model": "aries-deterministic",
+        "choices": [{
+            "index": 0,
+            "message": {"role": "assistant", "content": answer},
+            "finish_reason": "stop",
+        }],
+        "aries_runtime": {
+            "engine": "ARIES deterministic reasoning",
+            "route": route,
+            "inference_seconds": 0,
+            "deterministic": True,
+        },
+    }
+
+
+def _try_deterministic_completion(request: ChatRequest) -> dict[str, Any] | None:
+    latest_user = next(
+        (message.content for message in reversed(request.messages) if message.role == "user"),
+        None,
+    )
+    if not latest_user:
+        return None
+    try:
+        routed = route_math_prompt(latest_user)
+    except (ValueError, TypeError, OverflowError):
+        routed = None
+    if routed is not None:
+        return _deterministic_completion(routed["answer"], routed["route"])
+    answer = solve_native_prompt(latest_user)
+    if answer is not None:
+        return _deterministic_completion(answer, "native_reasoner")
+    return None
+
+
 @app.post("/v1/chat/completions")
 async def chat_completions(request: ChatRequest) -> dict[str, Any]:
+    deterministic = _try_deterministic_completion(request)
+    if deterministic is not None:
+        return deterministic
     if not UPSTREAM_BASE_URL or not MODEL_ID:
         raise HTTPException(
             status_code=503,

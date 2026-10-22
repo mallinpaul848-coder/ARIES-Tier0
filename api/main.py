@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from aries_math.chat_router import route_math_prompt
 from software.native_reasoner import solve as solve_native_prompt
+from aries_math.prise_research_engine import ARIESPRISEResearchEngine, PRISEProfile, PRIZE_PROBLEM_ROUTES
 
 app = FastAPI(title="ARIES AI API", version="1.0.5")
 
@@ -46,6 +47,16 @@ class ChatRequest(BaseModel):
     messages: list[Message] = Field(min_length=1, max_length=256)
     max_tokens: int = Field(default=256, ge=1, le=32768)
     temperature: float = Field(default=0.2, ge=0, le=2)
+
+
+class ResearchAnalysisRequest(BaseModel):
+    problem: str = Field(min_length=1, max_length=160)
+    values: list[float] = Field(default_factory=list, max_length=4096)
+    priority: float = Field(default=1.0, ge=0.0)
+    risk: float = Field(default=1.0, ge=0.0)
+    impact: float = Field(default=1.0, ge=0.0)
+    systemic: float = Field(default=1.0, ge=0.0)
+    emergent: float = Field(default=1.0, ge=0.0)
 
 
 class CalculationRequest(BaseModel):
@@ -135,6 +146,36 @@ def execute_aries_operation(operation: str, parameters: dict[str, Any]) -> Any:
         "Unsupported operation. Choose: digital_root, gcd, lcm, is_prime, "
         "dot_product, matrix_multiply, integer_mix."
     )
+
+
+_RESEARCH_ENGINE = ARIESPRISEResearchEngine()
+
+
+@app.get("/v8/research/problems")
+def v8_research_problems() -> dict[str, Any]:
+    return {
+        "engine": "ARIES PRISE Research Math Engine",
+        "problems": [
+            {"name": name, "route": list(route)}
+            for name, route in sorted(PRIZE_PROBLEM_ROUTES.items())
+        ],
+        "operators": ["PRISE", "digital_root_369", "vortex369", "phase8", "helixo_features"],
+    }
+
+
+@app.post("/v8/research/analyze")
+def v8_research_analyze(payload: ResearchAnalysisRequest) -> dict[str, Any]:
+    profile = PRISEProfile(
+        priority=payload.priority,
+        risk=payload.risk,
+        impact=payload.impact,
+        systemic=payload.systemic,
+        emergent=payload.emergent,
+    )
+    try:
+        return _RESEARCH_ENGINE.analyze(payload.problem, payload.values, profile)
+    except (ValueError, TypeError, OverflowError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 @app.get("/v8/execute/operations")

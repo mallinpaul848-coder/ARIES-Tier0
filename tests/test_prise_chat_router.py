@@ -52,6 +52,14 @@ class TestChatMathRouter(unittest.TestCase):
                 self.assertEqual(result["route"], "mallin_prise_research")
                 self.assertEqual(json.loads(result["answer"])["problem"], expected)
 
+    def test_mallin_sat_projection_audit_finds_counterexample(self):
+        prompt = 'SAT PROJECTION AUDIT JSON: {"formulas":[{"variable_count":2,"clauses":[[1,2],[1,2],[-1,-2],[-1,-2]]},{"variable_count":2,"clauses":[[1,2],[-1,2],[1,-2],[-1,-2]]}]}'
+        result = route_math_prompt(prompt)
+        self.assertEqual(result["route"], "mallin_sat_projection_audit")
+        payload = json.loads(result["answer"])
+        self.assertEqual(payload["projection_collisions"], 1)
+        self.assertFalse(payload["proof_of_p_equals_np"])
+
     def test_unmatched_prompt_falls_through(self):
         self.assertIsNone(route_math_prompt("Tell me a joke."))
 

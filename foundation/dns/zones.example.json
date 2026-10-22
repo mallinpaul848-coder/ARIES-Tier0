@@ -11,10 +11,12 @@
       "minimum": 300
     },
     "records": {
+      "@": [
+        {"type": "NS", "value": "ns1.mallin.example."},
+        {"type": "A", "value": "192.0.2.80"}
+      ],
       "ns1": [{"type": "A", "value": "192.0.2.53"}],
-      "@": [{"type": "NS", "value": "ns1.mallin.example."}],
-      "www": [{"type": "CNAME", "value": "mallin.example."}],
-      "@": [{"type": "A", "value": "192.0.2.80"}]
+      "www": [{"type": "CNAME", "value": "mallin.example."}]
     }
   }
 }

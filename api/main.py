@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from aries_math.chat_router import route_math_prompt
 from software.native_reasoner import solve as solve_native_prompt
 from aries_math.prise_research_engine import ARIESPRISEResearchEngine, PRISEProfile, PRIZE_PROBLEM_ROUTES
+from aries_math.mallin_universal import audit_sat_projection
 
 app = FastAPI(title="ARIES AI API", version="1.0.5")
 
@@ -57,6 +58,11 @@ class ResearchAnalysisRequest(BaseModel):
     impact: float = Field(default=1.0, ge=0.0)
     systemic: float = Field(default=1.0, ge=0.0)
     emergent: float = Field(default=1.0, ge=0.0)
+
+
+class SATProjectionAuditRequest(BaseModel):
+    formulas: list[dict[str, Any]] = Field(min_length=1, max_length=500)
+    max_variables: int = Field(default=20, ge=0, le=20)
 
 
 class CalculationRequest(BaseModel):
@@ -174,6 +180,14 @@ def v8_research_analyze(payload: ResearchAnalysisRequest) -> dict[str, Any]:
     )
     try:
         return _RESEARCH_ENGINE.analyze(payload.problem, payload.values, profile)
+    except (ValueError, TypeError, OverflowError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/v8/research/sat-projection-audit")
+def v8_sat_projection_audit(payload: SATProjectionAuditRequest) -> dict[str, Any]:
+    try:
+        return audit_sat_projection(payload.formulas, payload.max_variables)
     except (ValueError, TypeError, OverflowError) as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

@@ -10,6 +10,8 @@ on:
 jobs:
   dns-tests:
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -18,7 +20,7 @@ jobs:
       - name: Install DNS test dependencies
         run: python -m pip install -r foundation/dns/requirements.txt pytest
       - name: Run authoritative DNS tests
-        run: pytest -q foundation/tests
+        run: python -m pytest -q foundation/tests
       - name: Validate example zone JSON
         run: python -m json.tool foundation/dns/zones.example.json > /dev/null
       - name: Validate chat page is present

@@ -75,7 +75,7 @@ class LocalChatModel:
                 ),
             },
         )
-        recent_messages = [item for item in normalized if item["role"] != "system"][-12:]
+        recent_messages = [item for item in normalized if item["role"] != "system"][-8:]
         normalized = [system_message, *recent_messages]
         started_ns = time.perf_counter_ns()
         try:

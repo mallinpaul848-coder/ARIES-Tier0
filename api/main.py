@@ -369,7 +369,7 @@ async def chat_completions(request: ChatRequest) -> dict[str, Any]:
         except ValueError:
             raise HTTPException(status_code=502, detail="Model backend returned a non-JSON response.")
 
-    enabled = os.getenv("ARIES_TOOL_CALLING_ENABLED", "false").strip().lower() in {
+    enabled = os.getenv("ARIES_TOOL_CALLING_ENABLED", "true").strip().lower() in {
         "1", "true", "yes", "on"
     }
     if enabled:

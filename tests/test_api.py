@@ -76,6 +76,27 @@ def test_mallin_research_analysis_returns_auditable_exploratory_result():
     assert len(body["fingerprint_sha256"]) == 64
 
 
+def test_mallin_sat_projection_audit_endpoint_finds_counterexample():
+    response = client.post("/v8/research/sat-projection-audit", json={
+        "formulas": [
+            {"variable_count": 2, "clauses": [[1, 2], [1, 2], [-1, -2], [-1, -2]]},
+            {"variable_count": 2, "clauses": [[1, 2], [-1, 2], [1, -2], [-1, -2]]}
+        ]
+    })
+    assert response.status_code == 200
+    body = response.json()
+    assert body["projection_collisions"] == 1
+    assert body["proof_of_p_equals_np"] is False
+    assert body["counterexamples"][0]["meaning"].startswith("Same q3/q6/q9 projection")
+
+
+def test_mallin_sat_projection_audit_rejects_out_of_range_literals():
+    response = client.post("/v8/research/sat-projection-audit", json={
+        "formulas": [{"variable_count": 1, "clauses": [[2]]}]
+    })
+    assert response.status_code == 400
+
+
 def test_chat_url_does_not_duplicate_v1():
     assert chat_completions_url("https://provider.example/v1") == (
         "https://provider.example/v1/chat/completions"

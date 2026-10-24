@@ -125,7 +125,7 @@ def main():
             "turns":turn_results
         }
         report["sequences"].append(seq)
-        print(json.dumps({"sequence_turns":turn_count, **{k:v for k,v in seq.items() if k!="turns"}), flush=True)
+        print(json.dumps({"sequence_turns":turn_count, **{k:v for k,v in seq.items() if k!="turns"}}), flush=True)
 
     report["aggregate"] = {
         "requested_turns":total_turns,

@@ -13,13 +13,15 @@ on:
   pull_request:
     paths:
       - "tools/aries_performance_matrix.py"
-      - "tools/aries_bench.py"\n      - "tools/aries_chat_sequence_bench.py"
+      - "tools/aries_bench.py"
+      - "tools/aries_chat_sequence_bench.py"
       - ".github/workflows/aries-performance-matrix.yml"
   push:
     branches: [main]
     paths:
       - "tools/aries_performance_matrix.py"
       - "tools/aries_bench.py"
+      - "tools/aries_chat_sequence_bench.py"
       - ".github/workflows/aries-performance-matrix.yml"
 
 permissions:

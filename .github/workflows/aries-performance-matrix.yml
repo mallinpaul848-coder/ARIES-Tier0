@@ -51,6 +51,8 @@ jobs:
             --limit 10 \
             --concurrency 1 2 4 \
             --output validation-results/performance-matrix.json
+      - name: Run multi-turn continuity and latency benchmark
+        run: |
           python tools/aries_chat_sequence_bench.py \
             --base-url "$ARIES_BASE_URL" \
             --model "$ARIES_MODEL_ID" \

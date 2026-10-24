@@ -4,14 +4,15 @@ This is an explicit rule engine, not a neural language model. It handles narrow,
 auditable tasks and returns None when it cannot safely solve a prompt.
 """
 import re
-from datetime import date, timedelta
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
 
 def _fmt_number(value):
     if isinstance(value, float) and value.is_integer():
         return str(int(value))
     return str(value)
+
 
 def solve(prompt):
     text = " ".join(str(prompt).strip().split())
@@ -21,7 +22,9 @@ def solve(prompt):
     m = re.search(r"reply with exactly this token and nothing else\s*:\s*([^\n]+)", text, re.I)
     if m:
         return m.group(1).strip()
-    m = re.search(r"reply with exactly\s+(.+?)(?:\s+and nothing else)?[.!]?\s*$", text, re.I)
+    # Accept both "reply with exactly VALUE" and "reply with exactly: VALUE".
+    # The public live-check prompt can then be answered deterministically.
+    m = re.search(r"reply with exactly\s*:?\s*(.+?)(?:\s+and nothing else)?[.!]?\s*$", text, re.I)
     if m and len(m.group(1).strip()) < 120:
         return m.group(1).strip().rstrip(".!")
     m = re.search(r"return exactly\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+items?\s+separated by commas\s*:\s*(.+)$", text, re.I)
@@ -66,7 +69,7 @@ def solve(prompt):
             days += 1
         count = re.search(r"(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+days?\s+after", phrase)
         if count:
-            words = {"one":1,"two":2,"three":3,"four":4,"five":5,"six":6,"seven":7,"eight":8,"nine":9,"ten":10}
+            words = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
             days += int(count.group(1)) if count.group(1).isdigit() else words[count.group(1)]
         elif "day after" in phrase and "tomorrow" not in phrase:
             days += 1

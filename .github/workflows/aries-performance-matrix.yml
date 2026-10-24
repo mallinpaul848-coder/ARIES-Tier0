@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 20
     env:
       ARIES_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
-      ARIES_MODEL_ID: aries-native-ngram
+      ARIES_MODEL_ID: auto
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

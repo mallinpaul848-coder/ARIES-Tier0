@@ -88,7 +88,18 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
    try{
      const response=await apiFetch('/health',{method:'GET'});
      if(!response.ok)throw new Error('Health check returned HTTP '+response.status);
-     status(true,'API reachable');$('hint').textContent='API connected. Ready when you are.';
+     let rootData=null;
+     try{
+       const rootResponse=await apiFetch('/');
+       if(rootResponse.ok)rootData=await rootResponse.json();
+     }catch(_){ /* A successful health check still proves the service is reachable. */ }
+     if(rootData&&rootData.general_chat_ready===false){
+       status(true,'API online · limited');
+       $('hint').textContent='The API is online, but general chat is not configured. It may only answer supported built-in tasks.';
+     }else{
+       status(true,'API reachable');
+       $('hint').textContent='API connected. Ready when you are.';
+     }
    }catch(error){
      status(false,'API unavailable');$('hint').textContent='ARIES is offline. Start the ARIES app and try again.';
    }finally{$('check').disabled=false;}

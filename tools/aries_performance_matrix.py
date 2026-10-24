@@ -93,6 +93,7 @@ def main():
                     item["summary"] = child.get("summary", {})
                     item["health"] = child.get("health", {})
                     item["models"] = child.get("models", {})
+                    item["selected_model"] = child.get("selected_model")
                 except (ValueError, OSError) as exc:
                     item["report_parse_error"] = str(exc)
             report["measurements"].append(item)

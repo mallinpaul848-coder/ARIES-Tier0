@@ -98,8 +98,12 @@ def main():
                 api_key=args.api_key, timeout=args.timeout)
             choices = data.get("choices", []) if isinstance(data, dict) else []
             answer = choices[0].get("message", {}).get("content", "") if choices else ""
-            item.update({"http_status": status, "success": 200 <= status < 300 and bool(str(answer).strip()),
-                         "nonempty": bool(str(answer).strip())})
+            nonempty = bool(str(answer).strip())
+            exact_match = str(answer).strip() == "OK"
+            item.update({"http_status": status,
+                         "success": 200 <= status < 300 and nonempty,
+                         "nonempty": nonempty,
+                         "exact_match": exact_match})
             usage = data.get("usage", {}) if isinstance(data, dict) else {}
             item["completion_tokens"] = usage.get("completion_tokens")
         except urllib.error.HTTPError as exc:
@@ -121,6 +125,8 @@ def main():
             "concurrency": level, "requests": len(items), "successes": successes,
             "failures": len(items) - successes,
             "success_rate_percent": round(100 * successes / len(items), 2) if items else None,
+            "exact_match_count": sum(bool(x.get("exact_match")) for x in items),
+            "exact_match_rate_percent": round(100 * sum(bool(x.get("exact_match")) for x in items) / len(items), 2) if items else None,
             "latency_min_ms": round(min(latencies), 3) if latencies else None,
             "latency_mean_ms": round(statistics.mean(latencies), 3) if latencies else None,
             "latency_p50_ms": percentile(latencies, 50),

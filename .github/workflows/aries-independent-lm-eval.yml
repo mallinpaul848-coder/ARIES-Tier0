@@ -57,6 +57,7 @@ jobs:
             --model_args pretrained=published/aries-core-v1,dtype=float32,device=cpu,trust_remote_code=False \
             --tasks arc_easy,hellaswag \
             --batch_size 1 \
+            --limit 100 \
             --output_path validation-results/aries-lm-eval.json \
             --log_samples
       - name: Upload raw evaluation results and samples

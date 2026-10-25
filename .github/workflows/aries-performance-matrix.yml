@@ -53,10 +53,10 @@ jobs:
             --output validation-results/performance-matrix.json
       - name: Run multi-turn continuity and latency benchmark
         run: |
-          python tools/aries_chat_sequence_bench.py \
+          timeout 8m python tools/aries_chat_sequence_bench.py \
             --base-url "$ARIES_BASE_URL" \
             --model "$ARIES_MODEL_ID" \
-            --timeout 15 \
+            --timeout 8 \
             --turns 5 10 20 \
             --output validation-results/multi-turn-chat.json
       - name: Upload full matrix and individual run reports

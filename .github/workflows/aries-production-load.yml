@@ -1,0 +1,76 @@
+name: ARIES Production-Scale Load Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Authorized ARIES API base URL"
+        required: true
+        default: "https://aries-tier0-api-6qjh.onrender.com"
+        type: string
+      requests_per_level:
+        description: "Requests per concurrency level (1-250)"
+        required: true
+        default: "20"
+        type: string
+      levels:
+        description: "Concurrency ramp (each level 1-16)"
+        required: true
+        default: "1,4,8,16"
+        type: string
+  pull_request:
+    paths:
+      - "tools/aries_production_load.py"
+      - ".github/workflows/aries-production-load.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-script:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Syntax-check load tester
+        run: python3 -m py_compile tools/aries_production_load.py
+
+  production-load:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ARIES_BASE_URL: ${{ inputs.base_url }}
+      ARIES_MODEL_ID: auto
+      ARIES_API_KEY: ${{ secrets.ARIES_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record environment
+        run: |
+          date -u
+          uname -a
+          python3 --version
+      - name: Validate configuration and syntax
+        run: |
+          python3 -m py_compile tools/aries_production_load.py
+          case "${{ inputs.requests_per_level }}" in
+            ''|*[!0-9]*) echo "requests_per_level must be an integer"; exit 2 ;;
+          esac
+          test "${{ inputs.requests_per_level }}" -ge 1
+          test "${{ inputs.requests_per_level }}" -le 250
+      - name: Run controlled load ramp
+        run: |
+          python3 tools/aries_production_load.py \
+            --base-url "$ARIES_BASE_URL" \
+            --requests-per-level "${{ inputs.requests_per_level }}" \
+            --levels "${{ inputs.levels }}" \
+            --timeout 30 \
+            --output reports/production-load.json
+      - name: Upload raw production load report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-production-load-${{ github.run_number }}
+          path: reports/production-load.json
+          if-no-files-found: warn
+          retention-days: 90

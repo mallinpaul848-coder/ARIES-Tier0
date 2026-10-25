@@ -56,7 +56,6 @@ jobs:
           lm_eval --model hf \
             --model_args pretrained=published/aries-core-v1,dtype=float32,device=cpu,trust_remote_code=False \
             --tasks arc_easy,hellaswag \
-            --limit 25 \
             --batch_size 1 \
             --output_path validation-results/aries-lm-eval.json \
             --log_samples

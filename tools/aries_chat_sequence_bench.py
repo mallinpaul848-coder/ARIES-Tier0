@@ -74,6 +74,7 @@ def main():
     total_turns = 0
     nonempty = 0
     failures = 0
+    abort_reason = None
     for turn_count in args.turns:
         messages = [{"role":"system","content":"You are in a multi-turn continuity and latency diagnostic. Answer briefly and accurately. Retain prior conversation context."}]
         turn_results = []
@@ -92,7 +93,7 @@ def main():
             try:
                 status, payload = request_json(
                     api_root + "/chat/completions",
-                    {"model":model,"messages":messages,"temperature":0,"max_tokens":64},
+                    {"model":model,"messages":messages,"temperature":0,"max_tokens":16},
                     args.api_key,args.timeout
                 )
                 elapsed = (time.perf_counter()-started)*1000
@@ -112,6 +113,10 @@ def main():
                 all_latencies.append(elapsed)
             turn_results.append(item)
             total_turns += 1
+            if "error" in item:
+                abort_reason = item["error"]
+                print(json.dumps({"benchmark_aborted_early": True, "reason": abort_reason, "turn": turn}), flush=True)
+                break
         vals = [x["latency_ms"] for x in turn_results if isinstance(x.get("latency_ms"),(int,float))]
         seq = {
             "requested_turns":turn_count,
@@ -126,8 +131,12 @@ def main():
         }
         report["sequences"].append(seq)
         print(json.dumps({"sequence_turns":turn_count, **{k:v for k,v in seq.items() if k!="turns"}}), flush=True)
+        if abort_reason:
+            break
 
     report["aggregate"] = {
+        "aborted_early": bool(abort_reason),
+        "abort_reason": abort_reason,
         "requested_turns":total_turns,
         "nonempty_responses":nonempty,
         "nonempty_response_rate_percent":round(100*nonempty/total_turns,2) if total_turns else None,

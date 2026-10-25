@@ -37,7 +37,7 @@ def main():
     p.add_argument("--base-url", default=os.getenv("ARIES_BASE_URL", "http://127.0.0.1:8000"))
     p.add_argument("--model", default=os.getenv("ARIES_MODEL_ID", "auto"))
     p.add_argument("--api-key", default=os.getenv("ARIES_API_KEY", ""))
-    p.add_argument("--timeout", type=int, default=90)
+    p.add_argument("--timeout", type=int, default=15)
     p.add_argument("--turns", type=int, nargs="+", default=[5, 10, 20])
     p.add_argument("--output", default="validation-results/multi-turn-chat.json")
     args = p.parse_args()

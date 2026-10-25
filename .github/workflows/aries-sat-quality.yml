@@ -1,0 +1,48 @@
+name: ARIES SAT Reasoning Quality Evaluation
+
+on:
+  pull_request:
+    paths:
+      - "aries_math/**"
+      - "tests/test_sat_quality_lab.py"
+      - "tools/aries_sat_quality_bench.py"
+      - ".github/workflows/aries-sat-quality.yml"
+  push:
+    branches:
+      - "upgrade/reasoning-quality-math-fastpath"
+    paths:
+      - "aries_math/**"
+      - "tests/test_sat_quality_lab.py"
+      - "tools/aries_sat_quality_bench.py"
+      - ".github/workflows/aries-sat-quality.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sat-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test dependency
+        run: python -m pip install pytest
+      - name: Compile SAT evaluation code
+        run: |
+          python -m py_compile aries_math/sat_quality_lab.py tools/aries_sat_quality_bench.py
+      - name: Run SAT quality unit tests
+        run: python -m pytest -q tests/test_sat_quality_lab.py
+      - name: Run reproducible bounded SAT evaluation
+        run: python tools/aries_sat_quality_bench.py --count 100 --variables 8 --seed 7 --output reports/aries-sat-quality.json
+      - name: Upload SAT quality report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-sat-quality-${{ github.run_number }}
+          path: reports/aries-sat-quality.json
+          if-no-files-found: warn
+          retention-days: 90

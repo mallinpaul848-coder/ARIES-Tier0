@@ -1,0 +1,62 @@
+name: ARIES NIST AI RMF Evidence Readiness
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "docs/NIST_AI_RMF_READINESS.md"
+      - ".github/workflows/nist-ai-rmf-readiness.yml"
+      - "published/aries-core-v1/**"
+      - "training/**"
+      - "tools/aries_production_load.py"
+      - ".github/workflows/aries-production-load.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  readiness-inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate evidence inventory (not a certification)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          {
+            echo "# ARIES NIST AI RMF Evidence Inventory"
+            echo
+            echo "- Generated UTC: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Scope: repository artifact presence only"
+            echo "- Status: NOT NIST VALIDATION, CERTIFICATION, ENDORSEMENT, OR THIRD-PARTY REVIEW"
+            echo
+            echo "| Evidence item | Repository status |"
+            echo "|---|---|"
+            for path in \
+              "docs/NIST_AI_RMF_READINESS.md" \
+              "published/aries-core-v1/README.md" \
+              "published/aries-core-v1/config.json" \
+              "published/aries-core-v1/tokenizer.json" \
+              "published/aries-core-v1/model.safetensors" \
+              "training/aries_quality_eval.py" \
+              ".github/workflows/aries-production-load.yml" \
+              "tools/aries_production_load.py" \
+              ".github/workflows/aries-huggingface-verification.yml" \
+              "benchmarks/verify_hf_model.py"; do
+              if test -s "$path"; then
+                echo "| `$path` | Present and non-empty |"
+              else
+                echo "| `$path` | MISSING or empty |"
+              fi
+            done
+            echo
+            echo "This automated inventory checks file presence only. It does not assess system behavior, risk control effectiveness, data rights, fairness, safety, security, or compliance. Human review and independent testing remain necessary."
+          } | tee reports/nist-ai-rmf-evidence-inventory.md
+      - name: Upload evidence inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-nist-ai-rmf-evidence-inventory
+          path: reports/nist-ai-rmf-evidence-inventory.md
+          retention-days: 90

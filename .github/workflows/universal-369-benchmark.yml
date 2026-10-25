@@ -1,0 +1,73 @@
+name: Universal 3-6-9 Kernel Benchmark
+
+on:
+  push:
+    branches:
+      - main
+      - feat/universal-369-benchmark
+    paths:
+      - "benchmarks/universal_369/**"
+      - ".github/workflows/universal-369-benchmark.yml"
+  pull_request:
+    paths:
+      - "benchmarks/universal_369/**"
+      - ".github/workflows/universal-369-benchmark.yml"
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Transforms per sample"
+        required: false
+        default: "1000000"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Record runner environment
+        run: |
+          uname -a
+          cc --version
+          lscpu || true
+
+      - name: Compile benchmark
+        run: |
+          cc -O3 -std=c11 -Wall -Wextra -Wpedantic \
+            -Ibenchmarks/universal_369/include \
+            benchmarks/universal_369/src/bench_369.c \
+            -lm -o bench_369
+
+      - name: Run correctness smoke test
+        run: |
+          cat > /tmp/check_369.c <<'EOF'
+          #include <math.h>
+          #include "mallin_369_kernel.h"
+          int main(void) {
+              mallin_vec3 x = {{1.0, 2.0, 3.0}};
+              mallin_vec3 y = mallin_369_transform(x);
+              return !(fabs(y.v[0] - 42.0) < 1e-12 &&
+                       fabs(y.v[1] - 33.0) < 1e-12 &&
+                       fabs(y.v[2] - 33.0) < 1e-12);
+          }
+          EOF
+          cc -O2 -std=c11 -Wall -Wextra -Wpedantic \
+            -Ibenchmarks/universal_369/include /tmp/check_369.c -lm -o check_369
+          ./check_369
+
+      - name: Run benchmark
+        run: |
+          ITERATIONS="${{ github.event.inputs.iterations || '1000000' }}"
+          ./bench_369 "$ITERATIONS" | tee benchmark-results.txt
+
+      - name: Upload raw benchmark output
+        uses: actions/upload-artifact@v4
+        with:
+          name: universal-369-benchmark-results
+          path: benchmark-results.txt
+          if-no-files-found: error

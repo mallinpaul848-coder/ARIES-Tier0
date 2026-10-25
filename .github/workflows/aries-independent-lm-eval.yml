@@ -1,0 +1,70 @@
+name: ARIES Independent LM Evaluation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "published/aries-core-v1/**"
+      - ".github/workflows/aries-independent-lm-eval.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aries-independent-eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lm-evaluation-harness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout pinned candidate
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install independent evaluation harness
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "lm_eval[hf]==0.4.9" "transformers==4.57.6" safetensors
+      - name: Validate model and tokenizer load
+        run: |
+          python - <<'PY'
+          from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
+          path = "published/aries-core-v1"
+          config = AutoConfig.from_pretrained(path, trust_remote_code=False)
+          tokenizer = AutoTokenizer.from_pretrained(path, trust_remote_code=False)
+          model = AutoModelForCausalLM.from_pretrained(path, trust_remote_code=False)
+          assert config.model_type == "gpt2", config.model_type
+          assert len(tokenizer) == model.get_input_embeddings().weight.shape[0], (
+              len(tokenizer), model.get_input_embeddings().weight.shape[0]
+          )
+          print({
+              "model_type": config.model_type,
+              "parameters": sum(p.numel() for p in model.parameters()),
+              "tokenizer_vocab": len(tokenizer),
+              "embedding_vocab": model.get_input_embeddings().weight.shape[0],
+              "remote_code": False,
+          })
+          PY
+      - name: Run independent benchmark tasks
+        run: |
+          mkdir -p validation-results
+          lm_eval --model hf \
+            --model_args pretrained=published/aries-core-v1,dtype=float32,trust_remote_code=False \
+            --tasks arc_easy,hellaswag \
+            --limit 25 \
+            --batch_size 1 \
+            --output_path validation-results/aries-lm-eval.json \
+            --log_samples
+      - name: Upload raw evaluation results and samples
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-independent-lm-eval-${{ github.sha }}
+          path: validation-results/
+          if-no-files-found: warn
+          retention-days: 90

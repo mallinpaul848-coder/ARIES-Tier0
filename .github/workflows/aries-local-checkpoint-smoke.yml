@@ -1,3 +1,4 @@
+# Reproducible project-run checkpoint smoke test; not third-party certification.
 name: ARIES Local Checkpoint Reproducibility Smoke Test
 
 on:

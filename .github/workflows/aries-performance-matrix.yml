@@ -56,6 +56,7 @@ jobs:
           python tools/aries_chat_sequence_bench.py \
             --base-url "$ARIES_BASE_URL" \
             --model "$ARIES_MODEL_ID" \
+            --timeout 15 \
             --turns 5 10 20 \
             --output validation-results/multi-turn-chat.json
       - name: Upload full matrix and individual run reports

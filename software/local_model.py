@@ -33,7 +33,7 @@ class LocalChatModel:
             self._model = Llama(
                 model_path=str(path),
                 n_ctx=max(512, min(int(os.getenv("ARIES_LOCAL_CONTEXT_SIZE", "1024")), 2048)),
-                n_threads=max(1, min(int(os.getenv("ARIES_LOCAL_MODEL_THREADS", "1")), 4)),
+                n_threads=max(1, min(int(os.getenv("ARIES_LOCAL_MODEL_THREADS", "2")), 4)),
                 n_batch=32,
                 n_gpu_layers=0,
                 use_mmap=True,

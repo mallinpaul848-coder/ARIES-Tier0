@@ -8,6 +8,7 @@ on:
     branches: [main]
     paths:
       - "tools/aries_bench.py"
+      - "tools/aries_combined_bench.py"
       - "api/**"
       - "aries_math/**"
       - ".github/workflows/aries-performance.yml"

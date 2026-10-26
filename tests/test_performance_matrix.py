@@ -35,6 +35,18 @@ class PerformanceMatrixTests(unittest.TestCase):
         self.assertFalse(choose_path(baseline_ms=100, candidate_ms=110,
                                      baseline_correct=True, candidate_correct=True)["accepted"])
 
+    def test_correct_candidate_can_replace_incorrect_baseline(self):
+        result = choose_path(baseline_ms=100, candidate_ms=150,
+                             baseline_correct=False, candidate_correct=True)
+        self.assertTrue(result["accepted"])
+        self.assertEqual(result["reason"], "candidate_correct_baseline_incorrect")
+
+    def test_bad_candidate_is_rejected_even_when_baseline_is_wrong(self):
+        result = choose_path(baseline_ms=100, candidate_ms=10,
+                             baseline_correct=False, candidate_correct=False)
+        self.assertFalse(result["accepted"])
+        self.assertEqual(result["reason"], "candidate_incorrect")
+
     def test_platform_readiness_requires_all_components(self):
         self.assertTrue(platform_readiness({"api":{"passed":True}, "learning":{"passed":True}},
                                            ("api", "learning"))["ready"])

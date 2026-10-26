@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one combined ARIES latency, throughput, and answer-quality matrix."""
+"""Run a combined ARIES latency, throughput, and answer-quality matrix."""
 import argparse
 import json
 import os
@@ -8,12 +8,13 @@ import sys
 from pathlib import Path
 from datetime import datetime, timezone
 
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--base-url", default=os.getenv("ARIES_BASE_URL", "https://aries-tier0-api-6qjh.onrender.com"))
     p.add_argument("--model", default=os.getenv("ARIES_MODEL_ID", "auto"))
     p.add_argument("--timeout", type=int, default=75)
-    p.add_argument("--repeats", type=int, default=2)
+    p.add_argument("--repeats", type=int, default=5)
     p.add_argument("--output", default="reports/aries-combined-performance.json")
     args = p.parse_args()
     if not 1 <= args.repeats <= 5:
@@ -21,7 +22,9 @@ def main():
 
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
-    levels = [1, 2, 4, 8]
+    # Concurrency 16 is the harness maximum; include it to expose saturation
+    # without pretending that the remote host has 16 CPU workers.
+    levels = [1, 2, 4, 8, 16]
     runs = []
     for concurrency in levels:
         for repeat in range(1, args.repeats + 1):
@@ -49,9 +52,11 @@ def main():
     matrix = []
     for concurrency in levels:
         selected = [r for r in runs if r["concurrency"] == concurrency and r.get("summary")]
+
         def mean_of(key):
             vals = [r["summary"].get(key) for r in selected if isinstance(r["summary"].get(key), (int, float))]
             return round(sum(vals) / len(vals), 3) if vals else None
+
         matrix.append({
             "concurrency": concurrency,
             "repeats_with_reports": len(selected),
@@ -78,9 +83,10 @@ def main():
         "requested_model": args.model,
         "repeats_per_concurrency": args.repeats,
         "concurrency_levels": levels,
+        "planned_completion_requests": len(levels) * args.repeats * 15,
         "matrix": matrix,
         "runs": runs,
-        "interpretation": "Compare latency, throughput, request success, and exact-match accuracy at concurrency 1, 2, 4, and 8. Results can vary with hosting load and model warm-up; this is not an official academic benchmark.",
+        "interpretation": "Compare latency, throughput, request success, and exact-match accuracy at concurrency 1, 2, 4, 8, and 16. Results can vary with hosting load and model warm-up; this is not an official academic benchmark. API latency is not the same as native nanosecond kernel latency.",
     }
     out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print("\nCOMBINED MATRIX SUMMARY")
@@ -88,6 +94,7 @@ def main():
     print(f"Saved combined report: {out}")
     if not any(r.get("summary", {}).get("http_completion_responses", 0) for r in runs):
         raise SystemExit("FAIL: no benchmark run returned valid completion responses.")
+
 
 if __name__ == "__main__":
     main()

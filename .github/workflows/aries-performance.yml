@@ -26,7 +26,7 @@ jobs:
           python-version: "3.12"
       - name: Validate benchmark harness
         run: |
-          python -m py_compile tools/aries_bench.py
+          python -m py_compile tools/aries_bench.py tools/aries_combined_bench.py
           python - <<'PY'
           import importlib.util
           spec = importlib.util.spec_from_file_location("aries_bench", "tools/aries_bench.py")
@@ -44,13 +44,19 @@ jobs:
           ARIES_MODEL_ID: auto
         run: |
           python tools/aries_bench.py --base-url "$ARIES_BASE_URL" --model "$ARIES_MODEL_ID" --timeout 75 --limit 10 --concurrency 1 --output reports/aries-public-performance.json
+      - name: Run combined concurrency matrix
+        env:
+          ARIES_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
+          ARIES_MODEL_ID: auto
+        run: |
+          python tools/aries_combined_bench.py --base-url "$ARIES_BASE_URL" --model "$ARIES_MODEL_ID" --timeout 75 --repeats 2 --output reports/aries-combined-performance.json
       - name: Persist benchmark report in Git
         if: always()
         run: |
           if [ -f reports/aries-public-performance.json ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add reports/aries-public-performance.json
+            git add reports/aries-*.json
             if ! git diff --cached --quiet; then
               git commit -m "Record ARIES public performance benchmark"
               git push
@@ -63,6 +69,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: aries-performance-${{ github.run_number }}
-          path: reports/aries-public-performance.json
+          path: reports/aries-*.json
           if-no-files-found: warn
           retention-days: 90

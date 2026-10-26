@@ -26,7 +26,7 @@ RUN mkdir -p models data /app/licenses \
 
 ENV ARIES_NATIVE_MODEL=/app/models/aries-native-ngram.json
 ENV ARIES_GGUF_MODEL_PATH=/app/models/SmolLM2-135M-Instruct-Q4_K_M.gguf
-ENV ARIES_LOCAL_MODEL_THREADS=1
+ENV ARIES_LOCAL_MODEL_THREADS=2
 
 EXPOSE 10000
 CMD ["python", "software/public_native_server.py"]

@@ -1,0 +1,120 @@
+name: ARIES End-to-End Platform Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "ARIES API base URL"
+        required: false
+        default: "https://aries-tier0-api-6qjh.onrender.com"
+      cases:
+        description: "Maximum authored QA cases (1-10)"
+        required: false
+        default: "10"
+  schedule:
+    - cron: "17 6 * * 1"
+  pull_request:
+    paths:
+      - "tools/aries_bench.py"
+      - "api/**"
+      - "software/**"
+      - "aries_math/**"
+      - ".github/workflows/aries-e2e-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  end-to-end:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      ARIES_BASE_URL: ${{ github.event.inputs.base_url || 'https://aries-tier0-api-6qjh.onrender.com' }}
+      ARIES_MODEL_ID: auto
+      CASE_LIMIT: ${{ github.event.inputs.cases || '10' }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Record validation environment
+        run: |
+          date -u
+          uname -a
+          python3 --version
+          curl --version | head -n 1
+
+      - name: Validate benchmark script
+        run: python3 -m py_compile tools/aries_bench.py
+
+      - name: Probe public health endpoint
+        run: |
+          mkdir -p reports/e2e
+          curl --fail --silent --show-error --max-time 90 \
+            -D reports/e2e/health-headers.txt \
+            "$ARIES_BASE_URL/health" \
+            -o reports/e2e/health-response.json
+          cat reports/e2e/health-response.json
+
+      - name: Run serial end-to-end chat and quality test
+        id: serial
+        continue-on-error: true
+        run: |
+          python3 tools/aries_bench.py \
+            --base-url "$ARIES_BASE_URL" --model "$ARIES_MODEL_ID" \
+            --timeout 90 --limit "$CASE_LIMIT" --concurrency 1 \
+            --output reports/e2e/serial.json
+
+      - name: Run concurrent end-to-end chat and quality test
+        id: concurrent
+        continue-on-error: true
+        run: |
+          python3 tools/aries_bench.py \
+            --base-url "$ARIES_BASE_URL" --model "$ARIES_MODEL_ID" \
+            --timeout 90 --limit "$CASE_LIMIT" --concurrency 4 \
+            --output reports/e2e/concurrency-4.json
+
+      - name: Write validation summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("reports/e2e")
+          summary = {
+              "suite": "ARIES end-to-end platform validation",
+              "target": "${{ env.ARIES_BASE_URL }}",
+              "commit": "${{ github.sha }}",
+              "runs": {},
+              "independent_third_party_validation": False,
+              "scope_note": "External HTTP/API test of the deployed endpoint. This GitHub Actions run is project-operated CI, not independent third-party certification. Exact-match cases are a small authored diagnostic, not a general intelligence score."
+          }
+          for name in ("serial", "concurrency-4"):
+              path = root / f"{name}.json"
+              if path.exists():
+                  data = json.loads(path.read_text())
+                  summary["runs"][name] = {
+                      "summary": data.get("summary"),
+                      "health": data.get("health"),
+                      "models": data.get("models"),
+                      "selected_model": data.get("selected_model")
+                  }
+              else:
+                  summary["runs"][name] = {"status": "NO_REPORT; inspect workflow step logs"}
+          (root / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+          print(json.dumps(summary, indent=2))
+          PY
+
+      - name: Upload raw end-to-end reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-end-to-end-validation-${{ github.run_number }}
+          path: reports/e2e/
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Fail if either end-to-end run failed
+        if: always()
+        run: |
+          test "${{ steps.serial.outcome }}" = "success"
+          test "${{ steps.concurrent.outcome }}" = "success"

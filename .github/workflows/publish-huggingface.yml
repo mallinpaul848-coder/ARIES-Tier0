@@ -4,14 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       repo_id:
-        description: "Your Hugging Face namespace/model name (for example, YOUR_USERNAME/aries-core-v1)"
-        required: true
+        description: "Optional Hugging Face namespace/model name. Leave blank to use the token owner's namespace."
+        required: false
+        default: ""
         type: string
       private:
         description: "Create the Hugging Face model repository as private"
         required: true
         default: false
         type: boolean
+  push:
+    paths:
+      - ".github/workflows/publish-huggingface.yml"
 
 permissions:
   contents: read
@@ -29,18 +33,28 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Check required secret and repository ID
+      - name: Check token and resolve destination repository
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_REPO_ID: ${{ inputs.repo_id }}
+          HF_REPO_ID_INPUT: ${{ inputs.repo_id }}
         run: |
-          test -n "$HF_TOKEN" || { echo "::error::Missing HF_TOKEN. Add a Hugging Face write token in GitHub Actions repository secrets."; exit 1; }
+          test -n "$HF_TOKEN" || { echo "::error::Missing HF_TOKEN. Add a valid Hugging Face write token in GitHub Actions repository secrets."; exit 1; }
           python - <<'PY'
           import os
-          repo_id = os.environ["HF_REPO_ID"].strip()
+          from huggingface_hub import HfApi
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          repo_id = os.environ.get("HF_REPO_ID_INPUT", "").strip()
+          if not repo_id:
+              user = api.whoami()
+              namespace = user.get("name") or user.get("fullname")
+              if not namespace:
+                  raise SystemExit("Could not determine the Hugging Face token owner's namespace.")
+              repo_id = f"{namespace}/aries-core-v1"
           if repo_id.count("/") != 1 or any(not part for part in repo_id.split("/")):
               raise SystemExit("repo_id must be in namespace/model-name format")
-          print("Repository ID format is valid.")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env:
+              env.write(f"HF_REPO_ID={repo_id}\n")
+          print(f"Destination repository: https://huggingface.co/{repo_id}")
           PY
 
       - name: Install publishing and model verification dependencies
@@ -51,15 +65,14 @@ jobs:
       - name: Create or confirm model repository
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_REPO_ID: ${{ inputs.repo_id }}
           HF_PRIVATE: ${{ inputs.private }}
         run: |
           python - <<'PY'
           import os
           from huggingface_hub import HfApi
           api = HfApi(token=os.environ["HF_TOKEN"])
-          repo_id = os.environ["HF_REPO_ID"].strip()
-          private = os.environ["HF_PRIVATE"].lower() == "true"
+          repo_id = os.environ["HF_REPO_ID"]
+          private = os.environ.get("HF_PRIVATE", "false").lower() == "true"
           api.create_repo(repo_id=repo_id, repo_type="model", private=private, exist_ok=True)
           print(f"Repository is ready: https://huggingface.co/{repo_id}")
           PY
@@ -67,14 +80,13 @@ jobs:
       - name: Upload model configuration, weights, tokenizer, and model card
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_REPO_ID: ${{ inputs.repo_id }}
         run: |
           python - <<'PY'
           import os
           from huggingface_hub import HfApi
           api = HfApi(token=os.environ["HF_TOKEN"])
           api.upload_folder(
-              repo_id=os.environ["HF_REPO_ID"].strip(),
+              repo_id=os.environ["HF_REPO_ID"],
               repo_type="model",
               folder_path="published/aries-core-v1",
               commit_message="Publish ARIES Core v1 experimental checkpoint and model card",
@@ -87,9 +99,7 @@ jobs:
         if: ${{ !inputs.private }}
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_REPO_ID: ${{ inputs.repo_id }}
-        run: |
-          python benchmarks/verify_hf_model.py "$HF_REPO_ID" --max-new-tokens 16
+        run: python benchmarks/verify_hf_model.py "$HF_REPO_ID" --max-new-tokens 16
 
       - name: Explain private repository verification status
         if: ${{ inputs.private }}

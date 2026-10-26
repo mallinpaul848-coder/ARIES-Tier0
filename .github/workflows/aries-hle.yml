@@ -1,0 +1,45 @@
+name: ARIES Humanity's Last Exam Probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Number of eligible text-only questions (1-2500)"
+        required: true
+        default: "100"
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - "tools/aries_hle_text_bench.py"
+      - ".github/workflows/aries-hle.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  hle-text-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dataset loader
+        run: python -m pip install --upgrade pip datasets
+      - name: Run HLE text-only probe
+        env:
+          ARIES_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
+          ARIES_MODEL_ID: auto
+        run: |
+          LIMIT="${{ github.event.inputs.limit || '100' }}"
+          python tools/aries_hle_text_bench.py --base-url "$ARIES_BASE_URL" --model "$ARIES_MODEL_ID" --limit "$LIMIT" --timeout 90 --output reports/aries-hle-text-probe.json
+      - name: Upload aggregate HLE report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-hle-text-probe-${{ github.run_number }}
+          path: reports/aries-hle-text-probe.json
+          if-no-files-found: warn
+          retention-days: 90

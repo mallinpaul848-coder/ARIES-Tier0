@@ -60,7 +60,20 @@ jobs:
             git add reports/aries-*.json
             if ! git diff --cached --quiet; then
               git commit -m "Record ARIES public performance benchmark"
-              git push
+              # Other workflows can update main while this matrix is running.
+              # Rebase before pushing and retry transient non-fast-forward races.
+              for attempt in 1 2 3; do
+                git fetch origin main
+                git rebase -X theirs origin/main || { git rebase --abort || true; }
+                if git push origin HEAD:main; then
+                  break
+                fi
+                if [ "$attempt" -eq 3 ]; then
+                  echo "Could not persist report after 3 attempts; uploaded artifact remains available."
+                  exit 1
+                fi
+                sleep 2
+              done
             fi
           else
             echo "No JSON report was produced; see benchmark step logs for the failure."

@@ -1,0 +1,55 @@
+name: ARIES Capability Smoke Evaluation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "benchmarks/aries_capability_eval.py"
+      - ".github/workflows/aries-capability-evaluation.yml"
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: "Sequential rounds of the fixed smoke set (1-20)"
+        required: false
+        default: "2"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  public-capability-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run capability evaluation against public API
+        env:
+          ARIES_CAPABILITY_API_KEY: ${{ secrets.ARIES_CAPABILITY_API_KEY }}
+          ROUNDS_INPUT: ${{ inputs.rounds || '2' }}
+        run: |
+          mkdir -p reports
+          python benchmarks/aries_capability_eval.py \
+            --base-url https://aries-tier0-api-6qjh.onrender.com \
+            --model aries-local-smollm2-135m \
+            --rounds "$ROUNDS_INPUT" \
+            --timeout 60 \
+            --output reports/aries-capability-evaluation.json
+
+      - name: Upload raw capability evaluation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-capability-evaluation-${{ github.run_id }}
+          path: reports/aries-capability-evaluation.json
+          if-no-files-found: warn
+          retention-days: 90

@@ -1,0 +1,28 @@
+name: ARIES Auditable Learning Tests
+
+on:
+  push:
+    branches: [main, "feature/positive-impact-math"]
+    paths:
+      - "aries_math/learning_system.py"
+      - "tests/test_learning_system.py"
+      - ".github/workflows/learning-system-tests.yml"
+  pull_request:
+    paths:
+      - "aries_math/learning_system.py"
+      - "tests/test_learning_system.py"
+      - ".github/workflows/learning-system-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  learning-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run learning system tests
+        run: python -m unittest discover -s tests -p "test_learning_system.py" -v

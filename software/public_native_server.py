@@ -15,6 +15,7 @@ from local_model import LocalChatModel, LocalInferenceError
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aries_math.prise_unified import (ARIESExecutionEngine, PRISEProblem, exact_sat_bruteforce)
 from aries_math.chat_router import route_math_prompt
+from aries_math.reasoning_integration import analyze_request, build_reasoning_context
 
 MATH_ENGINE = ARIESExecutionEngine()
 
@@ -132,13 +133,22 @@ class Handler(BaseHTTPRequestHandler):
         return self.send_json(404, {"error":{"message":"Not found","type":"not_found"}})
     def do_POST(self):
         path = urlparse(self.path).path
-        if path not in {"/v1/chat/completions", "/math/analyze", "/math/prise", "/math/sat"}:
+        if path not in {"/v1/chat/completions", "/reasoning/analyze", "/math/analyze", "/math/prise", "/math/sat"}:
             return self.send_json(404, {"error":{"message":"Not found","type":"not_found"}})
         try:
             size = int(self.headers.get("Content-Length","0"))
             if size <= 0 or size > 1_000_000:
                 return self.send_json(400, {"error":{"message":"Request body must be 1 byte to 1 MB."}})
             body = json.loads(self.rfile.read(size))
+            if path == "/reasoning/analyze":
+                question = body.get("question", "")
+                if not isinstance(question, str) or not question.strip():
+                    return self.send_json(400, {"error":{"message":"question must be a non-empty string"}})
+                return self.send_json(200, {
+                    "module": "ARIES evidence-aware reasoning scaffold",
+                    "result": analyze_request(question),
+                    "notice": "Question decomposition is a planning aid, not proof of correctness or independent fact verification."
+                })
             if path == "/math/analyze":
                 payload = body.get("payload", "")
                 if not isinstance(payload, str):
@@ -186,6 +196,11 @@ class Handler(BaseHTTPRequestHandler):
             if not user_messages:
                 return self.send_json(400, {"error":{"message":"At least one non-empty user message is required"}})
             prompt = user_messages[-1].strip()
+            reasoning_plan = analyze_request(prompt)
+            reasoning_context = build_reasoning_context(prompt)
+            system_index = next((i for i, item in enumerate(normalized_messages) if item["role"] == "system"), None)
+            if system_index is not None:
+                normalized_messages[system_index]["content"] += "\n\n" + reasoning_context
             max_tokens = max(1,min(int(body.get("max_tokens",768)),2048))
             temperature = max(0.0,min(float(body.get("temperature",0.7)),2.0))
             started_ns = time.perf_counter_ns()
@@ -248,7 +263,9 @@ class Handler(BaseHTTPRequestHandler):
                     "upstream_inference_ns":upstream_elapsed_ns,
                     "local_model_inference_ns":local_model_elapsed_ns,
                     "model_type":"configured_chat_model" if upstream_used else ("local_instruct_model" if local_model_used else "native_task_engine_or_baseline"),
-                    "math_route":math_route
+                    "math_route":math_route,
+                    "reasoning_scaffold_applied":True,
+                    "reasoning_goal":reasoning_plan["goal"]
                 }
             })
         except UpstreamInferenceError as exc:

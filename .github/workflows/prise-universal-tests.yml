@@ -1,0 +1,28 @@
+name: ARIES PRISE Universal Solution Tests
+
+on:
+  push:
+    branches: [main, "feature/positive-impact-math"]
+    paths:
+      - "aries_math/prise_universal.py"
+      - "tests/test_prise_universal.py"
+      - ".github/workflows/prise-universal-tests.yml"
+  pull_request:
+    paths:
+      - "aries_math/prise_universal.py"
+      - "tests/test_prise_universal.py"
+      - ".github/workflows/prise-universal-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  prise-universal-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run PRISE universal tests
+        run: python -m unittest discover -s tests -p "test_prise_universal.py" -v

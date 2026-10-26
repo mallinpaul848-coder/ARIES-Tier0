@@ -1,0 +1,28 @@
+name: PRISE Positive Impact Tests
+
+on:
+  push:
+    branches: [main, "feature/positive-impact-math"]
+    paths:
+      - "aries_math/positive_impact.py"
+      - "tests/test_positive_impact.py"
+      - ".github/workflows/positive-impact-tests.yml"
+  pull_request:
+    paths:
+      - "aries_math/positive_impact.py"
+      - "tests/test_positive_impact.py"
+      - ".github/workflows/positive-impact-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run positive-impact unit tests
+        run: python -m unittest discover -s tests -p "test_positive_impact.py" -v

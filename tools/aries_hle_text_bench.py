@@ -58,7 +58,19 @@ def main():
         raise SystemExit("Install requirements with: pip install datasets") from exc
 
     started = time.perf_counter()
-    dataset = load_dataset("cais/hle", split="test")
+    hf_token = os.getenv("HF_TOKEN", "").strip() or None
+    try:
+        dataset = load_dataset("cais/hle", split="test", token=hf_token)
+    except Exception as exc:
+        message = str(exc)
+        if "gated" in message.lower() or "authenticated" in message.lower() or "access" in message.lower():
+            raise SystemExit(
+                "HLE dataset access is gated. Set the GitHub Actions repository secret "
+                "HF_TOKEN to a Hugging Face token for an account that has been granted "
+                "access to cais/hle, and accept the dataset conditions on Hugging Face. "
+                "No HLE score was produced."
+            ) from exc
+        raise
     dataset_rows = len(dataset)
     selected = []
     skipped_images = 0

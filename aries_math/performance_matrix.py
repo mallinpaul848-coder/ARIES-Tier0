@@ -6,8 +6,7 @@ whether a path is enabled. It does not implement or expose proprietary math.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
-from statistics import median
+from dataclasses import dataclass
 from time import perf_counter
 from typing import Callable, Iterable, TypeVar
 import math
@@ -69,23 +68,32 @@ def choose_path(
     candidate_correct: bool,
     max_regression_pct: float = 2.0,
 ) -> dict:
-    """Accept candidate only when correctness holds and latency is within budget."""
+    """Promote only correct candidates; enforce latency budget against a correct baseline."""
     numbers = (baseline_ms, candidate_ms, max_regression_pct)
     if any(not math.isfinite(float(x)) for x in numbers):
         raise ValueError("latency and budget values must be finite")
     if baseline_ms < 0 or candidate_ms < 0 or max_regression_pct < 0:
         raise ValueError("latency and regression budget cannot be negative")
+
     allowed_ms = baseline_ms * (1.0 + max_regression_pct / 100.0)
-    accepted = bool(candidate_correct and candidate_ms <= allowed_ms)
+    if not candidate_correct:
+        accepted, reason = False, "candidate_incorrect"
+    elif not baseline_correct:
+        accepted, reason = True, "candidate_correct_baseline_incorrect"
+    elif candidate_ms <= allowed_ms:
+        accepted, reason = True, "correct_and_within_latency_budget"
+    else:
+        accepted, reason = False, "latency_budget_exceeded"
+
     if baseline_ms == 0:
         improvement_pct = 0.0 if candidate_ms == 0 else -100.0
     else:
         improvement_pct = (baseline_ms - candidate_ms) / baseline_ms * 100.0
     return {
         "accepted": accepted,
-        "reason": "correct_and_within_latency_budget" if accepted else (
-            "candidate_incorrect" if not candidate_correct else "latency_budget_exceeded"
-        ),
+        "reason": reason,
+        "baseline_correct": bool(baseline_correct),
+        "candidate_correct": bool(candidate_correct),
         "baseline_ms": round(baseline_ms, 3),
         "candidate_ms": round(candidate_ms, 3),
         "allowed_ms": round(allowed_ms, 3),

@@ -1,0 +1,28 @@
+name: ARIES Reasoning Benchmark Tests
+
+on:
+  push:
+    branches: [main, "feature/positive-impact-math"]
+    paths:
+      - "aries_math/reasoning_benchmark.py"
+      - "tests/test_reasoning_benchmark.py"
+      - ".github/workflows/reasoning-benchmark-tests.yml"
+  pull_request:
+    paths:
+      - "aries_math/reasoning_benchmark.py"
+      - "tests/test_reasoning_benchmark.py"
+      - ".github/workflows/reasoning-benchmark-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run benchmark tests
+        run: python -m unittest discover -s tests -p "test_reasoning_benchmark.py" -v

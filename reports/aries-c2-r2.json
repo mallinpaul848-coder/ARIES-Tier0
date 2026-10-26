@@ -1,7 +1,7 @@
 {
   "suite": "ARIES Native Bench v2",
   "suite_type": "project-owned diagnostic; not an official academic benchmark",
-  "timestamp_utc": "2026-10-26T13:56:13.356765+00:00",
+  "timestamp_utc": "2026-10-26T14:15:31.091912+00:00",
   "target": "https://aries-tier0-api-6qjh.onrender.com",
   "requested_model": "auto",
   "configuration": {
@@ -14,7 +14,7 @@
       "category": "arithmetic",
       "expected": "323",
       "http_status": 200,
-      "latency_ms": 49.829,
+      "latency_ms": 504.559,
       "actual": "323",
       "nonempty": true,
       "passed_exact_match": true,
@@ -26,7 +26,7 @@
       "category": "arithmetic",
       "expected": "12",
       "http_status": 200,
-      "latency_ms": 55.761,
+      "latency_ms": 420.794,
       "actual": "12",
       "nonempty": true,
       "passed_exact_match": true,
@@ -38,7 +38,7 @@
       "category": "arithmetic",
       "expected": "1045",
       "http_status": 200,
-      "latency_ms": 91.964,
+      "latency_ms": 484.168,
       "actual": "1045",
       "nonempty": true,
       "passed_exact_match": true,
@@ -50,7 +50,7 @@
       "category": "arithmetic",
       "expected": "633",
       "http_status": 200,
-      "latency_ms": 72.45,
+      "latency_ms": 195.467,
       "actual": "633",
       "nonempty": true,
       "passed_exact_match": true,
@@ -62,7 +62,7 @@
       "category": "reasoning",
       "expected": "yes",
       "http_status": 200,
-      "latency_ms": 89.91,
+      "latency_ms": 267.709,
       "actual": "yes",
       "nonempty": true,
       "passed_exact_match": true,
@@ -74,7 +74,7 @@
       "category": "reasoning",
       "expected": "C",
       "http_status": 200,
-      "latency_ms": 75.918,
+      "latency_ms": 151.562,
       "actual": "C",
       "nonempty": true,
       "passed_exact_match": true,
@@ -86,7 +86,7 @@
       "category": "reasoning",
       "expected": "Friday",
       "http_status": 200,
-      "latency_ms": 90.765,
+      "latency_ms": 248.399,
       "actual": "Friday",
       "nonempty": true,
       "passed_exact_match": true,
@@ -98,7 +98,7 @@
       "category": "instruction",
       "expected": "ARIES-OK",
       "http_status": 200,
-      "latency_ms": 62.61,
+      "latency_ms": 243.58,
       "actual": "ARIES-OK",
       "nonempty": true,
       "passed_exact_match": true,
@@ -110,7 +110,7 @@
       "category": "instruction",
       "expected": "red, green, blue",
       "http_status": 200,
-      "latency_ms": 58.909,
+      "latency_ms": 120.752,
       "actual": "red, green, blue",
       "nonempty": true,
       "passed_exact_match": true,
@@ -122,17 +122,52 @@
       "category": "knowledge",
       "expected": "H2O",
       "http_status": 200,
-      "latency_ms": 152.584,
+      "latency_ms": 214.302,
       "actual": "H2O",
       "nonempty": true,
       "passed_exact_match": true,
       "prompt_tokens": 102,
       "completion_tokens": 3
+    },
+    {
+      "id": "reasoning_04",
+      "category": "reasoning",
+      "expected": "9",
+      "latency_ms": 75096.694,
+      "error": "TimeoutError: The read operation timed out"
+    },
+    {
+      "id": "reasoning_05",
+      "category": "reasoning",
+      "expected": "5 minutes",
+      "latency_ms": 75062.829,
+      "error": "TimeoutError: The read operation timed out"
+    },
+    {
+      "id": "reasoning_06",
+      "category": "reasoning",
+      "expected": "5 cents",
+      "latency_ms": 75111.064,
+      "error": "TimeoutError: The read operation timed out"
+    },
+    {
+      "id": "context_01",
+      "category": "context_memory",
+      "expected": "MALLIN-47",
+      "latency_ms": 75102.541,
+      "error": "TimeoutError: The read operation timed out"
+    },
+    {
+      "id": "context_02",
+      "category": "context_memory",
+      "expected": "2 threads, 2048 tokens",
+      "latency_ms": 75090.144,
+      "error": "TimeoutError: The read operation timed out"
     }
   ],
   "health": {
     "http_status": 200,
-    "latency_ms": 95.278,
+    "latency_ms": 322.308,
     "response": {
       "status": "ok",
       "service": "aries-ai-api"
@@ -140,7 +175,7 @@
   },
   "models": {
     "http_status": 200,
-    "latency_ms": 66.256,
+    "latency_ms": 191.666,
     "response": {
       "object": "list",
       "data": [
@@ -156,9 +191,9 @@
   },
   "selected_model": "aries-local-smollm2-135m",
   "summary": {
-    "cases_requested": 10,
+    "cases_requested": 15,
     "http_completion_responses": 10,
-    "request_success_rate_percent": 100.0,
+    "request_success_rate_percent": 66.67,
     "nonempty_responses": 10,
     "exact_match_passes": 10,
     "exact_match_accuracy_percent": 100.0,
@@ -170,7 +205,7 @@
         "accuracy_percent": 100.0
       },
       "reasoning": {
-        "cases": 3,
+        "cases": 6,
         "responses": 3,
         "exact_match_passes": 3,
         "accuracy_percent": 100.0
@@ -186,18 +221,24 @@
         "responses": 1,
         "exact_match_passes": 1,
         "accuracy_percent": 100.0
+      },
+      "context_memory": {
+        "cases": 2,
+        "responses": 0,
+        "exact_match_passes": 0,
+        "accuracy_percent": null
       }
     },
-    "latency_sample_count": 10,
-    "latency_min_ms": 49.829,
-    "latency_mean_ms": 80.07,
-    "latency_p50_ms": 74.184,
-    "latency_p90_ms": 98.026,
-    "latency_p95_ms": 125.305,
-    "latency_p99_ms": 147.128,
-    "latency_max_ms": 152.584,
-    "wall_clock_seconds": 0.462,
-    "completed_requests_per_second": 21.647,
+    "latency_sample_count": 15,
+    "latency_min_ms": 120.752,
+    "latency_mean_ms": 25220.971,
+    "latency_p50_ms": 420.794,
+    "latency_p90_ms": 75100.202,
+    "latency_p95_ms": 75105.098,
+    "latency_p99_ms": 75109.871,
+    "latency_max_ms": 75111.064,
+    "wall_clock_seconds": 226.636,
+    "completed_requests_per_second": 0.044,
     "warning": "Small authored diagnostic only; not an official MMLU, GSM8K, BBH, or leaderboard score."
   }
 }

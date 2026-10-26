@@ -1,0 +1,71 @@
+name: ARIES Repeatable Performance Matrix
+
+on:
+  workflow_dispatch:
+    inputs:
+      rounds:
+        description: Number of repetitions per concurrency level (1-5)
+        required: true
+        default: "2"
+        type: string
+  schedule:
+    - cron: "41 10 * * 1"
+  pull_request:
+    paths:
+      - "tools/aries_performance_matrix.py"
+      - "tools/aries_bench.py"
+      - "tools/aries_chat_sequence_bench.py"
+      - ".github/workflows/aries-performance-matrix.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/aries_performance_matrix.py"
+      - "tools/aries_bench.py"
+      - "tools/aries_chat_sequence_bench.py"
+      - ".github/workflows/aries-performance-matrix.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  performance-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ARIES_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
+      ARIES_MODEL_ID: auto
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run repeated serial and concurrent API benchmarks
+        env:
+          MATRIX_ROUNDS: ${{ github.event.inputs.rounds || '2' }}
+        run: |
+          mkdir -p validation-results
+          python tools/aries_performance_matrix.py \
+            --base-url "$ARIES_BASE_URL" \
+            --model "$ARIES_MODEL_ID" \
+            --rounds "$MATRIX_ROUNDS" \
+            --limit 10 \
+            --concurrency 1 2 4 \
+            --output validation-results/performance-matrix.json
+      - name: Allow hosted inference service to recover after load test
+        run: sleep 45
+      - name: Run multi-turn continuity and latency benchmark
+        run: |
+          timeout 5m python tools/aries_chat_sequence_bench.py \
+            --base-url "$ARIES_BASE_URL" \
+            --model "$ARIES_MODEL_ID" \
+            --timeout 30 \
+            --turns 5 10 20 \
+            --output validation-results/multi-turn-chat.json
+      - name: Upload full matrix and individual run reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-performance-matrix-${{ github.run_id }}
+          path: validation-results/
+          if-no-files-found: warn
+          retention-days: 90

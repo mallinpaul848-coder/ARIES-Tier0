@@ -1,0 +1,30 @@
+name: ARIES Platform Performance Matrix Tests
+
+on:
+  push:
+    branches: [main, "feature/platform-latency-optimization-matrix"]
+    paths:
+      - "aries_math/performance_matrix.py"
+      - "tests/test_performance_matrix.py"
+      - ".github/workflows/platform-performance-matrix.yml"
+  pull_request:
+    paths:
+      - "aries_math/performance_matrix.py"
+      - "tests/test_performance_matrix.py"
+      - ".github/workflows/platform-performance-matrix.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  performance-matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile performance matrix
+        run: python -m py_compile aries_math/performance_matrix.py
+      - name: Run performance matrix tests
+        run: python -m unittest discover -s tests -p "test_performance_matrix.py" -v

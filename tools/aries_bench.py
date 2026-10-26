@@ -27,6 +27,11 @@ CASES = [
     {"id":"instruction_01","category":"instruction","prompt":"Reply with exactly this token and nothing else: ARIES-OK","expected":"ARIES-OK"},
     {"id":"instruction_02","category":"instruction","prompt":"Return exactly three items separated by commas: red, green, blue","expected":"red, green, blue"},
     {"id":"knowledge_01","category":"knowledge","prompt":"At standard atmospheric pressure, what is the chemical formula for water? Reply with the formula only.","expected":"H2O"},
+    {"id":"reasoning_04","category":"reasoning","prompt":"A farmer has 17 sheep. All but 9 run away. How many sheep remain? Reply with the number only.","expected":"9"},
+    {"id":"reasoning_05","category":"reasoning","prompt":"If 5 machines make 5 widgets in 5 minutes, how long do 100 identical machines take to make 100 widgets? Reply exactly: 5 minutes","expected":"5 minutes"},
+    {"id":"reasoning_06","category":"reasoning","prompt":"A bat and a ball cost $1.10 total. The bat costs $1.00 more than the ball. How much does the ball cost? Reply exactly: 5 cents","expected":"5 cents"},
+    {"id":"context_01","category":"context_memory","messages":[{"role":"user","content":"Please remember this code for the next question: MALLIN-47. Reply only ACK."},{"role":"assistant","content":"ACK"},{"role":"user","content":"What code did I ask you to remember? Reply with the code only."}],"expected":"MALLIN-47"},
+    {"id":"context_02","category":"context_memory","messages":[{"role":"user","content":"For this test, my configuration is 2 threads and a 2048 token context window. Reply only ACK."},{"role":"assistant","content":"ACK"},{"role":"user","content":"Repeat the thread count and context window exactly in this format: 2 threads, 2048 tokens"}],"expected":"2 threads, 2048 tokens"},
 ]
 
 def normalize(value):
@@ -103,7 +108,7 @@ def main():
         try:
             status, response = request_json(
                 api_root + "/chat/completions",
-                {"model": model, "messages": [{"role":"user","content":case["prompt"]}],
+                {"model": model, "messages": case.get("messages", [{"role":"user","content":case.get("prompt", "")}]),
                  "temperature": 0, "max_tokens": 64},
                 args.api_key, args.timeout,
             )

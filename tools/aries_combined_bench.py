@@ -29,7 +29,7 @@ def main():
             cmd = [
                 sys.executable, "tools/aries_bench.py",
                 "--base-url", args.base_url, "--model", args.model,
-                "--timeout", str(args.timeout), "--limit", "10",
+                "--timeout", str(args.timeout), "--limit", "15",
                 "--concurrency", str(concurrency), "--output", str(path),
             ]
             print(f"\n=== concurrency={concurrency}, repeat={repeat}/{args.repeats} ===", flush=True)

@@ -32,6 +32,7 @@ jobs:
         env:
           ARIES_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
           ARIES_MODEL_ID: auto
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           LIMIT="${{ github.event.inputs.limit || '100' }}"
           python tools/aries_hle_text_bench.py --base-url "$ARIES_BASE_URL" --model "$ARIES_MODEL_ID" --limit "$LIMIT" --timeout 90 --output reports/aries-hle-text-probe.json

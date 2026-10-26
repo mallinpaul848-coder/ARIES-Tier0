@@ -19,7 +19,7 @@ permissions:
 jobs:
   performance:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -50,7 +50,7 @@ jobs:
           ARIES_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
           ARIES_MODEL_ID: auto
         run: |
-          python tools/aries_combined_bench.py --base-url "$ARIES_BASE_URL" --model "$ARIES_MODEL_ID" --timeout 75 --repeats 2 --output reports/aries-combined-performance.json
+          python tools/aries_combined_bench.py --base-url "$ARIES_BASE_URL" --model "$ARIES_MODEL_ID" --timeout 75 --repeats 5 --output reports/aries-combined-performance.json
       - name: Persist benchmark report in Git
         if: always()
         run: |

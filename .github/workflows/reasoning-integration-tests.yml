@@ -1,0 +1,30 @@
+name: ARIES Reasoning Integration Tests
+
+on:
+  push:
+    branches: [main, "feature/positive-impact-math"]
+    paths:
+      - "aries_math/reasoning_integration.py"
+      - "tests/test_reasoning_integration.py"
+      - ".github/workflows/reasoning-integration-tests.yml"
+      - "software/public_native_server.py"
+  pull_request:
+    paths:
+      - "aries_math/reasoning_integration.py"
+      - "tests/test_reasoning_integration.py"
+      - ".github/workflows/reasoning-integration-tests.yml"
+      - "software/public_native_server.py"
+
+permissions:
+  contents: read
+
+jobs:
+  reasoning-integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run reasoning integration tests
+        run: python -m unittest discover -s tests -p "test_reasoning_integration.py" -v

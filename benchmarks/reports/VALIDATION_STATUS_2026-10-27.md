@@ -93,3 +93,16 @@ Before presenting ARIES as externally validated, publish the exact model/checkpo
 The evaluator timeout/reporting correction is committed as `1ef3cf201e783768395dd270d7b1f0ca030fcf31`. It reduces the default per-case timeout to 20 seconds, records incomplete cases separately, and exits unsuccessfully when any case is incomplete or fails exact match. The latest workflow runs above passed their configured CI jobs; a fresh hosted-model PRISE matrix rerun and public Hugging Face publication have not been confirmed.
 
 Latest public inference artifact: [download report from run 40504471930](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40504471930/artifacts/12733334776).
+
+
+## Fair comparison protocol added (2026-10-27)
+
+A reproducible head-to-head protocol is now committed at [benchmarks/FAIR_COMPARISON_PROTOCOL.md](https://github.com/mallinpaul848-coder/ARIES-Tier0/blob/main/benchmarks/FAIR_COMPARISON_PROTOCOL.md). It requires the same versioned task set, pinned model revisions, recorded hardware/configuration, raw request-level samples, p50/p95/p99 latency, throughput/error/timeout rates, staged concurrency, and separate quality/completion scores. The protocol is in place; a controlled ARIES-versus-GPT/Gemini/Claude comparison has not yet been run.
+
+## Latest PRISE rerun status
+
+Workflow [40504141562](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40504141562) is still running at the last check in the reasoning-matrix job. Its evaluation step has not completed, so no final score is asserted here. The evaluator now uses a 20-second per-case timeout and is configured to fail incomplete cases.
+
+## Hugging Face publication check
+
+The private repository [paulmallin777/aries-core-v1](https://huggingface.co/paulmallin777/aries-core-v1) exists, but a live repository listing shows only `.gitattributes`; model weights, configuration, and tokenizer are not yet published there. The GitHub publish workflow requires the repository secret `HF_TOKEN` with Hugging Face write access. Never paste the token into chat or commit it.

@@ -42,7 +42,7 @@ Requested evaluation areas:
 
 NIST announced its Artificial Intelligence Technology Evaluation program for volunteer blind-data testing.
 Program overview: https://pages.nist.gov/ai-technology-evaluation/
-Program contact listed on the NIST page: aite-poc@nist.gov
+Program contact listed on the NIST page: aite-poc@list.nist.gov
 
 The initial tasks announced in July 2026 focus on image analysis with large vision-language models in quantum science, genomics, and public safety. ARIES should ask NIST whether its current text/API system fits a current track or whether future task tracks are planned; eligibility is not assumed.
 

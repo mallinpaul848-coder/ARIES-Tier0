@@ -1,0 +1,55 @@
+name: ARIES Checkpoint Preflight
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "published/aries-core-v1/**"
+      - ".github/workflows/aries-checkpoint-preflight.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  load-and-generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install CPU-only dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "torch>=2.2,<2.7" --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --no-cache-dir "transformers>=4.45,<5" "safetensors>=0.4"
+          python -m pip cache purge
+      - name: Validate required files and load checkpoint
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          import torch
+          from transformers import AutoModelForCausalLM, AutoTokenizer
+
+          folder = Path("published/aries-core-v1")
+          required = ["config.json", "model.safetensors", "tokenizer.json", "tokenizer_config.json", "README.md"]
+          missing = [name for name in required if not (folder / name).is_file()]
+          if missing:
+              raise SystemExit(f"Missing required checkpoint files: {', '.join(missing)}")
+          config = json.loads((folder / "config.json").read_text(encoding="utf-8"))
+          tokenizer = AutoTokenizer.from_pretrained(folder, local_files_only=True)
+          model = AutoModelForCausalLM.from_pretrained(folder, local_files_only=True, use_safetensors=True)
+          model.eval()
+          prompt = "ARIES checkpoint verification"
+          input_ids = tokenizer(prompt, return_tensors="pt")["input_ids"]
+          if input_ids.numel() == 0:
+              raise SystemExit("Tokenizer produced empty input")
+          with torch.inference_mode():
+              generated = model.generate(input_ids, max_new_tokens=4, do_sample=False)
+          if generated.shape[0] != 1 or generated.shape[1] < input_ids.shape[1]:
+              raise SystemExit("Generation sanity check failed")
+          params = sum(parameter.numel() for parameter in model.parameters())
+          print(json.dumps({"status": "passed", "model_type": config.get("model_type"), "parameters": params, "input_tokens": int(input_ids.shape[1]), "output_tokens": int(generated.shape[1]), "torch": torch.__version__}, indent=2))
+          PY

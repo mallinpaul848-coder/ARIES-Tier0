@@ -1,6 +1,7 @@
 # ARIES public gateway: real inference requires an explicitly configured upstream backend.
 import os
 import math
+from contextlib import asynccontextmanager
 import numbers
 import time
 from typing import Any
@@ -15,7 +16,23 @@ from aries_math.prise_research_engine import ARIESPRISEResearchEngine, PRISEProf
 from aries_math.mallin_universal import audit_sat_projection
 from aries_math.tool_agent import run_tool_loop
 
-app = FastAPI(title="ARIES AI API", version="1.0.5")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Reuse outbound connections across requests to reduce proxy overhead."""
+    limits = httpx.Limits(
+        max_connections=100,
+        max_keepalive_connections=20,
+        keepalive_expiry=30.0,
+    )
+    async with httpx.AsyncClient(
+        timeout=UPSTREAM_TIMEOUT_SECONDS,
+        limits=limits,
+    ) as client:
+        app.state.upstream_client = client
+        yield
+
+
+app = FastAPI(title="ARIES AI API", version="1.0.6", lifespan=lifespan)
 
 MODEL_ID = os.getenv("ARIES_MODEL_ID", "").strip()
 UPSTREAM_BASE_URL = os.getenv("ARIES_UPSTREAM_BASE_URL", "").strip().rstrip("/")
@@ -346,12 +363,29 @@ async def chat_completions(request: ChatRequest) -> dict[str, Any]:
 
     async def post_json(body: dict[str, Any]) -> dict[str, Any]:
         try:
-            async with httpx.AsyncClient(timeout=UPSTREAM_TIMEOUT_SECONDS) as client:
+            client = getattr(app.state, "upstream_client", None)
+            if client is not None:
+                # The app lifespan owns a pooled client; reuse TCP/TLS connections.
                 response = await client.post(
                     chat_completions_url(UPSTREAM_BASE_URL),
                     json=body,
                     headers=headers,
                 )
+            else:
+                # Keeps direct function invocation and tests outside lifespan safe.
+                async with httpx.AsyncClient(
+                    timeout=UPSTREAM_TIMEOUT_SECONDS,
+                    limits=httpx.Limits(
+                        max_connections=100,
+                        max_keepalive_connections=20,
+                        keepalive_expiry=30.0,
+                    ),
+                ) as temporary_client:
+                    response = await temporary_client.post(
+                        chat_completions_url(UPSTREAM_BASE_URL),
+                        json=body,
+                        headers=headers,
+                    )
         except httpx.TimeoutException:
             raise HTTPException(status_code=504, detail="The model backend timed out.")
         except httpx.RequestError:

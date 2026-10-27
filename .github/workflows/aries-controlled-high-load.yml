@@ -1,0 +1,49 @@
+name: ARIES Controlled Higher-Concurrency Validation
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_high_load:
+        description: "Confirm this test will send up to 400 chat requests to the live ARIES service, including up to 50 concurrent requests."
+        type: boolean
+        required: true
+        default: false
+      requests_per_stage:
+        description: "Requests per stage (20-250)"
+        required: true
+        default: "100"
+      concurrency_stages:
+        description: "Comma-separated concurrency stages, maximum 50 (recommended 1,10,25,50)"
+        required: true
+        default: "1,10,25,50"
+permissions:
+  contents: read
+jobs:
+  controlled-high-load:
+    if: inputs.confirm_high_load == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run explicitly authorized higher-concurrency test
+        id: load
+        continue-on-error: true
+        env:
+          ARIES_PUBLIC_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
+          ARIES_REQUESTS_PER_STAGE: ${{ inputs.requests_per_stage }}
+          ARIES_CONCURRENCY_STAGES: ${{ inputs.concurrency_stages }}
+          ARIES_LOAD_REPORT: aries-high-concurrency-report.json
+        run: python benchmarks/aries_production_load_test.py
+      - name: Upload measured report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-high-concurrency-report
+          path: aries-high-concurrency-report.json
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Require successful inference responses
+        if: steps.load.outcome != 'success'
+        run: exit 1

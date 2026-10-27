@@ -6,6 +6,7 @@ This report records observed GitHub Actions artifacts. It distinguishes project-
 
 ### CI results
 
+| Public inference benchmark (latest) | Passed 3/3 scripted response checks; HTTP 200 responses; latency 183.88 ms, 398.89 ms, and 214.13 ms; median 214.13 ms | [Run 40504471930](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40504471930) |
 | Test | Observed result | Evidence |
 |---|---|---|
 | Full performance suite (earlier run) | Passed: Python performance job and C++ gateway build/smoke job | [Run 40460458113](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40460458113) |
@@ -37,6 +38,10 @@ The full performance suite reported two in-process kernel measurement sets:
 - In-process API test: median 3.645 ms, p95 3.937 ms, p99 4.205 ms, mean 3.708 ms, approximately 269.66 requests/s over 250 successful requests.
 
 **Important:** the API test explicitly records `network_latency_tested: false`. These figures do not include HTTP network or hosted-server latency and must not be marketed as end-to-end chat latency. Kernel figures describe the measured kernel path only, not full model inference.
+
+## Latest public inference sample
+
+The latest public benchmark completed three chat samples against the hosted ARIES endpoint. All three returned HTTP 200 and passed the workflow's scripted assertions (3/3). Recorded latencies were 183.88 ms, 398.89 ms, and 214.13 ms; median 214.13 ms. The tested model ID was `aries-local-smollm2-135m`, and the report identified a local SmolLM2 instruction model with a deterministic task engine and optional OpenAI-compatible backend. This is a small smoke sample, not a high-concurrency load test or independent model-quality benchmark.
 
 ## Hosted endpoint smoke test
 
@@ -86,3 +91,5 @@ Before presenting ARIES as externally validated, publish the exact model/checkpo
 ## Latest code commit
 
 The evaluator timeout/reporting correction is committed as `1ef3cf201e783768395dd270d7b1f0ca030fcf31`. It reduces the default per-case timeout to 20 seconds, records incomplete cases separately, and exits unsuccessfully when any case is incomplete or fails exact match. The latest workflow runs above passed their configured CI jobs; a fresh hosted-model PRISE matrix rerun and public Hugging Face publication have not been confirmed.
+
+Latest public inference artifact: [download report from run 40504471930](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40504471930/artifacts/12733334776).

@@ -8,12 +8,27 @@ This report records observed GitHub Actions artifacts. It distinguishes project-
 
 | Test | Observed result | Evidence |
 |---|---|---|
-| Full performance suite | Passed: Python performance job and C++ gateway build/smoke job | [Run 40460458113](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40460458113) |
+| Full performance suite (earlier run) | Passed: Python performance job and C++ gateway build/smoke job | [Run 40460458113](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40460458113) |
+| Full performance suite (after evaluator fix) | Passed: Python performance job and C++ gateway build/smoke job | [Run 40504141441](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40504141441) |
+| API proxy integration (after evaluator fix) | Passed: health, configured readiness, model listing, and response forwarding through a deterministic mock backend; local CI proxy round-trip 2.74 ms | [Run 40504141498](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40504141498) |
 | Public endpoint smoke test | Passed; five endpoint checks returned HTTP 200 | [Run 40454375518](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40454375518) |
 | Local Hugging Face checkpoint smoke evaluation | Completed; model loaded/generated; small CPU task subset evaluated | [Run 40459398384](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40459398384) |
 | PRISE reasoning matrix against hosted API | Workflow completed successfully, but many individual cases timed out | [Run 40501268902](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40501268902) |
 
 ## Performance measurements
+
+## Latest rerun — commit 1ef3cf201e783768395dd270d7b1f0ca030fcf31
+
+The latest full performance workflow passed. It measured 20,000 iterations for each tiny Python operation and 250 in-process API requests:
+
+- Digital-root operation: median 120 ns, p95 130 ns, p99 200 ns, mean 126.2 ns.
+- Phase-8 modulo operation: median 90 ns, p95 100 ns, p99 130 ns, mean 94.0 ns.
+- In-process FastAPI test client: median 3.648 ms, p95 4.387 ms, p99 4.766 ms, mean 3.763 ms, 250/250 successful requests, approximately 265.76 requests/s.
+- C++ gateway compiled and its smoke test passed.
+- API proxy integration passed all configured checks; the test returned the expected response through a deterministic mock backend in 2.74 ms.
+
+These are project CI measurements. The API numbers exclude external network, deployed hosting, and LLM inference. The 2.74 ms integration result is a local mock-backend proxy test, not a live model latency measurement. Python operation timings include timer overhead; the observed values do not establish sub-nanosecond execution.
+
 
 The full performance suite reported two in-process kernel measurement sets:
 
@@ -67,3 +82,7 @@ Before presenting ARIES as externally validated, publish the exact model/checkpo
 - [Public endpoint smoke test](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40454375518)
 - [Hugging Face CPU smoke evaluation](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40459398384)
 - [PRISE reasoning matrix](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40501268902)
+
+## Latest code commit
+
+The evaluator timeout/reporting correction is committed as `1ef3cf201e783768395dd270d7b1f0ca030fcf31`. It reduces the default per-case timeout to 20 seconds, records incomplete cases separately, and exits unsuccessfully when any case is incomplete or fails exact match. The latest workflow runs above passed their configured CI jobs; a fresh hosted-model PRISE matrix rerun and public Hugging Face publication have not been confirmed.

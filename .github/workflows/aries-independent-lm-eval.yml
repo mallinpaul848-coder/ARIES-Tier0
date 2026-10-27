@@ -33,7 +33,11 @@ jobs:
       - name: Install independent evaluation harness
         run: |
           python -m pip install --upgrade pip
-          python -m pip install "lm_eval[hf]==0.4.9" "transformers==4.57.6" safetensors
+          # Install the CPU-only PyTorch wheel first. The default resolver selected
+          # CUDA packages on the hosted runner and exhausted its disk before testing.
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --no-cache-dir "lm_eval[hf]==0.4.9" "transformers==4.57.6" safetensors
+          python -m pip cache purge
       - name: Validate model and tokenizer load
         run: |
           python - <<'PY'

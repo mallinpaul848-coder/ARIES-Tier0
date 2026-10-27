@@ -66,7 +66,7 @@ jobs:
           if repo_id.count("/") != 1 or any(not part for part in repo_id.split("/")):
               raise SystemExit("repo_id must be in namespace/model-name format")
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env:
-              env.write(f"HF_REPO_ID={repo_id}\\n")
+              env.write(f"HF_REPO_ID={repo_id}\n")
           print(f"Destination repository: https://huggingface.co/{repo_id}")
           PY
 

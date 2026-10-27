@@ -101,7 +101,7 @@ A reproducible head-to-head protocol is now committed at [benchmarks/FAIR_COMPAR
 
 ## Latest PRISE rerun status
 
-Workflow [40504141562](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40504141562) is still running at the last check in the reasoning-matrix job. Its evaluation step has not completed, so no final score is asserted here. The evaluator now uses a 20-second per-case timeout and is configured to fail incomplete cases.
+Workflow [40504141562](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40504141562) completed with the reasoning-matrix evaluation step failing; the artifact uploaded successfully. The job status confirms the stricter evaluator rejected the run rather than silently counting incomplete cases as passes. The precise final per-case breakdown was not available in the job summary at the time of this report update. The evaluator uses a 20-second per-case timeout and is configured to fail incomplete cases. Artifact metadata: [reasoning report artifact 12734731395](https://github.com/mallinpaul848-coder/ARIES-Tier0/actions/runs/40504141562).
 
 ## Hugging Face publication check
 

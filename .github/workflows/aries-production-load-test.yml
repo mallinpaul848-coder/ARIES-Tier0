@@ -10,6 +10,11 @@ on:
         description: "Comma-separated concurrency stages (max 20; default 1,5,10,20)"
         required: false
         default: "1,5,10,20"
+  push:
+    branches: [main]
+    paths:
+      - "benchmarks/aries_production_load_test.py"
+      - ".github/workflows/aries-production-load-test.yml"
 permissions:
   contents: read
 jobs:

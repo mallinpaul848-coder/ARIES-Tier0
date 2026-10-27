@@ -101,11 +101,11 @@ def run_one(index: int, concurrency: int) -> dict:
     return result
 
 def main() -> int:
-    if REQUESTS_PER_STAGE < 1 or REQUESTS_PER_STAGE > 100:
-        print("ARIES_REQUESTS_PER_STAGE must be 1..100", file=sys.stderr)
+    if REQUESTS_PER_STAGE < 1 or REQUESTS_PER_STAGE > 250:
+        print("ARIES_REQUESTS_PER_STAGE must be 1..250", file=sys.stderr)
         return 2
-    if not STAGES or any(n < 1 or n > 20 for n in STAGES):
-        print("Concurrency stages must be between 1 and 20", file=sys.stderr)
+    if not STAGES or any(n < 1 or n > 50 for n in STAGES):
+        print("Concurrency stages must be between 1 and 50", file=sys.stderr)
         return 2
     report = {
         "title": "ARIES bounded production API load test",

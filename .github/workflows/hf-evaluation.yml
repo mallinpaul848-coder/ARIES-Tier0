@@ -68,7 +68,7 @@ jobs:
               "transformers_version": cmd("python", "-c", "import transformers; print(transformers.__version__)"),
               "lm_eval_version": cmd("python", "-c", "import lm_eval; print(getattr(lm_eval, '__version__', 'installed'))"),
           }
-          (out / "environment.json").write_text(json.dumps(meta, indent=2) + "\\n", encoding="utf-8")
+          (out / "environment.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
           print(json.dumps(meta, indent=2))
           PY
       - name: Upload raw evaluation artifacts

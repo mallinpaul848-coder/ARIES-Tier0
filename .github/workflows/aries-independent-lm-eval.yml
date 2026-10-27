@@ -2,6 +2,10 @@ name: ARIES Independent LM Evaluation
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "published/aries-core-v1/**"
+      - ".github/workflows/aries-independent-lm-eval.yml"
   pull_request:
     paths:
       - "published/aries-core-v1/**"

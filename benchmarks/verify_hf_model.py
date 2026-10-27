@@ -12,11 +12,12 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("repo_id", help="Public Hugging Face model repository, e.g. org/model")
+    parser.add_argument("repo_id", help="Public Hugging Face model repository (org/model) or local model directory")
     parser.add_argument("--revision", help="Optional immutable model commit SHA or revision")
     parser.add_argument("--max-new-tokens", type=int, default=16)
     parser.add_argument(
@@ -44,16 +45,23 @@ def main() -> int:
         load_args["trust_remote_code"] = True
 
     try:
-        info = HfApi().model_info(args.repo_id, revision=args.revision)
-        if info.private:
-            raise RuntimeError("Repository is private; public-download validation requires a public model repository.")
-        resolved_revision = info.sha
-        print(f"Public repository confirmed: https://huggingface.co/{args.repo_id}", flush=True)
-        print(f"Resolved immutable revision: {resolved_revision}", flush=True)
+        local_path = Path(args.repo_id)
+        if local_path.is_dir():
+            model_source = str(local_path.resolve())
+            resolved_revision = "local-files"
+            print(f"Local checkpoint selected: {model_source}", flush=True)
+        else:
+            info = HfApi().model_info(args.repo_id, revision=args.revision)
+            if info.private:
+                raise RuntimeError("Repository is private; public-download validation requires a public model repository.")
+            resolved_revision = info.sha
+            model_source = args.repo_id
+            print(f"Public repository confirmed: https://huggingface.co/{args.repo_id}", flush=True)
+            print(f"Resolved immutable revision: {resolved_revision}", flush=True)
 
-        config = AutoConfig.from_pretrained(args.repo_id, **load_args)
-        tokenizer = AutoTokenizer.from_pretrained(args.repo_id, **load_args)
-        model = AutoModelForCausalLM.from_pretrained(args.repo_id, torch_dtype="auto", **load_args)
+        config = AutoConfig.from_pretrained(model_source, **load_args)
+        tokenizer = AutoTokenizer.from_pretrained(model_source, **load_args)
+        model = AutoModelForCausalLM.from_pretrained(model_source, torch_dtype="auto", **load_args)
         model.eval()
         parameter_count = sum(parameter.numel() for parameter in model.parameters())
         inputs = tokenizer("Verify ARIES model generation:", return_tensors="pt")
@@ -69,8 +77,8 @@ def main() -> int:
         if generated.shape[1] <= inputs["input_ids"].shape[1]:
             raise RuntimeError("Model loaded but did not generate any new tokens.")
         decoded = tokenizer.decode(generated[0], skip_special_tokens=True)
-        print("PASS: public config, tokenizer, and causal-LM weights loaded.")
-        print("PASS: generated new tokens from the public repository.")
+        print("PASS: config, tokenizer, and causal-LM weights loaded.")
+        print("PASS: generated new tokens.")
         print(f"repo_id={args.repo_id}")
         print(f"revision={resolved_revision}")
         print(f"model_type={getattr(config, 'model_type', 'unknown')}")

@@ -50,7 +50,7 @@ def main():
     p.add_argument("--base-url", default=os.getenv("ARIES_BASE_URL","http://127.0.0.1:8000"))
     p.add_argument("--model", default=os.getenv("ARIES_MODEL_ID","auto"))
     p.add_argument("--api-key", default=os.getenv("ARIES_API_KEY",""))
-    p.add_argument("--timeout", type=int, default=60)
+    p.add_argument("--timeout", type=int, default=20)
     p.add_argument("--output", default="reports/aries-prise-reasoning.json")
     args = p.parse_args()
     base = args.base_url.rstrip("/")
@@ -101,16 +101,24 @@ def main():
             c["passed"] += int(r["passed_exact_match"])
     for c in cats.values():
         c["accuracy_percent"] = round(100*c["passed"]/c["responses"],2) if c["responses"] else None
-    report["summary"] = {"cases":len(CASES),"responses":len(done),"exact_match_passes":sum(r["passed_exact_match"] for r in done),
-        "accuracy_percent":round(100*sum(r["passed_exact_match"] for r in done)/len(done),2) if done else None,
+    passed = sum(bool(r.get("passed_exact_match")) for r in report["results"])
+    incomplete = len(CASES) - len(done)
+    report["summary"] = {"cases":len(CASES),"responses":len(done),"incomplete_cases":incomplete,
+        "exact_match_passes":passed,
+        "accuracy_percent_of_completed_responses":round(100*passed/len(done),2) if done else None,
+        "completion_rate_percent":round(100*len(done)/len(CASES),2),
+        "all_case_pass_rate_percent":round(100*passed/len(CASES),2),
         "nonempty_responses":sum(bool(r.get("nonempty")) for r in done),
         "latency_min_ms":round(min(times),3) if times else None,"latency_mean_ms":round(statistics.mean(times),3) if times else None,
         "latency_p50_ms":round(sorted(times)[(len(times)-1)//2],3) if times else None,
         "latency_max_ms":round(max(times),3) if times else None,"category_metrics":cats,
         "warning":"Small authored diagnostic; exact-match score is not a general intelligence measure or third-party validation."}
-    out=Path(args.output); out.parent.mkdir(parents=True,exist_ok=True); out.write_text(json.dumps(report,indent=2)+"\n",encoding="utf-8")
+    out=Path(args.output); out.parent.mkdir(parents=True,exist_ok=True); out.write_text(json.dumps(report,indent=2)+"\\n",encoding="utf-8")
     print(json.dumps(report["summary"],indent=2))
-    if not done: raise SystemExit("FAIL: no valid model completion responses; inspect endpoint/model configuration.")
+    if incomplete:
+        raise SystemExit(f"FAIL: {incomplete}/{len(CASES)} cases did not return valid HTTP completions; inspect endpoint/model stalls.")
+    if passed != len(CASES):
+        raise SystemExit(f"FAIL: {len(CASES)-passed}/{len(CASES)} cases failed exact-match checks.")
 
 if __name__=="__main__":
     main()

@@ -1,0 +1,43 @@
+name: ARIES Bounded Production API Load Test
+on:
+  workflow_dispatch:
+    inputs:
+      requests_per_stage:
+        description: "Requests per concurrency stage (1-100; default 20)"
+        required: false
+        default: "20"
+      concurrency_stages:
+        description: "Comma-separated concurrency stages (max 20; default 1,5,10,20)"
+        required: false
+        default: "1,5,10,20"
+permissions:
+  contents: read
+jobs:
+  bounded-public-load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run bounded public API load test
+        id: load
+        continue-on-error: true
+        env:
+          ARIES_PUBLIC_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
+          ARIES_REQUESTS_PER_STAGE: ${{ inputs.requests_per_stage || '20' }}
+          ARIES_CONCURRENCY_STAGES: ${{ inputs.concurrency_stages || '1,5,10,20' }}
+          ARIES_LOAD_REPORT: aries-production-load-report.json
+        run: python benchmarks/aries_production_load_test.py
+      - name: Upload measured report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-production-load-report
+          path: aries-production-load-report.json
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Require successful inference responses
+        if: steps.load.outcome != 'success'
+        run: exit 1

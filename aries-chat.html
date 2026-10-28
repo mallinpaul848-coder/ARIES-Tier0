@@ -8,12 +8,12 @@
 <style>
 :root{color-scheme:dark;--bg:#05010a;--panel:rgba(18,5,38,.88);--panel2:rgba(5,1,10,.72);--line:rgba(157,78,221,.38);--accent:#a855f7;--accent2:#7e22ce;--text:#f3e8ff;--muted:#b6a4d2;--user:rgba(126,34,206,.24);--assistant:rgba(30,10,60,.82)}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;background:linear-gradient(135deg,rgba(3,2,10,.58),rgba(16,3,38,.35),rgba(5,1,10,.55)),url("https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=2400&q=90") center center/cover fixed no-repeat;color:var(--text);font:15px/1.55 "Segoe UI",Tahoma,Geneva,Verdana,sans-serif}
+body{margin:0;min-height:100vh;background:#05010a;color:var(--text);font:15px/1.55 "Segoe UI",Tahoma,Geneva,Verdana,sans-serif}#spaceVideo{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;opacity:.68}#spaceShade{position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(135deg,rgba(3,2,10,.74),rgba(16,3,38,.50),rgba(5,1,10,.72))}
 body:before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(white 1px,transparent 0),radial-gradient(#d8b4fe 1px,transparent 0),radial-gradient(#fff 1px,transparent 0);background-size:60px 60px,97px 97px,137px 137px;background-position:0 0,24px 41px,70px 18px;opacity:.22}body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(5,1,10,.02) 12%,rgba(0,0,0,.48) 100%);}
 .app{position:relative;z-index:1;width:min(960px,100%);height:100dvh;min-height:500px;margin:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
 header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:0 0 38px #80008033;backdrop-filter:blur(12px)}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}.logo{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:13px;border:1px solid #a855f777;background:#a855f71a;color:#e9d5ff;font-size:17px;font-weight:900;letter-spacing:-1px}.brand h1{margin:0;font-size:16px;letter-spacing:.1em}.sub{font-size:11px;color:var(--muted);letter-spacing:.1em}.status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);white-space:nowrap}.dot{width:8px;height:8px;border-radius:50%;background:#8f82a4}.dot.ok{background:#50e3a4;box-shadow:0 0 12px #50e3a477}.dot.bad{background:#ff718d}
-.toolbar{display:flex;gap:8px;align-items:center}.endpoint{flex:1;min-width:0;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:12px ui-monospace,Consolas,monospace}.btn{border:1px solid var(--line);border-radius:10px;padding:10px 13px;background:#2a1240;color:var(--text);cursor:pointer;font-weight:600}.btn:hover,.listen-btn:hover{border-color:#d8b4fe;background:#552080}.btn:disabled{opacity:.52;cursor:wait}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.mode-select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;max-width:100%;font:12px "Segoe UI",sans-serif}.mode-note{flex-basis:100%;font-size:11px;color:var(--muted);padding:0 3px}.mode-note strong{color:#e9d5ff}.endpoint{flex:1;min-width:0;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:12px ui-monospace,Consolas,monospace}.btn{border:1px solid var(--line);border-radius:10px;padding:10px 13px;background:#2a1240;color:var(--text);cursor:pointer;font-weight:600}.btn:hover,.listen-btn:hover{border-color:#d8b4fe;background:#552080}.btn:disabled{opacity:.52;cursor:wait}
 main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,#0d061be3,#08030ef5);padding:20px;scroll-behavior:smooth;backdrop-filter:blur(8px)}
 .welcome{max-width:570px;margin:8vh auto;text-align:center}.orb{width:66px;height:66px;margin:0 auto 16px;border:1px solid #a855f777;border-radius:22px;display:grid;place-items:center;color:#e9d5ff;font-size:26px;background:radial-gradient(circle,#a855f733,transparent);box-shadow:0 0 32px #8000802d}.welcome h2{font-size:23px;margin:0 0 8px;color:#e9d5ff}.welcome p{color:var(--muted);margin:0 auto 20px;max-width:450px}.suggestions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.suggestion{background:#1d0e2d;color:#e9d5ff;border:1px solid var(--line);border-radius:999px;padding:9px 12px;cursor:pointer}.suggestion:hover{background:#35134e}
 .message{display:flex;margin:0 0 18px;gap:10px;align-items:flex-start}.avatar{flex:0 0 32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:10px;font-weight:900;color:#e9d5ff;background:#a855f71a;border:1px solid #a855f766}.message.user .avatar{color:#fff;background:#54217b;border-color:#a855f7}.bubble{max-width:min(760px,calc(100% - 42px));min-width:0;padding:11px 14px;border:1px solid var(--line);border-radius:4px 14px 14px 14px;background:var(--assistant);white-space:pre-wrap;overflow-wrap:anywhere}.message.user .bubble{background:var(--user);border-color:#a855f766;border-radius:14px 4px 14px 14px}.who{font-size:11px;color:#c4addd;margin-bottom:4px}.message.user .who{text-align:right}.message.user{flex-direction:row-reverse}.listen-btn{margin-top:9px;background:#421761;border:1px solid #a855f7;color:#f3e8ff;padding:5px 10px;border-radius:7px;font-size:11px;cursor:pointer}.listen-btn[aria-pressed="true"]{background:#6b21a8}
@@ -23,12 +23,13 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
 </style>
 </head>
 <body>
+<video id="spaceVideo" autoplay muted loop playsinline aria-hidden="true" poster="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=2400&q=90"><source src="https://www.shutterstock.com/shutterstock/videos/3781099555/preview/stock-footage-earth-surrounded-by-cosmic-debris-earth-is-beautifully-showcased-in-space-surrounded-by-floating.webm" type="video/webm"></video><div id="spaceShade"></div>
 <div class="app">
 <header>
  <div class="brand"><div class="logo">AR</div><div><h1>ARIES <span style="color:#d8b4fe">AI</span></h1><div class="sub">PURPLE CRAB NEBULA</div></div></div>
  <div class="status" role="status" aria-live="polite"><span id="dot" class="dot"></span><span id="statusText">Checking API…</span></div>
 </header>
-<div class="toolbar"><input id="endpoint" class="endpoint" aria-label="API base URL" value="https://aries-tier0-api-6qjh.onrender.com" spellcheck="false"><button id="voiceReplies" class="btn" type="button" aria-pressed="true" title="Toggle spoken ARIES replies">🔊 Voice replies: On</button><button id="check" class="btn" type="button">Check connection</button><button id="clear" class="btn" type="button">Clear chat</button></div>
+<div class="toolbar"><select id="chatMode" class="mode-select" aria-label="Chat mode"><option value="fast">Fast · Free</option><option value="balanced">Balanced · Free</option><option value="prise">PRISE Analysis · Free preview</option><option value="deep" disabled>Deep Reasoning · Paid plan (not enabled)</option></select><select id="responseStyle" class="mode-select" aria-label="Response style"><option value="normal">Standard style</option><option value="concise">Concise</option><option value="detailed">Detailed</option><option value="creative">Creative</option></select><input id="endpoint" class="endpoint" aria-label="API base URL" value="https://aries-tier0-api-6qjh.onrender.com" spellcheck="false"><button id="voiceReplies" class="btn" type="button" aria-pressed="true" title="Toggle spoken ARIES replies">🔊 Voice replies: On</button><button id="check" class="btn" type="button">Check connection</button><button id="clear" class="btn" type="button">Clear chat</button><div id="modeNote" class="mode-note">Free mode selected. Advanced paid reasoning is visibly marked and remains unavailable until billing and a compatible reasoning backend are configured.</div></div>
 <main id="chat" aria-live="polite">
  <section id="welcome" class="welcome"><div class="orb" aria-hidden="true">✳</div><h2>Patience, my student.</h2><p>The mind, like code, is strengthened by clarity and precision. Ask your question and let us work through it together. Messages are sent to the configured ARIES API.</p><div class="suggestions"><button class="suggestion" type="button">What is 17 × 19?</button><button class="suggestion" type="button">What can ARIES do?</button><button class="suggestion" type="button">Explain how a benchmark works.</button></div></section>
 </main>
@@ -40,6 +41,7 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
  const $=id=>document.getElementById(id);
  const chat=$('chat'),prompt=$('prompt');
  let recognition=null, listening=false, voiceReplies=true;
+ const chatMode=$('chatMode'),responseStyle=$('responseStyle');
  const voiceButton=$('voiceInput');
  const conversation=[];
  const PUBLIC_API='https://aries-tier0-api-6qjh.onrender.com';
@@ -68,7 +70,7 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
    }
    window.speechSynthesis.cancel();
    const utterance=new SpeechSynthesisUtterance(String(text||''));
-   utterance.pitch=.62;utterance.rate=.82;utterance.volume=1;
+   utterance.pitch=.58;utterance.rate=.84;utterance.volume=1;
    const voices=window.speechSynthesis.getVoices();
    const preferred=voices.find(v=>/Microsoft David|Google UK English Male/i.test(v.name))||voices.find(v=>/^en(-|_)/i.test(v.lang));
    if(preferred)utterance.voice=preferred;
@@ -111,7 +113,10 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
    $('send').disabled=true;$('check').disabled=true;
    const answer=addMessage('assistant','ARIES is preparing a response…',false);
    try{
-     const response=await apiFetch('/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'aries-native-ngram',messages:conversation,max_tokens:220,temperature:.2})});
+     const mode=chatMode.value,style=responseStyle.value;
+     const maxTokens=style==='concise'?120:style==='detailed'?420:220;
+     const temperature=style==='creative'?.75:style==='detailed'?.25:.2;
+     const response=await apiFetch('/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'aries-native-ngram',messages:conversation,max_tokens:maxTokens,temperature:temperature,metadata:{aries_mode:mode,response_style:style}})});
      let data;try{data=await response.json();}catch(_){throw new Error('The API returned a non-JSON response (HTTP '+response.status+').');}
      if(!response.ok)throw new Error((data.error&&data.error.message)||data.detail||'HTTP '+response.status);
      const result=data&&data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content;
@@ -129,6 +134,7 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
      if(conversation.length&&conversation[conversation.length-1].role==='user')conversation.pop();
    }finally{$('send').disabled=false;$('check').disabled=false;prompt.focus();chat.scrollTop=chat.scrollHeight;}
  }
+ chatMode.addEventListener('change',()=>{const m=chatMode.value;$('modeNote').textContent=m==='deep'?'Paid deep reasoning is not enabled: billing and a compatible reasoning backend must be configured first.':m==='prise'?'PRISE Analysis is a UI selection only until the backend explicitly implements and verifies this mode.':'Selected '+chatMode.options[chatMode.selectedIndex].text+'. Response style affects request length/tone; backend support may vary.';});
  $('check').addEventListener('click',check);
   $('voiceReplies').addEventListener('click',()=>{voiceReplies=!voiceReplies;$('voiceReplies').textContent=voiceReplies?'🔊 Voice replies: On':'🔇 Voice replies: Off';$('voiceReplies').setAttribute('aria-pressed',String(voiceReplies));if(!voiceReplies&&'speechSynthesis'in window)window.speechSynthesis.cancel();$('hint').textContent=voiceReplies?'Spoken replies enabled.':'Spoken replies disabled.';});
  $('clear').addEventListener('click',()=>{if('speechSynthesis'in window)window.speechSynthesis.cancel();conversation.length=0;chat.querySelectorAll('.message').forEach(node=>node.remove());$('welcome').classList.remove('hidden');$('hint').textContent='Ready for a new conversation.';prompt.focus();});

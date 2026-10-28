@@ -8,62 +8,154 @@
 </style>
 <title>MALLIN Platform · ARIES AI</title>
 </head>
-<body id="top">
+<body>
 <div class="stars" aria-hidden="true"></div>
-<header class="topbar"><a class="brand" href="#top"><span class="mark">✦</span><span>MALLIN <small>PLATFORM · TIER ZERO</small></span></a><div class="status"><i id="statusDot"></i><span id="statusText">Starting…</span></div><button id="installBtn" class="quiet" hidden>Install app</button></header>
+<header class="topbar"><a class="brand" href="./"><span class="mark">✦</span><span>MALLIN <small>PLATFORM · TIER ZERO</small></span></a><div class="status"><i id="statusDot"></i><span id="statusText">Starting…</span></div><button id="installBtn" class="quiet" hidden>Install app</button></header>
 <main class="layout">
-<section class="hero"><p class="eyebrow">ARIES AI / TIER ZERO</p><h1>Your intelligence.<br><span>Your control.</span></h1><p class="intro">An offline-first MALLIN interface designed to work without a hosted AI API. Your conversations stay in this browser unless you explicitly connect a backend.</p><div class="chips"><span>Offline-first</span><span>Permanent web edition</span><span>No analytics</span></div></section>
+<section class="hero"><p class="eyebrow">ARIES AI / TIER ZERO</p><h1>Your intelligence.<br><span>Your control.</span></h1><p class="intro">An offline-first MALLIN interface designed to work without a hosted AI API. Your conversations stay in this browser unless you explicitly connect a backend.</p><div class="chips"><span>Offline-first</span><span>Installable PWA</span><span>No analytics</span></div></section>
 <section class="chat-panel" aria-label="ARIES chat">
-<div class="chat-head"><div><strong>ARIES AI</strong><p id="engineLabel">Local demo · no model connected</p></div><button id="clearBtn" class="quiet">Clear chat</button></div>
-<div id="messages" class="messages" aria-live="polite"><div class="message assistant"><div class="who">ARIES</div><p>Welcome to MALLIN Platform. This build can handle basic offline tasks and arithmetic. For full language-model answers, connect a model you control; this page does not pretend a real AI model is running.</p></div></div>
-<div class="quick-prompts"><button data-prompt="What can you do offline?">What can you do?</button><button data-prompt="Calculate 128 * 64">Try a calculation</button><button data-prompt="Help me test my ARIES API">Test API setup</button></div>
+<div class="chat-head"><div><strong>ARIES AI</strong><p id="engineLabel">Browser AI · model not loaded</p></div><button id="clearBtn" class="quiet">Clear chat</button></div>
+<div id="messages" class="messages" aria-live="polite"><div class="message assistant"><div class="who">ARIES</div><p>Welcome to MALLIN Platform. Load the browser AI model below to generate real answers locally in your browser. No AI chat API is used. The first model download is large; compatible WebGPU is required.</p></div></div>
+<div class="quick-prompts"><button data-prompt="What can you do?">What can you do?</button><button data-prompt="Calculate 128 * 64">Try a calculation</button><button data-prompt="Explain PRISE in simple terms">Ask about PRISE</button></div>
 <form id="chatForm" class="composer"><textarea id="prompt" rows="1" placeholder="Message ARIES…" aria-label="Message ARIES" required></textarea><button type="submit" aria-label="Send message">↑</button></form>
-<div class="chat-foot"><span>Local demo mode</span><span>Nothing is sent unless you configure an endpoint</span></div>
+<div class="chat-foot"><span id="chatMode">Browser inference not loaded</span><span>Prompts stay in this browser for local inference</span></div>
 </section>
-<section class="settings"><details><summary>Connect a model endpoint you control</summary><p>Optional: enter a compatible API base URL. It is stored only in this browser. Do not use secrets on a public/shared device.</p><label for="endpoint">API base URL</label><input id="endpoint" type="url" placeholder="https://your-server.example/v1"><label for="model">Model ID (optional)</label><input id="model" type="text" placeholder="your-model-id"><div class="actions"><button id="saveEndpoint" type="button">Save endpoint</button><button id="testEndpoint" type="button" class="quiet">Check connection</button></div><p id="endpointResult" class="result" role="status">No endpoint configured.</p></details></section>
-<footer><span>© MALLIN Platform</span><span>Open-source app shell · bring your own compute</span><span>Public static demo · model not bundled</span></footer>
+<section class="settings"><details open><summary>Run the language model in this browser</summary><p>Load a compact instruction model on your own device. Messages are processed in this browser; no external AI inference API is called. The first load downloads the model and can take several minutes.</p><label for="localModel">Model size</label><select id="localModel"><option value="SmolLM2-360M-Instruct-q4f32_1-MLC">Compact · 360M parameters · lower memory</option><option value="Llama-3.2-1B-Instruct-q4f32_1-MLC">Larger · 1B parameters · higher memory</option></select><div class="actions"><button id="loadModelBtn" type="button">Load browser AI model</button></div><progress id="modelProgress" max="100" value="0" hidden style="width:100%;margin-top:12px"></progress><p id="modelStatus" class="result" role="status">Not loaded. Requires a WebGPU-compatible browser. Model/runtime are fetched from their published repositories; see the note below.</p><p class="small">Choose a compact 360M model or a more capable 1B model. The 1B model uses more memory and takes longer to download. These are open pretrained starter models, not ARIES's custom model weights. Some devices/browsers may not have enough GPU memory.</p><p class="small">Independence note: inference runs on the visitor's device, not a hosted model server. This version still retrieves the WebLLM runtime from esm.sh and model files from the MLC/Hugging Face repositories. To eliminate those download dependencies too, those runtime/model assets must be bundled and permanently published with the site.</p></details></section>
+<footer><span>© MALLIN Platform</span><span>Browser-local language model · no hosted inference API</span><span>Browser-local model · public static page</span></footer>
 </main><script>
 const $ = (id) => document.getElementById(id);
 const messages = $("messages"), form = $("chatForm"), promptBox = $("prompt");
-const endpointBox = $("endpoint"), modelBox = $("model"), endpointResult = $("endpointResult");
-const STORE_URL = "mallin.endpoint", STORE_MODEL = "mallin.model";
-let endpoint = "", model = "";
-try { endpoint = localStorage.getItem(STORE_URL) || ""; model = localStorage.getItem(STORE_MODEL) || ""; } catch {}
-endpointBox.value = endpoint; modelBox.value = model;
-function status(text, connected=false) { $("statusText").textContent=text; $("statusDot").classList.toggle("connected", connected); }
+const loadModelBtn = $("loadModelBtn"), modelStatus = $("modelStatus");
+const modelProgress = $("modelProgress"), modelSelect = $("localModel");
+const WEBLLM_URL = "https://esm.sh/@mlc-ai/web-llm@0.2.85";
+let engine = null, modelLoading = false, loadedModelId = "";
+let conversation = [];
+
+function status(text, connected=false) {
+  $("statusText").textContent = text;
+  $("statusDot").classList.toggle("connected", connected);
+  $("engineLabel").textContent = connected ? "Local model ready · " + loadedModelId : text;
+  $("chatMode").textContent = connected ? "Browser AI is ready" : "Browser inference not loaded";
+}
 function addMessage(text, role) {
-  const node=document.createElement("div"); node.className="message "+role;
-  const who=document.createElement("div"); who.className="who"; who.textContent=role==="user"?"YOU":"ARIES";
-  const p=document.createElement("p"); p.textContent=text; node.append(who,p); messages.append(node); messages.scrollTop=messages.scrollHeight;
+  const node=document.createElement("div");
+  node.className="message "+role;
+  const who=document.createElement("div");
+  who.className="who";
+  who.textContent=role==="user"?"YOU":"ARIES";
+  const p=document.createElement("p");
+  p.textContent=text;
+  node.append(who,p);
+  messages.append(node);
+  messages.scrollTop=messages.scrollHeight;
+  return p;
 }
 function localReply(q) {
   const s=q.trim();
   const m=s.match(/^(?:calculate\s+)?(-?\d+(?:\.\d+)?)\s*([+*/x×-])\s*(-?\d+(?:\.\d+)?)\s*\??$/i);
-  if(m){const a=Number(m[1]),b=Number(m[3]),op=m[2].toLowerCase(); if(op==="/"&&b===0)return "Division by zero is undefined."; const n=op==="+"?a+b:op==="-"?a-b:(op==="*"||op==="x"||op==="×")?a*b:a/b; return "Demo calculator result: "+n+". This is a local arithmetic test, not an AI-model response.";}
-  if(/what can you do|offline/i.test(s))return "This prototype provides a chat interface, basic arithmetic, and status messages offline. It does not include model weights or a built-in language model.";
-  if(/test api|endpoint|connection status|connected/i.test(s))return endpoint ? "An endpoint is configured in this browser. Use “Check connection” in settings to test it; configuration alone does not prove the model works." : "No model endpoint is configured. Open “Connect a model endpoint you control” below the chat.";
-  if(/hello|^hi\b|hey/i.test(s))return "Hello! ARIES is currently in local demo mode. Connect a model you control for general-purpose answers.";
-  return "I received your message, but this offline demo does not contain a full language model. Configure a compatible model endpoint you control to get genuine model-generated answers. I will not pretend a canned response is AI inference.";
+  if(m){
+    const a=Number(m[1]), b=Number(m[3]), op=m[2].toLowerCase();
+    if(op==="/"&&b===0)return "Division by zero is undefined.";
+    const n=op==="+"?a+b:op==="-"?a-b:(op==="*"||op==="x"||op==="×")?a*b:a/b;
+    return "Local calculator result: "+n+". Load the browser AI model for general language-model responses.";
+  }
+  if(/what can you do|offline/i.test(s))return "I can handle basic arithmetic and show this interface offline. Load the browser AI model to enable genuine language-model responses on this device.";
+  if(/hello|^hi\b|hey/i.test(s))return "Hello! I am MALLIN's ARIES chat interface. Load the browser AI model below to start local language-model inference.";
+  return "The language model is not loaded yet. Select “Load browser AI model” below. The first download can be large and requires WebGPU.";
 }
-async function callModel(q) {
-  if(!endpoint) return localReply(q);
-  const base=endpoint.replace(/\/+$/,"");
-  const response=await fetch(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:model||"default",messages:[{role:"user",content:q}],stream:false})});
-  if(!response.ok) throw new Error("Endpoint returned HTTP "+response.status);
-  const data=await response.json(); const answer=data?.choices?.[0]?.message?.content;
-  if(typeof answer!=="string"||!answer.trim()) throw new Error("Response did not contain choices[0].message.content");
+async function loadLocalModel() {
+  if(engine || modelLoading)return;
+  if(!window.isSecureContext){
+    modelStatus.textContent="A secure HTTPS page is required to use WebGPU. Open the permanent website through an HTTPS origin.";
+    return;
+  }
+  if(!("gpu" in navigator)){
+    modelStatus.textContent="This browser does not expose WebGPU. Try a current Chrome or Edge browser on compatible hardware. No hosted inference fallback is configured.";
+    status("WebGPU unavailable",false);
+    return;
+  }
+  modelLoading=true;
+  loadModelBtn.disabled=true;
+  const modelId=modelSelect.value;
+  modelProgress.hidden=false;
+  modelProgress.value=0;
+  modelStatus.textContent="Loading browser inference engine…";
+  status("Preparing local model…",false);
+  try {
+    // WebLLM executes inference in the visitor's browser. No AI inference API is called.
+    // Runtime and model artifacts are downloaded on first use from their published repositories.
+    const webllm = await import(WEBLLM_URL);
+    if(typeof webllm.CreateMLCEngine!=="function")throw new Error("The browser runtime did not expose CreateMLCEngine.");
+    engine = await webllm.CreateMLCEngine(modelId,{
+      initProgressCallback:(progress)=>{
+        const pct=typeof progress?.progress==="number"?Math.max(0,Math.min(100,Math.round(progress.progress*100))):0;
+        modelProgress.value=pct;
+        modelStatus.textContent=typeof progress?.text==="string"?progress.text:"Downloading model files…";
+        status("Loading model "+pct+"%",false);
+      }
+    });
+    loadedModelId=modelId;
+    conversation=[];
+    modelStatus.textContent="Ready. Inference runs locally in this browser. Prompts are not sent to an AI inference API.";
+    status("Local model ready",true);
+    loadModelBtn.textContent="Model loaded";
+    modelSelect.disabled=true;
+    modelProgress.value=100;
+    modelProgress.hidden=true;
+    addMessage("Browser language model loaded: "+loadedModelId+". Prompts are processed on this device.","assistant");
+  } catch(error) {
+    engine=null;
+    loadedModelId="";
+    modelStatus.textContent="Could not load the local model: "+(error?.message||String(error))+". Check WebGPU support, GPU memory, first-download connectivity, and browser console. No hosted inference fallback was used.";
+    status("Local model failed to load",false);
+    loadModelBtn.disabled=false;
+  } finally {
+    modelLoading=false;
+  }
+}
+async function answerWithModel(q) {
+  const messagesForModel=[
+    {role:"system",content:"You are ARIES AI, the assistant inside the MALLIN Platform. Be helpful, accurate, and clear. Do not claim certification, capabilities, access, or benchmark scores unless supported by the conversation. If uncertain, say so."},
+    ...conversation,
+    {role:"user",content:q}
+  ];
+  const response=await engine.chat.completions.create({
+    messages:messagesForModel,
+    temperature:0.7,
+    max_tokens:320
+  });
+  const answer=response?.choices?.[0]?.message?.content;
+  if(typeof answer!=="string"||!answer.trim())throw new Error("The model returned an empty answer.");
+  conversation.push({role:"user",content:q},{role:"assistant",content:answer.trim()});
+  if(conversation.length>20)conversation=conversation.slice(-20);
   return answer.trim();
 }
-form.addEventListener("submit",async e=>{e.preventDefault();const q=promptBox.value.trim();if(!q)return;addMessage(q,"user");promptBox.value="";const wait=document.createElement("div");wait.className="message assistant";wait.textContent="Thinking…";messages.append(wait);messages.scrollTop=messages.scrollHeight;
-  try{const answer=await callModel(q);wait.remove();addMessage(answer,"assistant");}
-  catch(err){wait.remove();addMessage("Could not get a model response: "+err.message+". Check the endpoint URL, CORS policy, and server status. No fallback answer was presented as model output.","assistant");}
+form.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const q=promptBox.value.trim();
+  if(!q)return;
+  addMessage(q,"user");
+  promptBox.value="";
+  const answerNode=addMessage(engine?"Generating locally…":"","assistant");
+  try {
+    answerNode.textContent=engine?await answerWithModel(q):localReply(q);
+  } catch(error) {
+    answerNode.textContent="Local inference error: "+(error?.message||String(error))+". The model did not provide an answer; try reloading the page and model.";
+  }
 });
-$("clearBtn").addEventListener("click",()=>{messages.replaceChildren();});
-document.querySelectorAll("[data-prompt]").forEach(b=>b.addEventListener("click",()=>{promptBox.value=b.dataset.prompt;form.requestSubmit();}));
-$("saveEndpoint").addEventListener("click",()=>{endpoint=endpointBox.value.trim().replace(/\/+$/,"");model=modelBox.value.trim();try{localStorage.setItem(STORE_URL,endpoint);localStorage.setItem(STORE_MODEL,model);}catch{} $("engineLabel").textContent=endpoint?"Endpoint configured · not yet verified":"Local demo · no model connected";endpointResult.textContent=endpoint?"Saved in this browser. Configuration is not proof of a successful model response.":"Endpoint cleared; local demo mode is active.";status(endpoint?"Endpoint configured (untested)":"Local demo mode",false);});
-$("testEndpoint").addEventListener("click",async()=>{endpoint=endpointBox.value.trim().replace(/\/+$/,"");if(!endpoint){endpointResult.textContent="Enter an endpoint URL first.";return;}endpointResult.textContent="Testing /models…";try{const r=await fetch(endpoint+"/models");if(!r.ok)throw new Error("HTTP "+r.status);const data=await r.json();endpointResult.textContent="Endpoint responded to /models. This does not yet verify chat completion.";status("Endpoint reachable",true);if(data.error)endpointResult.textContent+=" Server reported: "+data.error.message;}catch(err){endpointResult.textContent="Could not verify endpoint: "+err.message+". The server may block browser CORS requests.";status("Endpoint unverified",false);}});
-status(navigator.onLine?"Local demo ready · model not connected":"Offline · local demo",false);
-window.addEventListener("online",()=>status(endpoint?"Endpoint configured (untested)":"Local demo ready · model not connected",false));
-window.addEventListener("offline",()=>status("Offline · local demo",false));
+$("clearBtn").addEventListener("click",()=>{
+  messages.replaceChildren();
+  conversation=[];
+  addMessage("Chat cleared. The loaded model remains available in this tab.","assistant");
+});
+document.querySelectorAll("[data-prompt]").forEach(button=>button.addEventListener("click",()=>{
+  promptBox.value=button.dataset.prompt;
+  form.requestSubmit();
+}));
+loadModelBtn.addEventListener("click",loadLocalModel);
+modelProgress.hidden=true;
+status(navigator.onLine?"Ready · local model not loaded":"Offline · model not loaded",false);
+window.addEventListener("online",()=>{if(!engine&&!modelLoading)status("Online · local model not loaded",false);});
+window.addEventListener("offline",()=>{if(!engine&&!modelLoading)status("Offline · local model not loaded",false);});
 
 </script></body></html>

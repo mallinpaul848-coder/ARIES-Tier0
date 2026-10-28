@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: mallin-cloud
+    runtime: docker
+    dockerContext: ./mallin-cloud
+    dockerfilePath: ./mallin-cloud/Dockerfile
+    plan: starter
+    healthCheckPath: /health
+    disk:
+      name: mallin-cloud-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: MALLIN_ADMIN_TOKEN
+        generateValue: true
+      - key: MALLIN_DEPLOY_ROOT
+        value: /data/deployments

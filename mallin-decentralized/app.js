@@ -1,16 +1,15 @@
 const $ = (id) => document.getElementById(id);
 const messages = $("messages"), form = $("chatForm"), promptBox = $("prompt");
 const loadModelBtn = $("loadModelBtn"), modelStatus = $("modelStatus");
-const modelProgress = $("modelProgress");
-const MODEL_ID = "SmolLM2-360M-Instruct-q4f32_1-MLC";
+const modelProgress = $("modelProgress"), modelSelect = $("localModel");
 const WEBLLM_URL = "https://esm.sh/@mlc-ai/web-llm@0.2.86";
-let engine = null, modelLoading = false, modelFailed = false;
+let engine = null, modelLoading = false, loadedModelId = "";
 let conversation = [];
 
 function status(text, connected=false) {
   $("statusText").textContent = text;
   $("statusDot").classList.toggle("connected", connected);
-  $("engineLabel").textContent = connected ? "Local model ready · " + MODEL_ID : text;
+  $("engineLabel").textContent = connected ? "Local model ready · " + loadedModelId : text;
   $("chatMode").textContent = connected ? "Browser AI is ready" : "Browser inference not loaded";
 }
 function addMessage(text, role) {
@@ -37,48 +36,52 @@ function localReply(q) {
   }
   if(/what can you do|offline/i.test(s))return "I can handle basic arithmetic and show this interface offline. Load the browser AI model to enable genuine language-model responses on this device.";
   if(/hello|^hi\b|hey/i.test(s))return "Hello! I am MALLIN's ARIES chat interface. Load the browser AI model below to start local language-model inference.";
-  return "The language model is not loaded yet. Select “Load browser AI model” below. The first download is several hundred megabytes and requires WebGPU.";
+  return "The language model is not loaded yet. Select “Load browser AI model” below. The first download can be large and requires WebGPU.";
 }
 async function loadLocalModel() {
   if(engine || modelLoading)return;
   if(!window.isSecureContext){
-    modelStatus.textContent="A secure HTTPS page is required to use WebGPU. Open the permanent website through its HTTPS gateway.";
+    modelStatus.textContent="A secure HTTPS page is required to use WebGPU. Open the permanent website through an HTTPS origin.";
     return;
   }
   if(!("gpu" in navigator)){
-    modelStatus.textContent="This browser does not expose WebGPU. Try an up-to-date Chrome or Edge browser on a compatible device. No server fallback is configured.";
+    modelStatus.textContent="This browser does not expose WebGPU. Try a current Chrome or Edge browser on compatible hardware. No hosted inference fallback is configured.";
     status("WebGPU unavailable",false);
     return;
   }
   modelLoading=true;
   loadModelBtn.disabled=true;
+  const modelId=modelSelect.value;
   modelProgress.hidden=false;
   modelProgress.value=0;
-  modelStatus.textContent="Loading the browser inference engine…";
+  modelStatus.textContent="Loading browser inference engine…";
   status("Preparing local model…",false);
   try {
+    // WebLLM executes inference in the visitor's browser. No AI inference API is called.
+    // Runtime and model artifacts are downloaded on first use from their published repositories.
     const webllm = await import(WEBLLM_URL);
     if(typeof webllm.CreateMLCEngine!=="function")throw new Error("The browser runtime did not expose CreateMLCEngine.");
-    engine = await webllm.CreateMLCEngine(MODEL_ID,{
+    engine = await webllm.CreateMLCEngine(modelId,{
       initProgressCallback:(progress)=>{
         const pct=typeof progress?.progress==="number"?Math.max(0,Math.min(100,Math.round(progress.progress*100))):0;
         modelProgress.value=pct;
-        const msg=typeof progress?.text==="string"?progress.text:"Downloading model files…";
-        modelStatus.textContent=msg;
+        modelStatus.textContent=typeof progress?.text==="string"?progress.text:"Downloading model files…";
         status("Loading model "+pct+"%",false);
       }
     });
+    loadedModelId=modelId;
     conversation=[];
-    modelStatus.textContent="Ready. The model now runs locally in this browser; prompts are not sent to an AI API.";
+    modelStatus.textContent="Ready. Inference runs locally in this browser. Prompts are not sent to an AI inference API.";
     status("Local model ready",true);
     loadModelBtn.textContent="Model loaded";
+    modelSelect.disabled=true;
     modelProgress.value=100;
     modelProgress.hidden=true;
+    addMessage("Browser language model loaded: "+loadedModelId+". Prompts are processed on this device.","assistant");
   } catch(error) {
     engine=null;
-    modelFailed=true;
-    const message=error && error.message ? error.message : String(error);
-    modelStatus.textContent="Could not load the local model: "+message+". Check WebGPU support, available memory, internet access for the first download, and browser console.";
+    loadedModelId="";
+    modelStatus.textContent="Could not load the local model: "+(error?.message||String(error))+". Check WebGPU support, GPU memory, first-download connectivity, and browser console. No hosted inference fallback was used.";
     status("Local model failed to load",false);
     loadModelBtn.disabled=false;
   } finally {
@@ -87,7 +90,7 @@ async function loadLocalModel() {
 }
 async function answerWithModel(q) {
   const messagesForModel=[
-    {role:"system",content:"You are ARIES AI, the assistant inside the MALLIN Platform. Be helpful, accurate, and clear. Do not claim that the model has special certification, abilities, access, or benchmark scores unless those facts are supplied in the conversation. If uncertain, say so."},
+    {role:"system",content:"You are ARIES AI, the assistant inside the MALLIN Platform. Be helpful, accurate, and clear. Do not claim certification, capabilities, access, or benchmark scores unless supported by the conversation. If uncertain, say so."},
     ...conversation,
     {role:"user",content:q}
   ];
@@ -108,12 +111,11 @@ form.addEventListener("submit",async e=>{
   if(!q)return;
   addMessage(q,"user");
   promptBox.value="";
-  const answerNode=addMessage(engine?"Generating locally…":"", "assistant");
+  const answerNode=addMessage(engine?"Generating locally…":"","assistant");
   try {
-    const answer=engine?await answerWithModel(q):localReply(q);
-    answerNode.textContent=answer;
+    answerNode.textContent=engine?await answerWithModel(q):localReply(q);
   } catch(error) {
-    answerNode.textContent="Local inference error: "+(error?.message||String(error))+". The model did not provide an answer; try reloading the model.";
+    answerNode.textContent="Local inference error: "+(error?.message||String(error))+". The model did not provide an answer; try reloading the page and model.";
   }
 });
 $("clearBtn").addEventListener("click",()=>{
@@ -127,7 +129,7 @@ document.querySelectorAll("[data-prompt]").forEach(button=>button.addEventListen
 }));
 loadModelBtn.addEventListener("click",loadLocalModel);
 modelProgress.hidden=true;
-status(navigator.onLine?"Ready · local model not loaded":"Offline · load model after reconnecting",false);
+status(navigator.onLine?"Ready · local model not loaded":"Offline · model not loaded",false);
 window.addEventListener("online",()=>{if(!engine&&!modelLoading)status("Online · local model not loaded",false);});
 window.addEventListener("offline",()=>{if(!engine&&!modelLoading)status("Offline · local model not loaded",false);});
 if("serviceWorker" in navigator && location.protocol!=="file:"){

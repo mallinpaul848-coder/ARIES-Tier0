@@ -5,3 +5,20 @@ services:
     plan: free
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
+
+  - type: web
+    name: mallin-cloud
+    runtime: docker
+    plan: starter
+    dockerContext: ./mallin-cloud
+    dockerfilePath: ./mallin-cloud/Dockerfile
+    healthCheckPath: /health
+    disk:
+      name: mallin-cloud-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: MALLIN_ADMIN_TOKEN
+        generateValue: true
+      - key: MALLIN_DATA_DIR
+        value: /data

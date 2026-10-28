@@ -81,12 +81,23 @@ def deploy(payload: DeployRequest, authorization: Optional[str] = Header(default
             dest = out / child.name
             if child.is_dir(): shutil.copytree(child, dest)
             else: shutil.copy2(child, dest)
+        # Use ordinary directories rather than symlinks so deployments work on Windows
+        # without Developer Mode or elevated permissions.
         current = PUBLISHED / payload.project / "current"
-        next_link = PUBLISHED / payload.project / "current-next"
-        if next_link.exists() or next_link.is_symlink(): next_link.unlink()
-        next_link.symlink_to(out, target_is_directory=True)
-        if current.exists() or current.is_symlink(): current.unlink()
-        next_link.replace(current)
+        next_dir = PUBLISHED / payload.project / "current-next"
+        backup = PUBLISHED / payload.project / "current-previous"
+        shutil.rmtree(next_dir, ignore_errors=True)
+        shutil.copytree(out, next_dir)
+        shutil.rmtree(backup, ignore_errors=True)
+        if current.exists():
+            current.replace(backup)
+        try:
+            next_dir.replace(current)
+        except Exception:
+            if backup.exists() and not current.exists():
+                backup.replace(current)
+            raise
+        shutil.rmtree(backup, ignore_errors=True)
         record.update(status="ready", url=f"/sites/{payload.project}/", finished_at=datetime.now(timezone.utc).isoformat())
     except Exception as e:
         record.update(status="failed", error=str(e)[-5000:], finished_at=datetime.now(timezone.utc).isoformat())

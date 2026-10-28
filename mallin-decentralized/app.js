@@ -2,7 +2,7 @@ const $ = (id) => document.getElementById(id);
 const messages = $("messages"), form = $("chatForm"), promptBox = $("prompt");
 const loadModelBtn = $("loadModelBtn"), modelStatus = $("modelStatus");
 const modelProgress = $("modelProgress"), modelSelect = $("localModel");
-const WEBLLM_URL = "https://esm.sh/@mlc-ai/web-llm@0.2.86";
+const WEBLLM_URL = "https://esm.sh/@mlc-ai/web-llm@0.2.85";
 let engine = null, modelLoading = false, loadedModelId = "";
 let conversation = [];
 

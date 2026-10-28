@@ -1,0 +1,11 @@
+{
+  "name": "MALLIN Platform — ARIES AI",
+  "short_name": "ARIES AI",
+  "description": "Offline-first ARIES chat interface prototype",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#080615",
+  "theme_color": "#100a2d",
+  "icons": []
+}

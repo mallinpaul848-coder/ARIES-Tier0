@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#100a2d"><meta name="description" content="MALLIN Platform — offline-first ARIES AI interface.">
+<style>
+:root{color-scheme:dark;--bg:#090717;--panel:rgba(22,16,51,.84);--line:rgba(196,173,255,.2);--text:#f7f3ff;--muted:#b9b0d5;--purple:#a78bfa;--pink:#f0abfc}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 78% 12%,#39206d 0,transparent 36%),radial-gradient(ellipse at 8% 52%,#24134d 0,transparent 40%),linear-gradient(145deg,#080615,#100a2d 58%,#080717);color:var(--text);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}.stars{position:fixed;inset:0;pointer-events:none;opacity:.42;background-image:radial-gradient(1px 1px at 15% 18%,white 99%,transparent),radial-gradient(1px 1px at 74% 23%,#e9d5ff 99%,transparent),radial-gradient(2px 2px at 91% 61%,white 99%,transparent),radial-gradient(1px 1px at 34% 72%,white 99%,transparent),radial-gradient(1px 1px at 55% 42%,#c4b5fd 99%,transparent);background-size:280px 230px}.topbar,.layout{position:relative;z-index:1}.topbar{max-width:1120px;margin:auto;padding:20px 24px;display:flex;align-items:center;gap:18px;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:10px;color:var(--text);text-decoration:none;font-weight:850;letter-spacing:.12em}.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:.18em}.mark{display:grid;place-items:center;width:40px;height:40px;border:1px solid #a78bfa88;border-radius:13px;color:var(--pink);font-size:24px}.status{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}.status i{width:8px;height:8px;border-radius:50%;background:#c4b5fd;box-shadow:0 0 12px #a78bfa}.layout{max-width:1000px;margin:0 auto;padding:34px 24px 20px}.hero{padding:16px 0 28px}.eyebrow{font-size:11px;letter-spacing:.22em;color:var(--pink);font-weight:800}.hero h1{font-size:clamp(38px,7vw,66px);line-height:1.04;letter-spacing:-.045em;margin:10px 0 16px}.hero h1 span{background:linear-gradient(90deg,#c4b5fd,#f0abfc);color:transparent;background-clip:text}.intro{max-width:650px;color:var(--muted);font-size:16px}.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.chips span{border:1px solid var(--line);border-radius:999px;padding:5px 10px;color:#e9ddff;font-size:11px}.chat-panel,.settings{border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(18px);border-radius:20px;box-shadow:0 18px 80px #0004}.chat-panel{overflow:hidden}.chat-head{padding:18px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.chat-head strong{letter-spacing:.08em}.chat-head p{margin:2px 0 0;color:var(--muted);font-size:12px}.messages{min-height:230px;max-height:430px;overflow:auto;padding:22px;display:flex;flex-direction:column;gap:14px}.message{max-width:86%;padding:12px 15px;border-radius:15px;overflow-wrap:anywhere}.message p{margin:0;white-space:pre-wrap}.message.assistant{align-self:flex-start;background:#ffffff0a;border:1px solid var(--line)}.message.user{align-self:flex-end;background:linear-gradient(135deg,#6544a5,#473079);border:1px solid #c4b5fd55}.who{font-size:10px;letter-spacing:.15em;font-weight:800;color:var(--pink);margin-bottom:5px}.user .who{color:#e9ddff}.quick-prompts{display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 16px}.quick-prompts button,.quiet{background:#ffffff08;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:8px 11px;cursor:pointer}.quick-prompts button:hover,.quiet:hover{border-color:var(--purple);color:var(--text)}.composer{display:flex;gap:10px;padding:12px;margin:0 14px 8px;border:1px solid #b9a2f744;border-radius:15px;background:#090717aa}.composer textarea{flex:1;resize:vertical;max-height:150px;min-height:34px;background:transparent;border:0;color:var(--text);font:inherit;outline:none}.composer button,.actions button{border:0;border-radius:11px;background:linear-gradient(135deg,#9b78f5,#c77ae8);color:#160b30;font-weight:850;padding:0 17px;cursor:pointer}.chat-foot{display:flex;justify-content:space-between;gap:10px;padding:5px 20px 17px;color:#9489b4;font-size:10px}.settings{margin-top:16px;padding:16px 20px}.settings summary{cursor:pointer;font-weight:700}.settings p{color:var(--muted);font-size:13px}.settings label{display:block;margin:12px 0 5px;color:#e9ddff;font-size:12px}.settings input{width:100%;padding:11px 12px;background:#080615;border:1px solid var(--line);border-radius:10px;color:var(--text);font:inherit}.actions{display:flex;gap:8px;margin-top:12px}.actions button{min-height:38px}.actions .quiet{background:transparent;color:var(--muted);border:1px solid var(--line)}.result{overflow-wrap:anywhere}footer{display:flex;flex-wrap:wrap;gap:10px 18px;justify-content:space-between;color:#9489b4;font-size:11px;padding:22px 2px}footer a{color:#d8c9ff}@media(min-width:760px){.hero{padding-top:28px}.chat-panel{margin-top:8px}}@media(max-width:520px){.topbar{padding:14px}.layout{padding:20px 12px}.hero{padding:8px 4px 20px}.chat-foot{flex-direction:column}.message{max-width:96%}.status{font-size:10px}.brand{font-size:13px}}
+</style>
+<title>MALLIN Platform · ARIES AI</title>
+</head>
+<body id="top">
+<div class="stars" aria-hidden="true"></div>
+<header class="topbar"><a class="brand" href="#top"><span class="mark">✦</span><span>MALLIN <small>PLATFORM · TIER ZERO</small></span></a><div class="status"><i id="statusDot"></i><span id="statusText">Starting…</span></div><button id="installBtn" class="quiet" hidden>Install app</button></header>
+<main class="layout">
+<section class="hero"><p class="eyebrow">ARIES AI / TIER ZERO</p><h1>Your intelligence.<br><span>Your control.</span></h1><p class="intro">An offline-first MALLIN interface designed to work without a hosted AI API. Your conversations stay in this browser unless you explicitly connect a backend.</p><div class="chips"><span>Offline-first</span><span>Permanent web edition</span><span>No analytics</span></div></section>
+<section class="chat-panel" aria-label="ARIES chat">
+<div class="chat-head"><div><strong>ARIES AI</strong><p id="engineLabel">Local demo · no model connected</p></div><button id="clearBtn" class="quiet">Clear chat</button></div>
+<div id="messages" class="messages" aria-live="polite"><div class="message assistant"><div class="who">ARIES</div><p>Welcome to MALLIN Platform. This build can handle basic offline tasks and arithmetic. For full language-model answers, connect a model you control; this page does not pretend a real AI model is running.</p></div></div>
+<div class="quick-prompts"><button data-prompt="What can you do offline?">What can you do?</button><button data-prompt="Calculate 128 * 64">Try a calculation</button><button data-prompt="Help me test my ARIES API">Test API setup</button></div>
+<form id="chatForm" class="composer"><textarea id="prompt" rows="1" placeholder="Message ARIES…" aria-label="Message ARIES" required></textarea><button type="submit" aria-label="Send message">↑</button></form>
+<div class="chat-foot"><span>Local demo mode</span><span>Nothing is sent unless you configure an endpoint</span></div>
+</section>
+<section class="settings"><details><summary>Connect a model endpoint you control</summary><p>Optional: enter a compatible API base URL. It is stored only in this browser. Do not use secrets on a public/shared device.</p><label for="endpoint">API base URL</label><input id="endpoint" type="url" placeholder="https://your-server.example/v1"><label for="model">Model ID (optional)</label><input id="model" type="text" placeholder="your-model-id"><div class="actions"><button id="saveEndpoint" type="button">Save endpoint</button><button id="testEndpoint" type="button" class="quiet">Check connection</button></div><p id="endpointResult" class="result" role="status">No endpoint configured.</p></details></section>
+<footer><span>© MALLIN Platform</span><span>Open-source app shell · bring your own compute</span><a href="https://github.com/mallinpaul848-coder/ARIES-Tier0">Source repository</a></footer>
+</main><script>
+const $ = (id) => document.getElementById(id);
+const messages = $("messages"), form = $("chatForm"), promptBox = $("prompt");
+const endpointBox = $("endpoint"), modelBox = $("model"), endpointResult = $("endpointResult");
+const STORE_URL = "mallin.endpoint", STORE_MODEL = "mallin.model";
+let endpoint = "", model = "";
+try { endpoint = localStorage.getItem(STORE_URL) || ""; model = localStorage.getItem(STORE_MODEL) || ""; } catch {}
+endpointBox.value = endpoint; modelBox.value = model;
+function status(text, connected=false) { $("statusText").textContent=text; $("statusDot").classList.toggle("connected", connected); }
+function addMessage(text, role) {
+  const node=document.createElement("div"); node.className="message "+role;
+  const who=document.createElement("div"); who.className="who"; who.textContent=role==="user"?"YOU":"ARIES";
+  const p=document.createElement("p"); p.textContent=text; node.append(who,p); messages.append(node); messages.scrollTop=messages.scrollHeight;
+}
+function localReply(q) {
+  const s=q.trim();
+  const m=s.match(/^(?:calculate\s+)?(-?\d+(?:\.\d+)?)\s*([+*/x×-])\s*(-?\d+(?:\.\d+)?)\s*\??$/i);
+  if(m){const a=Number(m[1]),b=Number(m[3]),op=m[2].toLowerCase(); if(op==="/"&&b===0)return "Division by zero is undefined."; const n=op==="+"?a+b:op==="-"?a-b:(op==="*"||op==="x"||op==="×")?a*b:a/b; return "Demo calculator result: "+n+". This is a local arithmetic test, not an AI-model response.";}
+  if(/what can you do|offline/i.test(s))return "This prototype provides a chat interface, basic arithmetic, and status messages offline. It does not include model weights or a built-in language model.";
+  if(/test api|endpoint|connection status|connected/i.test(s))return endpoint ? "An endpoint is configured in this browser. Use “Check connection” in settings to test it; configuration alone does not prove the model works." : "No model endpoint is configured. Open “Connect a model endpoint you control” below the chat.";
+  if(/hello|^hi\b|hey/i.test(s))return "Hello! ARIES is currently in local demo mode. Connect a model you control for general-purpose answers.";
+  return "I received your message, but this offline demo does not contain a full language model. Configure a compatible model endpoint you control to get genuine model-generated answers. I will not pretend a canned response is AI inference.";
+}
+async function callModel(q) {
+  if(!endpoint) return localReply(q);
+  const base=endpoint.replace(/\/+$/,"");
+  const response=await fetch(base+"/chat/completions",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:model||"default",messages:[{role:"user",content:q}],stream:false})});
+  if(!response.ok) throw new Error("Endpoint returned HTTP "+response.status);
+  const data=await response.json(); const answer=data?.choices?.[0]?.message?.content;
+  if(typeof answer!=="string"||!answer.trim()) throw new Error("Response did not contain choices[0].message.content");
+  return answer.trim();
+}
+form.addEventListener("submit",async e=>{e.preventDefault();const q=promptBox.value.trim();if(!q)return;addMessage(q,"user");promptBox.value="";const wait=document.createElement("div");wait.className="message assistant";wait.textContent="Thinking…";messages.append(wait);messages.scrollTop=messages.scrollHeight;
+  try{const answer=await callModel(q);wait.remove();addMessage(answer,"assistant");}
+  catch(err){wait.remove();addMessage("Could not get a model response: "+err.message+". Check the endpoint URL, CORS policy, and server status. No fallback answer was presented as model output.","assistant");}
+});
+$("clearBtn").addEventListener("click",()=>{messages.replaceChildren();});
+document.querySelectorAll("[data-prompt]").forEach(b=>b.addEventListener("click",()=>{promptBox.value=b.dataset.prompt;form.requestSubmit();}));
+$("saveEndpoint").addEventListener("click",()=>{endpoint=endpointBox.value.trim().replace(/\/+$/,"");model=modelBox.value.trim();try{localStorage.setItem(STORE_URL,endpoint);localStorage.setItem(STORE_MODEL,model);}catch{} $("engineLabel").textContent=endpoint?"Endpoint configured · not yet verified":"Local demo · no model connected";endpointResult.textContent=endpoint?"Saved in this browser. Configuration is not proof of a successful model response.":"Endpoint cleared; local demo mode is active.";status(endpoint?"Endpoint configured (untested)":"Local demo mode",false);});
+$("testEndpoint").addEventListener("click",async()=>{endpoint=endpointBox.value.trim().replace(/\/+$/,"");if(!endpoint){endpointResult.textContent="Enter an endpoint URL first.";return;}endpointResult.textContent="Testing /models…";try{const r=await fetch(endpoint+"/models");if(!r.ok)throw new Error("HTTP "+r.status);const data=await r.json();endpointResult.textContent="Endpoint responded to /models. This does not yet verify chat completion.";status("Endpoint reachable",true);if(data.error)endpointResult.textContent+=" Server reported: "+data.error.message;}catch(err){endpointResult.textContent="Could not verify endpoint: "+err.message+". The server may block browser CORS requests.";status("Endpoint unverified",false);}});
+status(navigator.onLine?"Local demo ready · model not connected":"Offline · local demo",false);
+window.addEventListener("online",()=>status(endpoint?"Endpoint configured (untested)":"Local demo ready · model not connected",false));
+window.addEventListener("offline",()=>status("Offline · local demo",false));
+
+</script></body></html>

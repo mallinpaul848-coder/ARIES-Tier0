@@ -50,6 +50,22 @@ main{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radiu
  const PUBLIC_API='https://aries-tier0-api-6qjh.onrender.com';
  const GREETING='Welcome to ARIES AI. Ask a question to get started.';
  function base(){return $('endpoint').value.trim().replace(/\/+$/,'');}
+ // Original synthesized ambient pad: no third-party audio file or music service is required.
+ function duckMusic(duck){if(!ambientMaster||!ambientCtx)return;const target=ambientPlaying?Number($('musicVolume').value)/100*(duck ? 0.22 : 1):0;ambientMaster.gain.cancelScheduledValues(ambientCtx.currentTime);ambientMaster.gain.setTargetAtTime(target,ambientCtx.currentTime,.18);}
+ function startAmbient(){
+   const AudioCtx=window.AudioContext||window.webkitAudioContext;
+   if(!AudioCtx){$('hint').textContent='Ambient audio is not supported by this browser.';return;}
+   if(!ambientCtx){
+     ambientCtx=new AudioCtx();ambientMaster=ambientCtx.createGain();ambientMaster.gain.value=0;ambientMaster.connect(ambientCtx.destination);
+     // Gentle, slow-moving original chord tones; no vocals or external audio asset.
+     const notes=[110,164.81,220,261.63];notes.forEach((hz,i)=>{const osc=ambientCtx.createOscillator(),gain=ambientCtx.createGain(),filter=ambientCtx.createBiquadFilter();osc.type=i===1?'sine':'triangle';osc.frequency.value=hz;filter.type='lowpass';filter.frequency.value=700;gain.gain.value=[.17,.10,.08,.045][i];osc.connect(filter);filter.connect(gain);gain.connect(ambientMaster);osc.start();ambientNodes.push(osc,gain,filter);});
+     const lfo=ambientCtx.createOscillator(),lfoGain=ambientCtx.createGain();lfo.frequency.value=.07;lfoGain.gain.value=5;lfo.connect(lfoGain);lfoGain.connect(ambientNodes[0].frequency);lfo.start();ambientNodes.push(lfo,lfoGain);
+   }
+   ambientCtx.resume().then(()=>{ambientPlaying=true;$('musicToggle').textContent='♫ Pause ambient music';$('musicToggle').setAttribute('aria-pressed','true');duckMusic(false);$('hint').textContent='Soft instrumental ambience is on. Use the volume control or Pause to adjust it.';}).catch(()=>{$('hint').textContent='Audio could not start. Tap Play again to allow audio.';});
+ }
+ function stopAmbient(){ambientPlaying=false;if(ambientMaster&&ambientCtx){ambientMaster.gain.cancelScheduledValues(ambientCtx.currentTime);ambientMaster.gain.setTargetAtTime(0,ambientCtx.currentTime,.12);} $('musicToggle').textContent='♫ Play ambient music';$('musicToggle').setAttribute('aria-pressed','false');}
+ $('musicToggle').addEventListener('click',()=>ambientPlaying?stopAmbient():startAmbient());
+ $('musicVolume').addEventListener('input',()=>{if(ambientPlaying)duckMusic(false);});
  function status(ok,msg){$('dot').className='dot '+(ok?'ok':'bad');$('statusText').textContent=msg;}
  function addMessage(role,text,withVoice){
    $('welcome').classList.add('hidden');

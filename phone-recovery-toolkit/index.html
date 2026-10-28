@@ -2,42 +2,167 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#101027">
-<title>Phone Recovery Toolkit · MALLIN</title>
+<meta name="theme-color" content="#100d22">
+<meta name="description" content="Easy computer-assisted phone recovery guide for devices you own or are authorized to manage.">
+<title>Quick Phone Recovery · MALLIN</title>
 <style>
-:root{color-scheme:dark;--bg:#0b0b18;--panel:#17172a;--line:#393955;--text:#f3f2ff;--muted:#b9b8d2;--accent:#b9a4ff}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% 0,#302254 0,transparent 40%),var(--bg);color:var(--text);font:16px/1.55 system-ui,sans-serif}.wrap{max-width:940px;margin:auto;padding:24px 16px 60px}.brand{color:var(--accent);font-size:.8rem;font-weight:800;letter-spacing:.15em}h1{font-size:clamp(2rem,6vw,3.4rem);line-height:1.05;margin:.6rem 0}p{color:var(--muted)}.notice{border:1px solid #705b9e;background:#211a37;padding:14px 16px;border-radius:14px;margin:18px 0}.controls,.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px}.card h2{font-size:1.12rem;margin:0 0 8px}.card h3{font-size:1rem;margin:12px 0 5px}label{display:block;font-size:.9rem;margin:10px 0 5px}select,input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0e0e20;color:var(--text);font:inherit}button,.link{display:inline-block;background:#7551cb;color:white;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-weight:650;text-decoration:none;cursor:pointer}button.secondary{background:#282841;border:1px solid var(--line)}a{color:#c7b7ff}ol,ul{padding-left:22px;color:#e2e0f5}li{margin:7px 0}.steps{border-left:2px solid #7357b6;padding-left:14px;margin:12px 0}.small{font-size:.86rem}.result{margin-top:16px}.tag{font-size:.72rem;border:1px solid var(--line);padding:4px 8px;border-radius:999px;color:var(--accent)}footer{margin-top:26px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:.82rem}
+:root{color-scheme:dark;--bg:#0a0914;--panel:#171426;--line:#38324d;--ink:#f7f4ff;--muted:#c5bed9;--accent:#c3a9ff;--purple:#7651cc;--warn:#ffe0a8}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 85% 0,#33204f 0,transparent 38%),var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}.wrap{width:min(850px,100%);margin:auto;padding:22px 15px 45px}.brand{font-size:.78rem;letter-spacing:.14em;font-weight:800;color:var(--accent)}h1{font-size:clamp(2.1rem,7vw,3.3rem);line-height:1.03;margin:12px 0}h2{font-size:1.2rem;margin:0 0 9px}h3{font-size:1rem;margin:16px 0 6px}p{color:var(--muted);margin:8px 0 12px}.panel{background:rgba(23,20,38,.95);border:1px solid var(--line);border-radius:17px;padding:17px;margin:15px 0}.alert{background:#2a211a;border-color:#6c573c}.alert strong{color:var(--warn)}label{display:block;font-weight:700;margin:0 0 7px}select{width:100%;padding:13px;background:#0e0c19;border:1px solid #514866;color:var(--ink);border-radius:12px;font:inherit;min-height:49px}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}button,.btn{display:inline-flex;align-items:center;justify-content:center;min-height:45px;padding:10px 15px;border:1px solid transparent;border-radius:12px;background:var(--purple);color:#fff;font:inherit;font-weight:750;text-decoration:none;cursor:pointer}button.secondary,.btn.secondary{background:#28243a;border-color:#504762}button:focus-visible,a:focus-visible,select:focus-visible{outline:3px solid #d8c6ff;outline-offset:2px}.hint,.tiny{font-size:.87rem;color:var(--muted)}.steps{padding-left:25px}.steps li{padding:5px 0}.links{display:grid;gap:8px;margin-top:12px}.links a{display:block;border:1px solid #4b405f;border-radius:11px;padding:12px;background:#211b31;text-decoration:none}.links a:hover{background:#2a223d;text-decoration:underline}.tag{display:inline-block;color:var(--accent);border:1px solid #4b3d65;background:#28223b;border-radius:99px;padding:3px 9px;font-size:.78rem;margin-bottom:9px}.hidden{display:none}.foot{border-top:1px solid var(--line);padding-top:15px;margin-top:22px;font-size:.83rem;color:var(--muted)}.callout{padding:12px;border-left:3px solid var(--accent);background:#211b31;border-radius:8px;color:#eee8ff}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.tile{background:#131120;border:1px solid var(--line);padding:13px;border-radius:13px}.tile b{display:block;margin-bottom:4px}@media(max-width:520px){.wrap{padding:17px 12px 32px}.panel{padding:14px}.actions>*{width:100%}}
 </style>
 </head>
 <body><main class="wrap">
-<div class="brand">MALLIN PLATFORM · SEPARATE UTILITY</div>
-<h1>Phone Recovery Toolkit</h1>
-<p>Owner-authorized troubleshooting for iPhone and Android devices: screen-lock recovery, Apple Activation Lock, Google Factory Reset Protection (FRP), carrier/SIM unlocking, and next steps for proof-of-ownership cases.</p>
-<div class="notice"><strong>Security boundary:</strong> this tool provides recovery instructions, not an exploit or security bypass. It cannot remove Activation Lock or FRP by itself. Use the account originally linked to the device or the manufacturer's official ownership-review process. Do not share passcodes, passwords, IMEI, or proof-of-purchase documents on this page.</div>
-<section class="card">
-<h2>Find the right recovery path</h2>
-<label for="device">Device type</label><select id="device"><option value="iphone">iPhone / Activation Lock</option><option value="android">Android screen lock forgotten</option><option value="frp">Android Google FRP after reset</option><option value="samsung">Samsung Galaxy / FRP</option><option value="carrier">Carrier / SIM network lock</option><option value="work">Company-managed phone (MDM)</option></select>
-<label for="symptom">What is on the screen?</label><select id="symptom"><option value="account">Asks for Apple/Google account previously used</option><option value="passcode">Passcode, PIN, pattern, or password forgotten</option><option value="sim">“SIM not supported” / network unlock message</option><option value="used">Bought second-hand; previous owner still linked</option><option value="work">Remote management / organization enrollment</option></select>
-<button id="show" type="button" style="margin-top:12px">Show recovery steps</button>
-<div id="result" class="result" aria-live="polite"></div>
+<div class="brand">MALLIN PLATFORM · QUICK PHONE RECOVERY</div>
+<h1>Plug in. Choose the lock. Follow the steps.</h1>
+<p>Use this simple guide on your Windows PC while your phone is connected by USB. Pick the exact problem and it will show the shortest legitimate recovery route and the official tool to use.</p>
+<section class="panel alert"><strong>Important:</strong> There is no universal program that safely unlocks every iPhone and Android phone by USB. Computer recovery can erase a phone, and it does not remove Apple Activation Lock, Google FRP, or company management. This page does not exploit or bypass those protections. Never share your passcode or account password here.</section>
+
+<section class="panel">
+<h2>1 · What does your phone say?</h2>
+<label for="problem">Choose one option</label>
+<select id="problem">
+<option value="iphonepass">iPhone — forgotten screen passcode</option>
+<option value="activation">iPhone — “iPhone Locked to Owner” / Activation Lock</option>
+<option value="androidpin">Android — forgotten PIN, pattern, or screen lock</option>
+<option value="frp">Android — asks for Google account after reset (FRP)</option>
+<option value="samsung">Samsung Galaxy — Google account / device protection</option>
+<option value="carrier">“SIM not supported” / carrier network lock</option>
+<option value="mdm">“Remote Management” / company or school phone</option>
+</select>
+<div class="actions"><button id="go" type="button">Show the fastest recovery path</button><button id="clear" class="secondary" type="button">Start over</button></div>
 </section>
-<section class="cards">
-<article class="card"><span class="tag">iPhone</span><h2>Apple Activation Lock</h2><ol><li>Use the Apple Account that originally enabled Find My, or follow the on-screen account-recovery steps.</li><li>If the phone belongs to you but the account is inaccessible, recover the account through Apple.</li><li>With valid proof of purchase, submit Apple's official Activation Lock support request.</li><li>If bought used, ask the previous owner to remove the device from their account. Do not pay for “iCloud bypass” tools.</li></ol><a href="https://support.apple.com/108934" target="_blank" rel="noopener">Apple's official guide ↗</a></article>
-<article class="card"><span class="tag">Android</span><h2>Google FRP protection</h2><ol><li>Connect to Wi-Fi and sign in with a Google Account previously synced to the phone.</li><li>If you forgot the password, recover the Google Account through Google's official recovery page.</li><li>After a password reset, a security waiting period may apply; follow the device's on-screen instructions.</li><li>If the account cannot be recovered, contact the manufacturer or an authorized service center with proof of purchase.</li></ol><a href="https://support.google.com/accounts/answer/7682439" target="_blank" rel="noopener">Google Account recovery ↗</a><br><a href="https://support.google.com/android/answer/7663172" target="_blank" rel="noopener">Android lock-screen help ↗</a></article>
-<article class="card"><span class="tag">Samsung</span><h2>Galaxy device recovery</h2><ol><li>Use the Google Account previously added to the device; a recovery-menu reset normally does not remove FRP.</li><li>If you recently changed your Google password, follow the waiting period shown by Google/device guidance.</li><li>If you cannot identify the account, contact an authorized Samsung service center and bring proof of purchase.</li><li>Before any reset, understand that a factory reset erases local data.</li></ol><a href="https://www.samsung.com/us/support/answer/ANS10003349/" target="_blank" rel="noopener">Samsung's FRP guide ↗</a></article>
-<article class="card"><span class="tag">Carrier</span><h2>SIM / network unlock</h2><ol><li>Check whether the phone says SIM/network locked rather than Activation Lock or FRP.</li><li>Contact the carrier that originally sold or financed the phone and request an eligibility check.</li><li>Resolve account, payment, or lost/stolen status issues through that carrier.</li><li>After approval, follow the carrier's model-specific unlock instructions.</li></ol><p class="small">A carrier unlock is different from removing an Apple/Google account lock.</p></article>
+
+<section id="result" class="panel hidden" aria-live="polite">
+<span id="badge" class="tag">QUICK PATH</span>
+<h2 id="title"></h2><p id="summary"></p>
+<div id="extra" class="callout"></div>
+<h3>Do these steps in order</h3><ol id="steps" class="steps"></ol>
+<h3>Official tools and help</h3><div id="links" class="links"></div>
+<p class="tiny" id="footnote"></p>
 </section>
-<section class="card"><h2>Before resetting a phone</h2><ul><li>A factory reset can permanently erase photos, messages, and other local data.</li><li>Resetting through recovery mode may trigger FRP. It does not legitimately remove the previously linked account.</li><li>If a phone is second-hand and still linked to another owner, ask the seller to unlink it or return it.</li><li>If a work/school management screen appears, contact the organization's IT administrator; only an authorized administrator can release enrollment.</li><li>A device IMEI/serial number alone is not proof of ownership and does not legitimately defeat account locks.</li></ul></section>
-<footer>Separate utility from ARIES AI. This is an informational guide, not a manufacturer tool, unlock service, or certification. Steps vary by model, operating-system version, carrier, and ownership status. Official guidance may change.</footer>
+
+<section class="panel">
+<h2>Before you connect the phone</h2>
+<div class="grid">
+<div class="tile"><b>Use a data-capable USB cable</b><span class="tiny">Some cables only charge. Try another USB port if the computer does not see the phone.</span></div>
+<div class="tile"><b>Use official software</b><span class="tiny">For iPhone on Windows, use Apple Devices from Microsoft Store. Android steps differ by brand and model.</span></div>
+<div class="tile"><b>Know the linked account</b><span class="tiny">After a reset, Apple Activation Lock or Android FRP may still require the account previously linked to the phone.</span></div>
+<div class="tile"><b>Protect your data</b><span class="tiny">A restore or factory reset can permanently erase photos, messages, and other local data.</span></div>
+</div>
+</section>
+<footer class="foot">Independent informational guide; not affiliated with Apple, Google, Samsung, or carriers. It does not detect or modify the connected device and does not collect form entries. Steps vary by model and software version.</footer>
 </main>
 <script>
 const guides={
-iphone:{title:"iPhone · Activation Lock",steps:["Connect the phone to Wi-Fi and follow the Activation Lock screen using the Apple Account that originally set up the device.","If you own it but forgot the account password, recover your Apple Account through Apple's official account recovery.","If you have proof of purchase, submit Apple's Activation Lock support request. For a second-hand phone, ask the previous owner to remove it from their account.","Do not erase repeatedly expecting Activation Lock to disappear; a reset alone does not remove the account link."],links:[["Apple Activation Lock guide","https://support.apple.com/108934"],["Apple Account recovery","https://iforgot.apple.com/"]]},
-android:{title:"Android · Forgotten screen lock",steps:["Try the PIN, pattern, password, or biometric options still offered by the device; check whether you have a current backup.","If you cannot unlock it, the manufacturer may offer a button-based factory reset. This erases local data and may require the previously synced Google Account afterward.","Before resetting, make sure you can sign in to a Google Account that was already on the phone.","Use the manufacturer's exact instructions for your model. Do not use an unknown tool promising to preserve data while defeating the lock."],links:[["Google Android lock help","https://support.google.com/android/answer/7663172"],["Android factory reset guidance","https://support.google.com/android/answer/6088915"]]},
-frp:{title:"Android · Google FRP",steps:["Connect to Wi-Fi on the setup screen.","Sign in using a Google Account that was previously synced to this device; on some devices, the previous screen-lock method may also be accepted.","If you forgot the account, recover it using Google's official account recovery. A recently changed password may have a security delay.","If you bought the phone used, contact the seller to remove their account. If you are the owner and cannot recover it, contact the manufacturer/authorized service center with proof of purchase."],links:[["Google Account recovery","https://support.google.com/accounts/answer/7682439"],["Samsung Google Device Protection","https://www.samsung.com/us/support/answer/ANS10003349/"]]},
-samsung:{title:"Samsung Galaxy · FRP / Device Protection",steps:["Use the Google Account previously registered on the phone, or the previous screen-lock method if the device offers it.","If the password was just reset, wait for any security cooldown shown by Google or the device.","If you cannot identify the linked account, check your Google accounts and registered devices.","If recovery fails, contact an authorized Samsung service center with proof of purchase. A recovery-menu reset does not remove FRP."],links:[["Samsung Google Device Protection","https://www.samsung.com/us/support/answer/ANS10003349/"],["Samsung factory reset and FRP notes","https://www.samsung.com/us/support/answer/ANS10002030/"]]},
-carrier:{title:"Carrier / SIM network lock",steps:["Insert a supported SIM or check the phone's settings to confirm that this is a carrier/network lock, not an account-activation lock.","Contact the original carrier and request an unlock for your device. Have purchase/line details ready for the carrier, but do not enter them into this page.","Ask the carrier about eligibility, unpaid balances, financing, or lost/stolen restrictions.","Once approved, follow the carrier's exact unlock instructions; some iPhones require internet activation, while Android steps vary by carrier/model."],links:[["FCC consumer information","https://www.fcc.gov/consumers/guides/cell-phone-unlocking"]]},
-work:{title:"Company-managed / Remote Management",steps:["Do not attempt to bypass organizational enrollment or mobile-device management.","Contact the employer, school, or organization named on the screen and ask its authorized administrator to release the device.","For a second-hand device, ask the seller to arrange release before completing the purchase or return it.","A factory reset usually does not remove server-side enrollment."],links:[["Apple Business support","https://support.apple.com/business"],["Android Enterprise help","https://support.google.com/work/android/"]]}
+iphonepass:{
+title:"iPhone passcode forgotten",badge:"COMPUTER RESTORE",
+summary:"On Windows, use Apple's Apple Devices app to restore the iPhone through recovery mode. This erases the phone; after restore, a backup may be available.",
+extra:"You need a Windows PC, a data-capable USB cable, an internet connection, and time for the software download. A restore removes the passcode by erasing the device—it does not remove Activation Lock.",
+steps:[
+"On the PC, install or open Apple Devices from the Microsoft Store. Close other Apple device-management apps if they conflict.",
+"Turn the iPhone off. Connect the cable to the PC, then connect it to the iPhone while holding the correct recovery-mode button for your iPhone model until the cable/computer recovery screen appears.",
+"In Apple Devices, select the iPhone. Choose Restore when offered and follow the prompts. Keep it connected until the restore completes.",
+"Set up the iPhone again and restore a backup if you have one. If Activation Lock appears, sign in with the Apple Account previously linked to the iPhone."
+],
+links:[["Get Apple Devices for Windows","https://apps.microsoft.com/detail/9np83lwlpz9k"],["Apple's official computer restore steps","https://support.apple.com/118430"],["Apple Activation Lock help","https://support.apple.com/108934"]],
+footnote:"Do not choose Restore unless you accept that data stored only on the phone will be erased."
+},
+activation:{
+title:"iPhone Activation Lock",badge:"ACCOUNT / OWNERSHIP",
+summary:"Plugging it into a PC or restoring it will not remove Activation Lock. The linked Apple Account or Apple's official ownership-review route is required.",
+extra:"If this is a used phone still linked to a seller, ask the seller to remove it from their account or return/refund it. Avoid paid “iCloud bypass” tools.",
+steps:[
+"Connect to Wi-Fi on the iPhone and read the Activation Lock screen.",
+"Use the Apple Account originally linked to the iPhone; if it is your account but you forgot the password, recover it with Apple.",
+"If you own the phone and have valid proof of purchase, submit Apple's official Activation Lock support request.",
+"If it came from another owner, have that owner unlink the device before you proceed."
+],
+links:[["Apple Activation Lock instructions","https://support.apple.com/108934"],["Recover Apple Account","https://iforgot.apple.com/"]],
+footnote:"A factory restore does not make an Activation-Locked phone usable without account authorization."
+},
+androidpin:{
+title:"Android screen PIN / pattern forgotten",badge:"BRAND-SPECIFIC RECOVERY",
+summary:"There is no universal PC app that can remove a current Android screen lock while keeping all data. The official recovery option depends on the brand and model.",
+extra:"Do not factory reset until you understand the data loss and know which Google Account was previously synced to the phone.",
+steps:[
+"Identify the exact brand and model printed on the device or box; do not post its serial number or IMEI here.",
+"Check the manufacturer's official support instructions for a forgotten screen lock. If the phone is still on and has a backup, consider the data implications before reset.",
+"If the manufacturer instructs you to factory reset, understand that local data is erased and the phone may ask for a previously synced Google Account during setup.",
+"If you cannot complete ownership verification after reset, use Google's account recovery or authorized manufacturer support."
+],
+links:[["Google Android lock-screen help","https://support.google.com/android/answer/7663172"],["Google factory-reset guidance","https://support.google.com/android/answer/6088915"],["Google Account recovery","https://support.google.com/accounts/answer/7682439"]],
+footnote:"ADB or computer utilities do not provide a universal unlock; many require prior on-device authorization and setup."
+},
+frp:{
+title:"Google FRP after a reset",badge:"GOOGLE ACCOUNT REQUIRED",
+summary:"Factory Reset Protection is designed to stop someone using a reset phone without the previously linked account. A cable or PC utility does not legitimately remove that requirement.",
+extra:"If it is not your Google Account that appears, the former owner must remove their account or take the phone back. Do not pay for bypass utilities.",
+steps:[
+"Connect the phone to Wi-Fi on the setup screen.",
+"Sign in with a Google Account previously added and synced to that phone; use any previous-screen-lock option if the device offers one.",
+"If you forgot the account or password, recover the Google Account from a separate browser and follow any security waiting period shown.",
+"If the device was purchased used, ask the seller to unlink it or return/refund the phone.",
+"If you are the owner and still cannot recover access, contact the manufacturer or authorized service center with proof of purchase."
+],
+links:[["Google Account recovery","https://support.google.com/accounts/answer/7682439"],["Google device protection explanation","https://support.google.com/android/answer/9459346"],["Android factory-reset guidance","https://support.google.com/android/answer/6088915"]],
+footnote:"Another reset will not remove FRP and may not help you recover your data."
+},
+samsung:{
+title:"Samsung Galaxy device protection",badge:"SAMSUNG / GOOGLE",
+summary:"After a reset, many Galaxy phones require a Google Account previously registered on the device. Connecting to a PC does not bypass that check.",
+extra:"If you are the owner, recover the linked Google Account. If it is second-hand, the previous owner needs to unlink it; otherwise use an authorized Samsung service center.",
+steps:[
+"Connect the phone to Wi-Fi on the setup screen.",
+"Enter the Google Account previously synced to the Galaxy phone and follow the on-screen ownership checks.",
+"If you forgot the password, recover the Google Account and follow any displayed security delay.",
+"If access still fails and you own the phone, bring proof of purchase to an authorized Samsung service center."
+],
+links:[["Samsung Device Protection guide","https://www.samsung.com/us/support/answer/ANS10003349/"],["Samsung reset and FRP information","https://www.samsung.com/us/support/answer/ANS10002030/"],["Google Account recovery","https://support.google.com/accounts/answer/7682439"]],
+footnote:"A recovery-menu reset does not inherently remove Google FRP."
+},
+carrier:{
+title:"SIM / carrier network lock",badge:"CARRIER REQUEST",
+summary:"This is a carrier restriction, not an Apple or Google account lock. The carrier that applied the restriction must approve the unlock.",
+extra:"Do not install a “FRP tool” for a SIM lock. Use the carrier that originally sold or financed the device.",
+steps:[
+"Confirm the exact message says SIM or network restriction.",
+"Contact the original carrier and request an unlock eligibility check.",
+"Resolve any account, financing, payment, or lost/stolen-status issue with that carrier.",
+"After approval, follow the carrier's model-specific unlock instructions."
+],
+links:[["FCC cellphone-unlocking guide","https://www.fcc.gov/consumers/guides/cell-phone-unlocking"]],
+footnote:"Keep account numbers and IMEI/serial details private; provide them only directly to the official carrier when requested."
+},
+mdm:{
+title:"Remote Management / company-managed phone",badge:"ADMIN RELEASE",
+summary:"A company, school, or other organization-managed device must be released by its authorized administrator. A PC tool or factory reset usually does not remove server-side enrollment.",
+extra:"If you bought it used, ask the seller to arrange management release or return/refund the device.",
+steps:[
+"Read the organization name on the management screen.",
+"Contact that organization's IT/help desk and ask its authorized administrator to release the device from management.",
+"Ask the seller for written confirmation of release before keeping a second-hand phone.",
+"Do not keep resetting the device; server-side enrollment may remain."
+],
+links:[["Apple business support","https://support.apple.com/business"],["Android Enterprise help","https://support.google.com/work/android/"]],
+footnote:"Only the managing organization can release its enrollment."
+}
 };
-$("show").addEventListener("click",()=>{const key=$("device").value,guide=guides[key],symptom=$("symptom").value;let html="<h3>"+guide.title+"</h3><ol>"+guide.steps.map(s=>"<li>"+s+"</li>").join("")+"</ol><p>";html+=guide.links.map(([label,url])=>'<a href="'+url+'" target="_blank" rel="noopener">'+label+' ↗</a>').join("<br>");html+="</p>";if(symptom==="used")html+='<div class="notice">For a second-hand phone still linked to the previous owner, the safe route is for that owner to unlink it, or return/refund the device. This guide cannot remove their account.</div>';if(symptom==="sim"&&key!=="carrier")html+='<div class="notice">If the exact message mentions SIM or network restrictions, choose “Carrier / SIM network lock” above; that is separate from Activation Lock and FRP.</div>';if(symptom==="work"&&key!=="work")html+='<div class="notice">If the screen says Remote Management or names an organization, choose “Company-managed phone (MDM)”. The organization administrator must release it.</div>';$("result").innerHTML=html;});
-</script></body></html>
+function render(){
+ const g=guides[document.getElementById("problem").value];
+ document.getElementById("result").classList.remove("hidden");
+ document.getElementById("badge").textContent=g.badge;
+ document.getElementById("title").textContent=g.title;
+ document.getElementById("summary").textContent=g.summary;
+ document.getElementById("extra").textContent=g.extra;
+ const steps=document.getElementById("steps");steps.replaceChildren();
+ g.steps.forEach(s=>{const li=document.createElement("li");li.textContent=s;steps.appendChild(li)});
+ const links=document.getElementById("links");links.replaceChildren();
+ g.links.forEach(([label,url])=>{const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener noreferrer";a.textContent=label+" ↗";links.appendChild(a)});
+ document.getElementById("footnote").textContent=g.footnote;
+ document.getElementById("result").scrollIntoView({behavior:"smooth",block:"start"});
+}
+document.getElementById("go").addEventListener("click",render);
+document.getElementById("problem").addEventListener("change",render);
+document.getElementById("clear").addEventListener("click",()=>{document.getElementById("problem").selectedIndex=0;document.getElementById("result").classList.add("hidden");window.scrollTo({top:0,behavior:"smooth"})});
+</script>
+</body>
+</html>

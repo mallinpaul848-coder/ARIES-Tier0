@@ -21,7 +21,7 @@
 <div class="chat-foot"><span>Local demo mode</span><span>Nothing is sent unless you configure an endpoint</span></div>
 </section>
 <section class="settings"><details><summary>Connect a model endpoint you control</summary><p>Optional: enter a compatible API base URL. It is stored only in this browser. Do not use secrets on a public/shared device.</p><label for="endpoint">API base URL</label><input id="endpoint" type="url" placeholder="https://your-server.example/v1"><label for="model">Model ID (optional)</label><input id="model" type="text" placeholder="your-model-id"><div class="actions"><button id="saveEndpoint" type="button">Save endpoint</button><button id="testEndpoint" type="button" class="quiet">Check connection</button></div><p id="endpointResult" class="result" role="status">No endpoint configured.</p></details></section>
-<footer><span>© MALLIN Platform</span><span>Open-source app shell · bring your own compute</span><a href="https://github.com/mallinpaul848-coder/ARIES-Tier0">Source repository</a></footer>
+<footer><span>© MALLIN Platform</span><span>Open-source app shell · bring your own compute</span><span>Public static demo · model not bundled</span></footer>
 </main><script>
 const $ = (id) => document.getElementById(id);
 const messages = $("messages"), form = $("chatForm"), promptBox = $("prompt");

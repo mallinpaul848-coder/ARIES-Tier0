@@ -39,15 +39,20 @@ function localReply(q) {
   return "The language model is not loaded yet. Select “Load browser AI model” below. The first download can be large and requires WebGPU.";
 }
 async function loadLocalModel() {
-  if(engine || modelLoading)return;
+  if(engine) return true;
+  if(modelLoading) {
+    // If a user submits a prompt while the load button is working, wait for that same load.
+    while(modelLoading) await new Promise(resolve => setTimeout(resolve, 150));
+    return Boolean(engine);
+  }
   if(!window.isSecureContext){
     modelStatus.textContent="A secure HTTPS page is required to use WebGPU. Open the permanent website through an HTTPS origin.";
-    return;
+    return false;
   }
   if(!("gpu" in navigator)){
     modelStatus.textContent="This browser does not expose WebGPU. Try a current Chrome or Edge browser on compatible hardware. No hosted inference fallback is configured.";
     status("WebGPU unavailable",false);
-    return;
+    return false;
   }
   modelLoading=true;
   loadModelBtn.disabled=true;
@@ -77,7 +82,7 @@ async function loadLocalModel() {
     modelSelect.disabled=true;
     modelProgress.value=100;
     modelProgress.hidden=true;
-    addMessage("Browser language model loaded: "+loadedModelId+". Prompts are processed on this device.","assistant");
+    // Keep the chat transcript focused on the user's conversation; readiness is shown in model status.
   } catch(error) {
     engine=null;
     loadedModelId="";
@@ -111,11 +116,20 @@ form.addEventListener("submit",async e=>{
   if(!q)return;
   addMessage(q,"user");
   promptBox.value="";
-  const answerNode=addMessage(engine?"Generating locally…":"","assistant");
+  const answerNode=addMessage(engine?"Generating locally…":"Starting browser AI…","assistant");
   try {
+    const calc=/^(?:calculate\\s+)?(-?\\d+(?:\\.\\d+)?)\\s*([+*/x×-])\\s*(-?\\d+(?:\\.\\d+)?)\\s*\\??$/i.test(q);
+    if(!engine && !calc) {
+      answerNode.textContent="Loading the selected language model for your first answer. This can take several minutes and download hundreds of megabytes…";
+      const ready=await loadLocalModel();
+      if(!ready) {
+        answerNode.textContent=modelStatus.textContent || "Browser-local language model could not start.";
+        return;
+      }
+    }
     answerNode.textContent=engine?await answerWithModel(q):localReply(q);
   } catch(error) {
-    answerNode.textContent="Local inference error: "+(error?.message||String(error))+". The model did not provide an answer; try reloading the page and model.";
+    answerNode.textContent="Local inference error: "+(error?.message||String(error))+". The model did not provide an answer; check model status and retry.";
   }
 });
 $("clearBtn").addEventListener("click",()=>{

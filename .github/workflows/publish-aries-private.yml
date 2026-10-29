@@ -1,0 +1,100 @@
+name: Publish ARIES checkpoint privately and verify
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "published/aries-core-v1/**"
+      - ".github/workflows/publish-aries-private.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish-private:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install CPU-only verification and Hub tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "torch>=2.2,<2.7" --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install "transformers>=4.45,<5" "huggingface_hub>=0.27" "safetensors>=0.4"
+      - name: Verify checkpoint before upload
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import torch
+          from transformers import AutoModelForCausalLM, AutoTokenizer
+          folder = Path("published/aries-core-v1")
+          required = ["config.json", "model.safetensors", "tokenizer.json", "tokenizer_config.json", "README.md"]
+          missing = [name for name in required if not (folder / name).is_file()]
+          if missing:
+              raise SystemExit("Missing required checkpoint files: " + ", ".join(missing))
+          tokenizer = AutoTokenizer.from_pretrained(folder, local_files_only=True)
+          model = AutoModelForCausalLM.from_pretrained(folder, local_files_only=True, use_safetensors=True)
+          model.eval()
+          inputs = tokenizer("ARIES checkpoint verification", return_tensors="pt")
+          with torch.inference_mode():
+              output = model.generate(**inputs, max_new_tokens=4, do_sample=False)
+          if output.shape[0] != 1 or output.shape[1] < inputs["input_ids"].shape[1]:
+              raise SystemExit("Generation smoke test failed")
+          print("PASS: local checkpoint loads and generates")
+          print("parameters=" + str(sum(p.numel() for p in model.parameters())))
+          PY
+      - name: Publish to the existing private Hugging Face model repository
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          test -n "$HF_TOKEN" || { echo "::error::HF_TOKEN secret is missing; no upload was performed."; exit 1; }
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+          repo_id = "paulmallin777/aries-core-v1"
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          api.create_repo(repo_id=repo_id, repo_type="model", private=True, exist_ok=True)
+          api.upload_folder(
+              repo_id=repo_id,
+              repo_type="model",
+              folder_path="published/aries-core-v1",
+              commit_message="Publish ARIES Core v1 checkpoint privately for evaluation",
+              ignore_patterns=["*.log", "*.tmp", ".DS_Store"],
+          )
+          info = api.model_info(repo_id, files_metadata=True)
+          names = {item.rfilename for item in info.siblings}
+          required = {"config.json", "model.safetensors", "tokenizer.json", "tokenizer_config.json", "README.md"}
+          missing = sorted(required - names)
+          if missing:
+              raise SystemExit("Hub verification missing files: " + ", ".join(missing))
+          print("PASS: uploaded and verified required files at https://huggingface.co/" + repo_id)
+          print("revision=" + str(info.sha))
+          PY
+      - name: Save a publication evidence record
+        if: always()
+        run: |
+          mkdir -p evidence
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          record = {
+            "project": "ARIES Core v1",
+            "target_repo": "https://huggingface.co/paulmallin777/aries-core-v1",
+            "visibility": "private",
+            "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
+            "source_commit": os.environ.get("GITHUB_SHA"),
+            "note": "Private artifact publication and smoke verification only; not independent benchmark validation or certification."
+          }
+          Path("evidence/aries-hf-private-publication.json").write_text(json.dumps(record, indent=2) + "\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aries-hf-private-publication-evidence
+          path: evidence/aries-hf-private-publication.json
+          if-no-files-found: ignore
+          retention-days: 90

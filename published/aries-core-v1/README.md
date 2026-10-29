@@ -41,3 +41,8 @@ The uploader is responsible for checking the dataset card, license, attribution,
 ## Evaluation
 
 No independent benchmark score is claimed. Run reproducible evaluation on a pinned revision before reporting performance.
+
+
+## Publication status and evidence boundary
+
+The checkpoint is prepared for private Hugging Face publication and smoke verification by the repository workflow `.github/workflows/publish-aries-private.yml`. This workflow uploads to `paulmallin777/aries-core-v1` as a private repository, checks that the required model and tokenizer files exist, and runs a short local generation smoke test before upload. It does not publish the model publicly, certify model quality, establish leaderboard eligibility, or claim independent evaluation. Public release remains gated on reviewing the training corpus license, attribution, and redistribution rights.

@@ -33,9 +33,9 @@ Invoke-RestMethod "https://aries-tier0-api-6qjh.onrender.com/v1/chat/completions
 
 ## Local general-chat model
 
-- Model file: [SmolLM2-135M-Instruct-Q4_K_M.gguf](https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF)
-- Runtime: `llama-cpp-python` on CPU, one thread by default
-- The build verifies the downloaded GGUF file by SHA-256 before using it.
+- Model file: [Qwen2.5-1.5B-Instruct-Q4_K_M.gguf](https://huggingface.co/bartowski/Qwen2.5-1.5B-Instruct-GGUF)
+- Runtime: `llama-cpp-python` on CPU, two CPU threads by default
+- The Docker build downloads the quantized GGUF weights from Hugging Face; verify the upstream artifact checksum before production release.
 - Model license: Apache-2.0. The container includes the full license at `/app/licenses/Apache-2.0.txt`.
 
 The live service's `/diagnostics` and `/` endpoints report whether local inference loaded successfully. The deployment must pass the public endpoint check, including a general question-answer test, before the updated chat backend should be considered live.

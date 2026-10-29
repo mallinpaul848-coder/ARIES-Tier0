@@ -1,39 +1,36 @@
 # MALLIN Platform — ARIES AI browser-local language model
 
-MALLIN now has a browser-local inference path: visitors can load a compact open-weight language model and run inference in their own WebGPU-capable browser. The website itself does not need an AI inference server.
+MALLIN now has a browser-local inference path so it does not require a hosted AI chat API or a language-model server. Visitors' browsers run the model through WebLLM/WebGPU.
 
-## Start chat with a real language model
+## Use the live model UI
 
-1. Open the MALLIN static site from a secure HTTPS origin.
-2. In **Run the language model in this browser**, select a model.
-3. Click **Load browser AI model** and let the first-time download finish.
-4. Wait until the status says **Local model ready**, then send a prompt.
+1. Open the site from a secure HTTPS origin.
+2. Choose the compact **SmolLM2 360M Instruct, Q4F32** or larger **Llama 3.2 1B Instruct, Q4F32** model.
+3. Click **Load browser AI model**, or send a normal chat prompt and the model will begin loading automatically.
+4. Wait until the model status says ready. Your prompt is then processed locally by the model.
 
-Available models:
-- **SmolLM2 360M Instruct, Q4F32**: compact starter model, lower memory use.
-- **Llama 3.2 1B Instruct, Q4F32**: larger starter model, generally stronger but uses more memory.
+The first load downloads model weights and the WebLLM runtime and may take several minutes / hundreds of MB. The model will need a WebGPU-capable browser and sufficient GPU memory. Some devices will be unsupported. A simple arithmetic expression can still use the local calculator without loading the model.
 
-These are real, pretrained public starter models, **not ARIES custom model weights**. This code does not claim the browser models are independently evaluated or certified as ARIES.
+## What model actually runs?
 
-## How it works
+The two choices are real, pre-trained open-weight WebLLM-supported models, not ARIES's custom weights. The website must not be described as running a custom-trained ARIES model unless those custom model artifacts are actually created and incorporated. No certification or benchmark result is claimed.
 
-- Inference runs locally in the visitor's browser via WebLLM/WebGPU, rather than sending prompts to an AI chat API.
-- The runtime and model weights are downloaded on the first run and may be cached by the browser/runtime for later use.
-- This requires a compatible modern browser, WebGPU support, adequate GPU memory, a secure HTTPS context, and network access for the initial runtime/model download.
-- The first model download is sizeable. Once model assets are cached, some previously loaded models may work offline, depending on the browser cache and storage.
-- The app intentionally has no automatic hosted inference fallback. If local inference fails, it reports the failure instead of pretending a canned response is model output.
+WebLLM is documented as an in-browser LLM inference engine using WebGPU with an OpenAI-compatible chat API:
+- https://webllm.mlc.ai/docs/
+- https://webllm.mlc.ai/docs/user/basic_usage.html
+- Supported model configuration: https://github.com/mlc-ai/web-llm/blob/main/src/config.ts
 
-Official references:
-- WebLLM is an in-browser LLM inference engine using WebGPU: https://webllm.mlc.ai/docs/
-- Supported prebuilt models and model IDs: https://github.com/mlc-ai/web-llm/blob/main/src/config.ts
-- WebLLM model loading / chat completion: https://webllm.mlc.ai/docs/user/basic_usage.html
+## Hosting / no third-party inference server
 
-## Hosting and permanence
+The site contains no hosted AI inference endpoint and sends chat prompts to no AI API. Model inference happens on each visitor's hardware. However, the first visit still retrieves the WebLLM runtime and model artifacts from external repositories (esm.run, the MLC model library host, and Hugging Face). That is a code/model download dependency, not a hosted inference API. Eliminating even those external download sources requires publishing the runtime, compiled WebGPU libraries, and model weights as permanent assets too; those assets are much larger than the HTML and may require paid permanent storage.
 
-A static site can be published to permanent decentralized storage, but that does not itself run a central model. Browser-side inference removes the need for central AI compute; each visitor runs the model. Gateway availability and the runtime/model download sources remain external network dependencies unless those assets are also packaged and published.
+## Deployment status
 
-## Remaining limitations
+The self-contained permanent-site export is at `permaweb/mallin-platform.html`. The one-file upload helper is at `permaweb/PUBLISH-MALLIN-PERMAWEB.html`. These files are prepared, but an Arweave transaction has not been confirmed. A permanent public URL must not be claimed until a real upload returns a transaction ID and the page is opened successfully from a separate browser.
 
-- This is not yet ARIES's custom trained model; no custom ARIES weights are bundled in this repo path.
-- The site source has been updated, but the permanent Arweave upload has not been confirmed.
-- Browser execution has been syntax-checked; full inference still needs a real browser/GPU run test. Do not claim that test passed until it has.
+## Current limitations
+
+- No central model server is running, by design. Each visitor runs model inference on their own compatible browser/hardware.
+- This browser model is not the project's custom ARIES weights.
+- Full model inference has been syntax-checked but still needs a real browser/WebGPU integration test.
+- If users expect a centrally hosted shared inference engine while also banning any server/device and all external compute, those requirements conflict: some machine must execute the model.

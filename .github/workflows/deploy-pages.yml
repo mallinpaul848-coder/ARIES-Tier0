@@ -15,6 +15,10 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
+    # GitHub Pages is not enabled for this private repository on the current plan.
+    # The existing Vercel production deployment is the public website route.
+    # Only attempt Pages when the repository itself is public.
+    if: github.event.repository.visibility == 'public'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -24,8 +28,6 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - name: Upload website artifact
         uses: actions/upload-pages-artifact@v3
         with:

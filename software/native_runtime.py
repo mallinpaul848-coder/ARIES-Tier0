@@ -40,13 +40,6 @@ def answer_known_question(prompt):
         return "My name is ARIES. I'm an experimental AI system. My local baseline has limited capabilities, so I will say when I cannot answer reliably."
     if lower in {"what is 2 + 2", "what's 2 + 2", "what is 2 plus 2"}:
         return "4"
-    if solve_reasoner:
-        try:
-            result = solve_reasoner(text)
-            if isinstance(result, str) and result.strip():
-                return result.strip()
-        except (ValueError, TypeError, ArithmeticError):
-            pass
     return None
 
 

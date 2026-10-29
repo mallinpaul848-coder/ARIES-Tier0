@@ -1,0 +1,6 @@
+name = "aries-mallin-ai"
+main = "index.js"
+compatibility_date = "2026-10-28"
+
+[ai]
+binding = "AI"

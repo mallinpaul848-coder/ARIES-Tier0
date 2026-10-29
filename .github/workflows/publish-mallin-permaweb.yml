@@ -30,11 +30,11 @@ jobs:
           node-version: "22"
 
       - name: Install upload tools
-        run: npm install --no-save @ardrive/turbo-sdk arweave
+        run: |
+          npm init -y
+          npm install --no-save @ardrive/turbo-sdk arweave
 
       - name: Publish and verify
-        env:
-          GITHUB_STEP_SUMMARY: ${{ github.step_summary }}
         run: node scripts/publish_mallin_permaweb.mjs
 
   cancelled:

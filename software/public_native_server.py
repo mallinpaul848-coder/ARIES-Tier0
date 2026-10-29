@@ -204,19 +204,14 @@ class Handler(BaseHTTPRequestHandler):
             max_tokens = max(1,min(int(body.get("max_tokens",768)),2048))
             temperature = max(0.0,min(float(body.get("temperature",0.7)),2.0))
             started_ns = time.perf_counter_ns()
-            answer, fast_path_cache_hit, fast_path_elapsed_ns = FAST_PATH.solve_with_metadata(prompt)
+            answer = answer_known_question(prompt)
             math_route = None
             upstream_used = False
             upstream_elapsed_ns = None
             local_model_used = False
             local_model_elapsed_ns = None
-            if answer is None:
-                answer = answer_known_question(prompt)
-            if answer is None:
-                math_result = route_math_prompt(prompt)
-                if math_result is not None:
-                    answer = math_result["answer"]
-                    math_route = math_result["route"]
+            fast_path_cache_hit = False
+            fast_path_elapsed_ns = 0
             if answer is None and UPSTREAM_READY:
                 answer, upstream_elapsed_ns = request_upstream_answer(
                     normalized_messages,
@@ -235,6 +230,13 @@ class Handler(BaseHTTPRequestHandler):
                     temperature=temperature,
                 )
                 local_model_used = True
+            if answer is None:
+                answer, fast_path_cache_hit, fast_path_elapsed_ns = FAST_PATH.solve_with_metadata(prompt)
+            if answer is None:
+                math_result = route_math_prompt(prompt)
+                if math_result is not None:
+                    answer = math_result["answer"]
+                    math_route = math_result["route"]
             if answer is None:
                 answer = (
                     "I can handle supported calculations and built-in ARIES tasks, but general "

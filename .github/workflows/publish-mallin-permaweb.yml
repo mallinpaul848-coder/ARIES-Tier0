@@ -11,13 +11,18 @@ on:
         options:
           - "no"
           - "yes"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/publish-mallin-now.txt"
 
 permissions:
   contents: read
 
 jobs:
   publish:
-    if: ${{ inputs.confirm_publication == 'yes' }}
+    if: ${{ github.event_name == 'push' || inputs.confirm_publication == 'yes' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -38,7 +43,7 @@ jobs:
         run: node scripts/publish_mallin_permaweb.mjs
 
   cancelled:
-    if: ${{ inputs.confirm_publication != 'yes' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_publication != 'yes' }}
     runs-on: ubuntu-latest
     steps:
       - run: echo "No upload performed. Re-run this workflow and choose yes to publish."

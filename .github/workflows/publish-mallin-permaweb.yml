@@ -1,0 +1,44 @@
+name: Publish MALLIN to permanent storage
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_publication:
+        description: "Confirm public, immutable Arweave publication"
+        type: choice
+        required: true
+        default: "no"
+        options:
+          - "no"
+          - "yes"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: ${{ inputs.confirm_publication == 'yes' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out site source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install upload tools
+        run: npm install --no-save @ardrive/turbo-sdk arweave
+
+      - name: Publish and verify
+        env:
+          GITHUB_STEP_SUMMARY: ${{ github.step_summary }}
+        run: node scripts/publish_mallin_permaweb.mjs
+
+  cancelled:
+    if: ${{ inputs.confirm_publication != 'yes' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No upload performed. Re-run this workflow and choose yes to publish."

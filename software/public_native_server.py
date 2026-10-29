@@ -223,7 +223,7 @@ class Handler(BaseHTTPRequestHandler):
                     timeout_seconds=UPSTREAM_TIMEOUT_SECONDS,
                 )
                 upstream_used = True
-            elif answer is None and LOCAL_MODEL_READY:
+            if answer is None and LOCAL_MODEL_READY:
                 answer, local_model_elapsed_ns = LOCAL_MODEL.generate(
                     normalized_messages,
                     max_tokens=max_tokens,

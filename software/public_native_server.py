@@ -77,7 +77,7 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
     def do_GET(self):
         path = urlparse(self.path).path
-        ready = True
+        ready = UPSTREAM_READY or LOCAL_MODEL_READY
         if path in ("/app", "/app/"):
             return self.send_html(path)
         if path == "/health":
@@ -105,14 +105,14 @@ class Handler(BaseHTTPRequestHandler):
                 "inference_configured":True,
                 "backend":"openai-compatible-upstream" if UPSTREAM_READY else ("local-llama-cpp" if LOCAL_MODEL_READY else "native"),
                 "general_chat_ready":UPSTREAM_READY or LOCAL_MODEL_READY,
-                "model_format":"ARIES deterministic task engine with local SmolLM2 instruction model and optional OpenAI-compatible backend",
+                "model_format":"ARIES deterministic task engine with optional local Qwen2.5-1.5B-Instruct GGUF model and optional OpenAI-compatible backend",
                 "trained_characters":MODEL.trained_characters,
-                "next_step":"Local instruction model is ready." if LOCAL_MODEL_READY or UPSTREAM_READY else "Configure a local GGUF model or ARIES_UPSTREAM_BASE_URL and ARIES_MODEL_ID; add ARIES_UPSTREAM_API_KEY when required."
+                "next_step":"General chat backend is loaded." if LOCAL_MODEL_READY or UPSTREAM_READY else "General chat is not ready: configure a local GGUF model or ARIES_UPSTREAM_BASE_URL and ARIES_MODEL_ID; add ARIES_UPSTREAM_API_KEY when required."
             })
         if path == "/v1/models":
             return self.send_json(200, {"object":"list","data":[
                 {"id":MODEL_ID,"object":"model","owned_by":"aries"}],
-                "inference_ready":True,
+                "inference_ready":UPSTREAM_READY or LOCAL_MODEL_READY,
                 "model_type":"OpenAI-compatible chat backend with ARIES native task engine" if UPSTREAM_READY else ("local Qwen2.5-1.5B-Instruct" if LOCAL_MODEL_READY else "character n-gram baseline")})
         if path == "/performance":
             return self.send_json(200, {

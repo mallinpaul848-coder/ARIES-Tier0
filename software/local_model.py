@@ -19,7 +19,7 @@ class LocalChatModel:
             model_path
             or os.getenv(
                 "ARIES_GGUF_MODEL_PATH",
-                "/app/models/SmolLM2-135M-Instruct-Q4_K_M.gguf",
+                "/app/models/Qwen2.5-1.5B-Instruct-Q4_K_M.gguf",
             )
         )
         if not path.is_file():
@@ -93,7 +93,7 @@ class LocalChatModel:
             with self._lock:
                 response = self._model.create_chat_completion(
                     messages=normalized,
-                    max_tokens=max(1, min(int(max_tokens), 256)),
+                    max_tokens=max(1, min(int(max_tokens), 384)),
                     temperature=max(0.0, min(float(temperature), 1.2)),
                     top_p=0.9,
                     repeat_penalty=1.08,

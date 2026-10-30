@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "suite": "ARIES Evidence Report",
+  "status": "template_not_a_measurement",
+  "timestamp_utc": null,
+  "git_commit": null,
+  "build_id": null,
+  "target": null,
+  "workload_type": null,
+  "hardware_profile": {
+    "platform": null,
+    "system": null,
+    "release": null,
+    "machine": null,
+    "processor": null,
+    "logical_cpu_count": null,
+    "memory_total_bytes": null
+  },
+  "configuration": {
+    "model": null,
+    "requests": null,
+    "concurrency": null,
+    "warmup_requests": null,
+    "timeout_seconds": null,
+    "prompt_corpus_version": null,
+    "decoding_parameters": null
+  },
+  "measurement_scope": {
+    "latency_definition": null,
+    "ttft_ms": null,
+    "model_only_compute_latency_ms": null,
+    "tokens_per_second": null,
+    "energy_joules_per_successful_request": null,
+    "allocation_count": null
+  },
+  "summary": {
+    "requests_attempted": null,
+    "successful_responses": null,
+    "failed_responses": null,
+    "success_rate_percent": null,
+    "successful_requests_per_second": null,
+    "latency_ms": {
+      "min": null,
+      "mean": null,
+      "p50": null,
+      "p95": null,
+      "p99": null,
+      "max": null
+    }
+  },
+  "raw_results": [],
+  "notes": []
+}

@@ -86,13 +86,13 @@ class LocalChatModel:
                 ),
             },
         )
-        # Keep prompt prefill bounded for the one-vCPU public instance. Eight long
-        # turns can exceed the 512-token context and stall CPU-only generation.
+        # Bound prompt prefill for the one-vCPU public instance; long chat histories
+        # otherwise waste most of the small model's 512-token context.
         system_message = {"role": "system", "content": system_message["content"][:900]}
         recent_messages = [item for item in normalized if item["role"] != "system"][-4:]
         normalized = [system_message, *recent_messages]
         started_ns = time.perf_counter_ns()
-        print(f"ARIES local inference started; messages={len(recent_messages)}; prompt_chars={sum(len(x[chr(99)+chr(111)+chr(110)+chr(116)+chr(101)+chr(110)+chr(116)]) for x in normalized)}", flush=True)
+        print(f"ARIES local inference started; messages={len(recent_messages)}; prompt_chars={sum(len(x["content"]) for x in normalized)}", flush=True)
         try:
             with self._lock:
                 response = self._model.create_chat_completion(

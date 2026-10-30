@@ -89,13 +89,13 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200, {
                 "service":"ARIES AI API","api_version":"1.0.10",
                 "status":"configured","inference_ready":ready,
-                "backend":"local-llama-cpp" if LOCAL_MODEL_READY else ("aries-native-char-ngram" if INDEPENDENT_MODE else "openai-compatible-upstream"),
+                "backend":"local-llama-cpp" if LOCAL_MODEL_READY else ("openai-compatible-upstream" if UPSTREAM_READY else "aries-native-char-ngram"),
                 "model_id":MODEL_ID,"native_reasoner_enabled":True,"native_reasoner_version":"0.2",
                 "independent_mode":INDEPENDENT_MODE,
                 "general_chat_upstream_configured":UPSTREAM_READY,
                 "general_chat_ready":UPSTREAM_READY or LOCAL_MODEL_READY,
                 "local_model_loaded":LOCAL_MODEL_READY,
-                "note":"ARIES native task engine with optional OpenAI-compatible general chat backend."
+                "note":"Independent mode is local-only; general chat uses the installed local model and built-in deterministic routes remain available."
             })
         if path == "/diagnostics":
             return self.send_json(200, {

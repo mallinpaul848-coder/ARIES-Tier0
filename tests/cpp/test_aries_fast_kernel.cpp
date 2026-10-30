@@ -20,6 +20,8 @@ int main() {
     for (const auto value : values) {
         assert(UltraLowLatencyHarmonicEngine::fast_digital_root(value) ==
                compute_digital_root(value));
+        assert(UltraLowLatencyHarmonicEngine::table_digital_root(value) ==
+               compute_digital_root(value));
     }
 
     std::uint64_t score = 0;

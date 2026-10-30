@@ -119,11 +119,46 @@ def _matrix(value: Any, name: str) -> list[list[int]]:
 
 
 def _is_prime(n: int) -> bool:
+    """Exact primality test; deterministic Miller-Rabin for unsigned 64-bit inputs.
+
+    The fixed witness set is proven deterministic below 2**64. Larger Python
+    integers retain an exact trial-division fallback rather than receiving a
+    probabilistic answer.
+    """
     if n < 2:
         return False
-    if n % 2 == 0:
-        return n == 2
-    divisor = 3
+
+    small_primes = (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37)
+    for prime in small_primes:
+        if n % prime == 0:
+            return n == prime
+
+    if n < (1 << 64):
+        # Write n - 1 = d * 2**s, with d odd.
+        d = n - 1
+        s = 0
+        while d % 2 == 0:
+            d //= 2
+            s += 1
+
+        # Deterministic for every integer in [0, 2**64).
+        for base in (2, 325, 9375, 28178, 450775, 9780504, 1795265022):
+            a = base % n
+            if a == 0:
+                continue
+            x = pow(a, d, n)
+            if x == 1 or x == n - 1:
+                continue
+            for _ in range(s - 1):
+                x = (x * x) % n
+                if x == n - 1:
+                    break
+            else:
+                return False
+        return True
+
+    # Exact fallback for integers outside the proven 64-bit witness range.
+    divisor = 41
     while divisor * divisor <= n:
         if n % divisor == 0:
             return False

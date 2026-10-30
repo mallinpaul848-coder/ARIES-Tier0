@@ -214,7 +214,7 @@ class Handler(BaseHTTPRequestHandler):
             )
             reasoning_plan = analyze_request(prompt) if needs_reasoning_scaffold else None
             if needs_reasoning_scaffold:
-                reasoning_context = build_reasoning_context(prompt)
+                reasoning_context = build_reasoning_context(prompt, reasoning_plan)
                 system_index = next((i for i, item in enumerate(normalized_messages) if item["role"] == "system"), None)
                 if system_index is not None:
                     normalized_messages[system_index]["content"] += "\n\n" + reasoning_context

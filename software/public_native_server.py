@@ -39,7 +39,7 @@ except Exception as exc:
 LOCAL_MODEL_READY = LOCAL_MODEL is not None
 MODEL_ID = (
     UPSTREAM_MODEL_ID if UPSTREAM_READY
-    else "aries-local-qwen2.5-1.5b" if LOCAL_MODEL_READY
+    else "aries-local-smollm2-360m" if LOCAL_MODEL_READY
     else NATIVE_MODEL_ID
 )
 FAST_PATH = FastPathEngine(solve, max_entries=int(os.getenv("ARIES_FAST_CACHE_SIZE", "2048")))
@@ -110,7 +110,7 @@ class Handler(BaseHTTPRequestHandler):
                 "independent_mode":INDEPENDENT_MODE,
                 "backend":"local-llama-cpp" if LOCAL_MODEL_READY else ("native" if INDEPENDENT_MODE else "openai-compatible-upstream"),
                 "general_chat_ready":UPSTREAM_READY or LOCAL_MODEL_READY,
-                "model_format":"ARIES deterministic task engine with optional local Qwen2.5-1.5B-Instruct GGUF model and optional OpenAI-compatible backend",
+                "model_format":"ARIES deterministic task engine with optional local SmolLM2-360M-Instruct GGUF model and optional OpenAI-compatible backend",
                 "trained_characters":MODEL.trained_characters,
                 "next_step":"Local ARIES model is loaded." if LOCAL_MODEL_READY else ("Independent mode is active. Install a compatible local GGUF model to enable general chat; built-in deterministic tasks remain available." if INDEPENDENT_MODE else ("General chat backend is loaded." if UPSTREAM_READY else "Configure a local GGUF model or explicitly opt into an OpenAI-compatible upstream."))
             })
@@ -118,7 +118,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200, {"object":"list","data":[
                 {"id":MODEL_ID,"object":"model","owned_by":"aries"}],
                 "inference_ready":UPSTREAM_READY or LOCAL_MODEL_READY,
-                "model_type":"OpenAI-compatible chat backend with ARIES native task engine" if UPSTREAM_READY else ("local Qwen2.5-1.5B-Instruct" if LOCAL_MODEL_READY else "character n-gram baseline")})
+                "model_type":"OpenAI-compatible chat backend with ARIES native task engine" if UPSTREAM_READY else ("local SmolLM2-360M-Instruct" if LOCAL_MODEL_READY else "character n-gram baseline")})
         if path == "/performance":
             return self.send_json(200, {
                 "service": "ARIES AI API",

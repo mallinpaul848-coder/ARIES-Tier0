@@ -86,6 +86,36 @@ int main() {
     const double ref_median = percentile(reference, 0.50);
     const double candidate_median = percentile(candidate, 0.50);
     const double speedup = ref_median / candidate_median;
+    // Compare the cheap mod-3 predicate with full digital-root classification.
+    // Both must agree for every input before any timing is accepted.
+    std::array<double, kRounds> predicate_reference{}, predicate_candidate{};
+    const auto reference_predicate = [](std::uint64_t value) {
+        return aries::core::is_harmonic_node(value);
+    };
+    const auto fast_predicate = [](std::uint64_t value) {
+        return aries::core::is_harmonic_node_fast(value);
+    };
+    for (const auto value : inputs) {
+        if (reference_predicate(value) != fast_predicate(value)) {
+            std::cerr << "FAIL: mod-3 predicate differs from digital-root reference\\n";
+            return 1;
+        }
+    }
+    (void)measure_ns_per_op(inputs, reference_predicate);
+    (void)measure_ns_per_op(inputs, fast_predicate);
+    for (std::size_t round = 0; round < kRounds; ++round) {
+        if ((round & 1U) == 0) {
+            predicate_reference[round] = measure_ns_per_op(inputs, reference_predicate);
+            predicate_candidate[round] = measure_ns_per_op(inputs, fast_predicate);
+        } else {
+            predicate_candidate[round] = measure_ns_per_op(inputs, fast_predicate);
+            predicate_reference[round] = measure_ns_per_op(inputs, reference_predicate);
+        }
+    }
+    const double predicate_reference_median = percentile(predicate_reference, 0.50);
+    const double predicate_candidate_median = percentile(predicate_candidate, 0.50);
+    const double predicate_speedup = predicate_reference_median / predicate_candidate_median;
+
     std::cout << "benchmark=prise_digital_root_comparison\n"
               << "correctness=PASS (" << kInputCount << " inputs)\n"
               << "rounds=" << kRounds << "\n"
@@ -96,6 +126,13 @@ int main() {
               << "table_candidate_p95_ns_op=" << percentile(candidate, 0.95) << "\n"
               << "table_candidate_speedup=" << speedup << "x\n"
               << "candidate_faster_by_median=" << (speedup > 1.0 ? "true" : "false") << "\n"
+              << "predicate_correctness=PASS (" << kInputCount << " inputs)\\n"
+              << "predicate_reference_digital_root_p50_ns_op=" << predicate_reference_median << "\\n"
+              << "predicate_reference_digital_root_p95_ns_op=" << percentile(predicate_reference, 0.95) << "\\n"
+              << "predicate_fast_mod3_p50_ns_op=" << predicate_candidate_median << "\\n"
+              << "predicate_fast_mod3_p95_ns_op=" << percentile(predicate_candidate, 0.95) << "\\n"
+              << "predicate_fast_mod3_speedup=" << predicate_speedup << "x\\n"
+              << "predicate_faster_by_median=" << (predicate_speedup > 1.0 ? "true" : "false") << "\\n"
               << "sink=" << sink << "\n"
               << "limitation=CPU kernel only; excludes API, model inference, and network\n";
     return 0;

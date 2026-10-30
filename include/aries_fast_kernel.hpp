@@ -36,17 +36,26 @@ inline constexpr std::array<std::uint8_t, 8> byte_weights{
 
 class UltraLowLatencyHarmonicEngine {
 public:
-    // Eight byte-table lookups and a bounded final reduction; no runtime
-    // division or data-dependent loop. This is O(1), but not guaranteed
-    // sub-nanosecond: actual latency depends on compiler and CPU.
+    // The compiler can strength-reduce constant modulo by 9. Keep this
+    // compact arithmetic path as the production default; the table path below
+    // remains available for an apples-to-apples benchmark on each target CPU.
     [[nodiscard]] static constexpr std::uint8_t fast_digital_root(std::uint64_t value) noexcept {
+        if (value == 0) return 0;
+        const auto remainder = static_cast<std::uint8_t>(value % 9);
+        return remainder == 0 ? 9 : remainder;
+    }
+
+    // Experimental lookup candidate: eight byte-table reads plus reduction.
+    // It is not assumed to be faster; benchmark results decide whether to use it.
+    [[nodiscard]] static constexpr std::uint8_t table_digital_root(std::uint64_t value) noexcept {
+        if (value == 0) return 0;
         std::uint32_t remainder = 0;
         for (std::size_t i = 0; i < byte_weights.size(); ++i) {
             const auto byte_value = static_cast<std::uint8_t>(value >> (i * 8));
             remainder += byte_remainder_table[byte_value] * byte_weights[i];
         }
         remainder %= 9;
-        return value == 0 ? 0 : static_cast<std::uint8_t>(remainder == 0 ? 9 : remainder);
+        return static_cast<std::uint8_t>(remainder == 0 ? 9 : remainder);
     }
 
     [[nodiscard]] static constexpr bool evaluate_harmonic_fast(

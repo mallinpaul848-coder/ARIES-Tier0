@@ -18,6 +18,17 @@ inline constexpr std::array<std::uint8_t, 256> make_byte_remainder_table() noexc
 
 inline constexpr auto byte_remainder_table = make_byte_remainder_table();
 
+inline constexpr std::array<std::uint8_t, 449> make_root_table() noexcept {
+    std::array<std::uint8_t, 449> table{};
+    for (std::size_t i = 0; i < table.size(); ++i) {
+        const auto remainder = static_cast<std::uint8_t>(i % 9);
+        table[i] = remainder == 0 ? 9 : remainder;
+    }
+    return table;
+}
+
+inline constexpr auto root_table = make_root_table();
+
 // 256^i modulo 9 repeats as 1, 4, 7 because 256 == 4 (mod 9).
 inline constexpr std::array<std::uint8_t, 8> byte_weights{
     1, 4, 7, 1, 4, 7, 1, 4

@@ -58,7 +58,7 @@ int main() {
     // Correctness gate before timing: reject any candidate mismatch.
     for (const auto value : inputs) {
         if (compute_digital_root(value) !=
-            UltraLowLatencyHarmonicEngine::fast_digital_root(value)) {
+            UltraLowLatencyHarmonicEngine::table_digital_root(value)) {
             std::cerr << "FAIL: candidate differs from reference\n";
             return 1;
         }
@@ -70,7 +70,7 @@ int main() {
         if ((round & 1U) == 0) {
             reference[round] = measure_ns_per_op(inputs, compute_digital_root);
             candidate[round] = measure_ns_per_op(
-                inputs, UltraLowLatencyHarmonicEngine::fast_digital_root);
+                inputs, UltraLowLatencyHarmonicEngine::table_digital_root);
         } else {
             candidate[round] = measure_ns_per_op(
                 inputs, UltraLowLatencyHarmonicEngine::fast_digital_root);
@@ -86,9 +86,9 @@ int main() {
               << "operations_per_round=" << (kInputCount * kRepeats) << "\n"
               << "reference_modulo_p50_ns_op=" << ref_median << "\n"
               << "reference_modulo_p95_ns_op=" << percentile(reference, 0.95) << "\n"
-              << "table_candidate_p50_ns_op=" << fast_median << "\n"
-              << "table_candidate_p95_ns_op=" << percentile(candidate, 0.95) << "\n"
-              << "candidate_speedup=" << (ref_median / fast_median) << "x\n"
+              << "lookup_candidate_p50_ns_op=" << fast_median << "\n"
+              << "lookup_candidate_p95_ns_op=" << percentile(candidate, 0.95) << "\n"
+              << "lookup_candidate_speedup=" << (ref_median / fast_median) << "x\n"
               << "sink=" << sink << "\n"
               << "limitation=CPU kernel only; excludes API, model inference, and network\n";
     return 0;

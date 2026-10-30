@@ -1,6 +1,5 @@
-// Reproducible PRISE digital-root kernel comparison.
-// Measures reference modulo implementation vs the table-based candidate.
-// This is a CPU microbenchmark, not language-model inference.
+// PRISE benchmark: compare mathematically equivalent kernels after correctness gates.
+// This is a CPU microbenchmark, not end-to-end API or model inference.
 #include "aries_harmonic_kernel.hpp"
 #include "aries_fast_kernel.hpp"
 
@@ -9,12 +8,11 @@
 #include <chrono>
 #include <cstdint>
 #include <iostream>
-#include <numeric>
 
 namespace {
 constexpr std::size_t kInputCount = 4096;
-constexpr std::size_t kRounds = 11;
-constexpr std::size_t kRepeats = 256;
+constexpr std::size_t kRounds = 15;
+constexpr std::size_t kRepeats = 128;
 volatile std::uint64_t sink = 0;
 
 std::array<std::uint64_t, kInputCount> make_inputs() {
@@ -35,7 +33,7 @@ double measure_ns_per_op(const std::array<std::uint64_t, kInputCount>& inputs,
     const auto start = std::chrono::steady_clock::now();
     std::uint64_t local = 0;
     for (std::size_t repeat = 0; repeat < kRepeats; ++repeat) {
-        for (const auto value : inputs) local += function(value);
+        for (const auto value : inputs) local += static_cast<std::uint64_t>(function(value));
     }
     const auto stop = std::chrono::steady_clock::now();
     sink = sink ^ local;
@@ -48,48 +46,55 @@ double percentile(std::array<double, kRounds> values, double p) {
     const auto index = static_cast<std::size_t>(p * (values.size() - 1));
     return values[index];
 }
-}
 
-int main() {
-    using aries::core::compute_digital_root;
-    using aries::core::UltraLowLatencyHarmonicEngine;
-    const auto inputs = make_inputs();
-
-    // Correctness gate before timing: reject any candidate mismatch.
+template <typename Reference, typename Candidate>
+void compare(const char* label,
+             const std::array<std::uint64_t, kInputCount>& inputs,
+             Reference reference_fn, Candidate candidate_fn) {
     for (const auto value : inputs) {
-        if (compute_digital_root(value) !=
-            UltraLowLatencyHarmonicEngine::table_digital_root(value)) {
-            std::cerr << "FAIL: candidate differs from reference\n";
-            return 1;
+        if (reference_fn(value) != candidate_fn(value)) {
+            std::cerr << "FAIL: correctness gate failed for " << label << '\\n';
+            std::exit(1);
         }
     }
 
     std::array<double, kRounds> reference{}, candidate{};
     for (std::size_t round = 0; round < kRounds; ++round) {
-        // Alternate order to reduce systematic warm-up/order bias.
         if ((round & 1U) == 0) {
-            reference[round] = measure_ns_per_op(inputs, compute_digital_root);
-            candidate[round] = measure_ns_per_op(
-                inputs, UltraLowLatencyHarmonicEngine::table_digital_root);
+            reference[round] = measure_ns_per_op(inputs, reference_fn);
+            candidate[round] = measure_ns_per_op(inputs, candidate_fn);
         } else {
-            candidate[round] = measure_ns_per_op(
-                inputs, UltraLowLatencyHarmonicEngine::fast_digital_root);
-            reference[round] = measure_ns_per_op(inputs, compute_digital_root);
+            candidate[round] = measure_ns_per_op(inputs, candidate_fn);
+            reference[round] = measure_ns_per_op(inputs, reference_fn);
         }
     }
 
-    const double ref_median = percentile(reference, 0.50);
-    const double fast_median = percentile(candidate, 0.50);
-    std::cout << "benchmark=prise_digital_root_comparison\n"
-              << "correctness=PASS (" << kInputCount << " inputs)\n"
-              << "rounds=" << kRounds << "\n"
-              << "operations_per_round=" << (kInputCount * kRepeats) << "\n"
-              << "reference_modulo_p50_ns_op=" << ref_median << "\n"
-              << "reference_modulo_p95_ns_op=" << percentile(reference, 0.95) << "\n"
-              << "lookup_candidate_p50_ns_op=" << fast_median << "\n"
-              << "lookup_candidate_p95_ns_op=" << percentile(candidate, 0.95) << "\n"
-              << "lookup_candidate_speedup=" << (ref_median / fast_median) << "x\n"
-              << "sink=" << sink << "\n"
-              << "limitation=CPU kernel only; excludes API, model inference, and network\n";
+    const double ref_p50 = percentile(reference, 0.50);
+    const double candidate_p50 = percentile(candidate, 0.50);
+    std::cout << label << "_correctness=PASS inputs=" << kInputCount << '\\n'
+              << label << "_reference_p50_ns_op=" << ref_p50 << '\\n'
+              << label << "_reference_p95_ns_op=" << percentile(reference, 0.95) << '\\n'
+              << label << "_candidate_p50_ns_op=" << candidate_p50 << '\\n'
+              << label << "_candidate_p95_ns_op=" << percentile(candidate, 0.95) << '\\n'
+              << label << "_candidate_speedup=" << (ref_p50 / candidate_p50) << "x\\n";
+}
+}
+
+int main() {
+    using aries::core::UltraLowLatencyHarmonicEngine;
+    const auto inputs = make_inputs();
+
+    compare("digital_root_lookup", inputs,
+        [](std::uint64_t n) { return aries::core::compute_digital_root(n); },
+        [](std::uint64_t n) { return UltraLowLatencyHarmonicEngine::table_digital_root(n); });
+
+    compare("harmonic_mod3", inputs,
+        [](std::uint64_t n) { return aries::core::is_harmonic_node(n); },
+        [](std::uint64_t n) { return aries::core::is_harmonic_node_fast(n); });
+
+    std::cout << "rounds=" << kRounds << '\\n'
+              << "operations_per_round=" << (kInputCount * kRepeats) << '\\n'
+              << "sink=" << sink << '\\n'
+              << "scope=isolated CPU kernels; excludes API, model inference, and network\\n";
     return 0;
 }

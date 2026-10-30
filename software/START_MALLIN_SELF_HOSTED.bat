@@ -5,7 +5,7 @@ title MALLIN AI - Self-Hosted
 echo.
 echo MALLIN AI / ARIES TIER ZERO - SELF-HOSTED
 echo =========================================
-echo This runs on this Windows computer. No Render, Vercel, or hosted API is used.
+echo This runs on this Windows computer. No Render, Vercel, Cloudflare, or hosted AI API is used.
 echo.
 where py >nul 2>&1
 if errorlevel 1 (
@@ -37,7 +37,33 @@ if not exist "models\aries-native-ngram.json" (
   "%PYTHON%" software\native_runtime.py train --corpus software\deployment_corpus.txt --model models\aries-native-ngram.json
   if errorlevel 1 goto fail
 )
+if not exist "models\aries-model.gguf" (
+  echo.
+  echo OPTIONAL: install a small local language model for general question answering?
+  echo This downloads an approximately 0.5B-parameter public GGUF model.
+  echo It is not ARIES-trained weights. The model runs on this computer and prompts stay local.
+  choice /C YN /N /M "Download and install local model? [Y/N] "
+  if errorlevel 2 goto no_model
+  echo Installing the local CPU inference runtime...
+  "%PYTHON%" -m pip install -r software\requirements-inference.txt
+  if errorlevel 1 (
+    echo.
+    echo The local inference runtime could not be installed on this Python/Windows setup.
+    echo ARIES will still start in native-baseline mode. No external AI API will be used.
+    goto no_model
+  )
+  echo Downloading the public GGUF model...
+  set "ARIES_GGUF_MODEL_PATH=%CD%\models\aries-model.gguf"
+  "%PYTHON%" software\download_model.py
+  if errorlevel 1 (
+    echo Model download failed. ARIES will start in native-baseline mode.
+    goto no_model
+  )
+)
+:no_model
 set "ARIES_NATIVE_MODEL=%CD%\models\aries-native-ngram.json"
+set "ARIES_GGUF_MODEL_PATH=%CD%\models\aries-model.gguf"
+set "ARIES_INDEPENDENT_MODE=1"
 set "ARIES_WEB_ROOT=%CD%\foundation\web"
 set "PORT=10000"
 echo.

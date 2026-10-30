@@ -9,9 +9,10 @@ def analyze_request(question: str) -> dict:
     return decompose_question(question)
 
 
-def build_reasoning_context(question: str) -> str:
-    """Build concise instructions for a chat model; never fabricate evidence or conclusions."""
-    plan = decompose_question(question)
+def build_reasoning_context(question: str, plan: dict | None = None) -> str:
+    """Build concise instructions; reuse a supplied plan to avoid duplicate decomposition."""
+    if plan is None:
+        plan = decompose_question(question)
     checks = "\n".join(f"- {item}" for item in plan["checks"])
     return (
         "ARIES reasoning checklist (process guidance, not evidence):\n"

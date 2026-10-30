@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - "include/aries_harmonic_kernel.hpp"
+      - "include/aries_harmonic_kernel.hpp"\n      - "include/aries_fast_kernel.hpp"\n      - "include/aries_fast_kernel.hpp"
       - "math_core/aries_harmonic_bridge.py"
-      - "tests/cpp/test_aries_harmonic_kernel.cpp"
+      - "tests/cpp/test_aries_harmonic_kernel.cpp"\n      - "tests/cpp/test_aries_fast_kernel.cpp"\n      - "tests/cpp/test_aries_fast_kernel.cpp"
       - "tests/test_aries_harmonic_bridge.py"
       - "CMakeLists.txt"
       - ".github/workflows/harmonic-kernel-tests.yml"
@@ -41,6 +41,6 @@ jobs:
       - name: Configure C++20 tests
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build C++20 tests
-        run: cmake --build build --target test_aries_harmonic_kernel --parallel 2
+        run: cmake --build build --target test_aries_harmonic_kernel test_aries_fast_kernel --parallel 2
       - name: Run C++20 tests
         run: ctest --test-dir build --output-on-failure

@@ -48,6 +48,7 @@ double percentile(std::array<double, kRounds> values, double p) {
     return values[index];
 }
 
+} // namespace
 
 int main() {
     using aries::core::compute_digital_root;

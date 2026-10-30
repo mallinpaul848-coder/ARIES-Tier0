@@ -31,6 +31,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Compile benchmark
         run: g++ -O3 -std=c++17 -Wall -Wextra -Werror benchmarks/aries_microbenchmark.cpp -o aries_microbenchmark
+      - name: Compile PRISE kernel comparison
+        run: g++ -O3 -std=c++20 -Wall -Wextra -Werror -Iinclude benchmarks/aries_prise_kernel_benchmark.cpp -o aries_prise_kernel_benchmark
+      - name: Run PRISE kernel comparison
+        run: ./aries_prise_kernel_benchmark | tee aries_prise_kernel_report.txt
       - name: Run deterministic microbenchmark
         shell: bash
         run: |
@@ -47,5 +51,6 @@ jobs:
           path: |
             aries_microbenchmark_report.txt
             aries_microbenchmark_samples.csv
+            aries_prise_kernel_report.txt
           if-no-files-found: error
           retention-days: 90

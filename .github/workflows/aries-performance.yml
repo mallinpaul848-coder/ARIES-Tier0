@@ -11,6 +11,9 @@ on:
       - "tools/aries_combined_bench.py"
       - "api/**"
       - "aries_math/**"
+      - "include/**"
+      - "tests/cpp/**"
+      - "benchmarks/**"
       - ".github/workflows/aries-performance.yml"
 
 permissions:

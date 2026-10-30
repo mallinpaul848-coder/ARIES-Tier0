@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from api.main import app, chat_completions_url
+from api.main import app, chat_completions_url, _is_prime
 
 client = TestClient(app)
 
@@ -107,3 +107,20 @@ def test_chat_url_adds_v1_when_missing():
     assert chat_completions_url("https://provider.example") == (
         "https://provider.example/v1/chat/completions"
     )
+
+
+
+def test_is_prime_handles_small_values_and_known_composites():
+    assert not _is_prime(-7)
+    assert not _is_prime(0)
+    assert not _is_prime(1)
+    assert _is_prime(2)
+    assert _is_prime(3)
+    assert not _is_prime(9)
+    assert not _is_prime(341)
+
+
+def test_is_prime_deterministic_64_bit_witness_range():
+    assert _is_prime(2**61 - 1)
+    assert not _is_prime(2**64 - 1)
+    assert not _is_prime(3_215_031_751)

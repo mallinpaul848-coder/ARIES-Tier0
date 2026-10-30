@@ -82,20 +82,52 @@ void compare(const char* label,
 }
 
 int main() {
+    using aries::core::compute_digital_root;
     using aries::core::UltraLowLatencyHarmonicEngine;
     const auto inputs = make_inputs();
 
-    compare("digital_root_lookup", inputs,
-        [](std::uint64_t n) { return aries::core::compute_digital_root(n); },
-        [](std::uint64_t n) { return UltraLowLatencyHarmonicEngine::table_digital_root(n); });
+    // Correctness gate before timing: reject any candidate mismatch.
+    for (const auto value : inputs) {
+        if (compute_digital_root(value) !=
+            UltraLowLatencyHarmonicEngine::table_digital_root(value)) {
+            std::cerr << "FAIL: table candidate differs from reference\n";
+            return 1;
+        }
+    }
 
-    compare("harmonic_mod3", inputs,
-        [](std::uint64_t n) { return aries::core::is_harmonic_node(n); },
-        [](std::uint64_t n) { return aries::core::is_harmonic_node_fast(n); });
+    // Warm both paths before collecting samples.
+    (void)measure_ns_per_op(inputs, compute_digital_root);
+    (void)measure_ns_per_op(inputs, UltraLowLatencyHarmonicEngine::table_digital_root);
 
-    std::cout << "rounds=" << kRounds << '\\n'
-              << "operations_per_round=" << (kInputCount * kRepeats) << '\\n'
-              << "sink=" << sink << '\\n'
-              << "scope=isolated CPU kernels; excludes API, model inference, and network\\n";
+    std::array<double, kRounds> reference{}, candidate{};
+    for (std::size_t round = 0; round < kRounds; ++round) {
+        // Both branches compare the same two implementations. Alternate order
+        // to reduce systematic cache, thermal, and scheduling bias.
+        if ((round & 1U) == 0) {
+            reference[round] = measure_ns_per_op(inputs, compute_digital_root);
+            candidate[round] = measure_ns_per_op(
+                inputs, UltraLowLatencyHarmonicEngine::table_digital_root);
+        } else {
+            candidate[round] = measure_ns_per_op(
+                inputs, UltraLowLatencyHarmonicEngine::table_digital_root);
+            reference[round] = measure_ns_per_op(inputs, compute_digital_root);
+        }
+    }
+
+    const double ref_median = percentile(reference, 0.50);
+    const double candidate_median = percentile(candidate, 0.50);
+    const double speedup = ref_median / candidate_median;
+    std::cout << "benchmark=prise_digital_root_comparison\n"
+              << "correctness=PASS (" << kInputCount << " inputs)\n"
+              << "rounds=" << kRounds << "\n"
+              << "operations_per_round=" << (kInputCount * kRepeats) << "\n"
+              << "reference_modulo_p50_ns_op=" << ref_median << "\n"
+              << "reference_modulo_p95_ns_op=" << percentile(reference, 0.95) << "\n"
+              << "table_candidate_p50_ns_op=" << candidate_median << "\n"
+              << "table_candidate_p95_ns_op=" << percentile(candidate, 0.95) << "\n"
+              << "table_candidate_speedup=" << speedup << "x\n"
+              << "candidate_faster_by_median=" << (speedup > 1.0 ? "true" : "false") << "\n"
+              << "sink=" << sink << "\n"
+              << "limitation=CPU kernel only; excludes API, model inference, and network\n";
     return 0;
 }

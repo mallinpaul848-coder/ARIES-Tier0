@@ -31,3 +31,7 @@ if(BUILD_TESTING)
   target_include_directories(test_aries_fast_kernel PRIVATE include)
   add_test(NAME aries_fast_kernel COMMAND test_aries_fast_kernel)
 endif()
+
+add_executable(test_aries_tier0_engine tests/cpp/test_aries_tier0_engine.cpp)
+target_include_directories(test_aries_tier0_engine PRIVATE include)
+add_test(NAME aries_tier0_engine COMMAND test_aries_tier0_engine)

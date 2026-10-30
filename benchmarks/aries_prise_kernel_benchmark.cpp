@@ -97,7 +97,7 @@ int main() {
     };
     for (const auto value : inputs) {
         if (reference_predicate(value) != fast_predicate(value)) {
-            std::cerr << "FAIL: mod-3 predicate differs from digital-root reference\\n";
+            std::cerr << "FAIL: mod-3 predicate differs from digital-root reference\n";
             return 1;
         }
     }
@@ -126,13 +126,13 @@ int main() {
               << "table_candidate_p95_ns_op=" << percentile(candidate, 0.95) << "\n"
               << "table_candidate_speedup=" << speedup << "x\n"
               << "candidate_faster_by_median=" << (speedup > 1.0 ? "true" : "false") << "\n"
-              << "predicate_correctness=PASS (" << kInputCount << " inputs)\\n"
-              << "predicate_reference_digital_root_p50_ns_op=" << predicate_reference_median << "\\n"
-              << "predicate_reference_digital_root_p95_ns_op=" << percentile(predicate_reference, 0.95) << "\\n"
-              << "predicate_fast_mod3_p50_ns_op=" << predicate_candidate_median << "\\n"
-              << "predicate_fast_mod3_p95_ns_op=" << percentile(predicate_candidate, 0.95) << "\\n"
-              << "predicate_fast_mod3_speedup=" << predicate_speedup << "x\\n"
-              << "predicate_faster_by_median=" << (predicate_speedup > 1.0 ? "true" : "false") << "\\n"
+              << "predicate_correctness=PASS (" << kInputCount << " inputs)\n"
+              << "predicate_reference_digital_root_p50_ns_op=" << predicate_reference_median << "\n"
+              << "predicate_reference_digital_root_p95_ns_op=" << percentile(predicate_reference, 0.95) << "\n"
+              << "predicate_fast_mod3_p50_ns_op=" << predicate_candidate_median << "\n"
+              << "predicate_fast_mod3_p95_ns_op=" << percentile(predicate_candidate, 0.95) << "\n"
+              << "predicate_fast_mod3_speedup=" << predicate_speedup << "x\n"
+              << "predicate_faster_by_median=" << (predicate_speedup > 1.0 ? "true" : "false") << "\n"
               << "sink=" << sink << "\n"
               << "limitation=CPU kernel only; excludes API, model inference, and network\n";
     return 0;

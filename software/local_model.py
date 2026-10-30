@@ -56,7 +56,7 @@ class LocalChatModel:
                 continue
             role, content = item.get("role"), item.get("content")
             if role in {"system", "user", "assistant"} and isinstance(content, str) and content.strip():
-                normalized.append({"role": role, "content": content[-6000:]})
+                normalized.append({"role": role, "content": content[-1200:]})
         if not any(item["role"] == "user" for item in normalized):
             raise LocalInferenceError("A non-empty user message is required.")
         system_message = next(
@@ -86,9 +86,13 @@ class LocalChatModel:
                 ),
             },
         )
-        recent_messages = [item for item in normalized if item["role"] != "system"][-8:]
+        # Keep prompt prefill bounded for the one-vCPU public instance. Eight long
+        # turns can exceed the 512-token context and stall CPU-only generation.
+        system_message = {"role": "system", "content": system_message["content"][:900]}
+        recent_messages = [item for item in normalized if item["role"] != "system"][-4:]
         normalized = [system_message, *recent_messages]
         started_ns = time.perf_counter_ns()
+        print(f"ARIES local inference started; messages={len(recent_messages)}; prompt_chars={sum(len(x[chr(99)+chr(111)+chr(110)+chr(116)+chr(101)+chr(110)+chr(116)]) for x in normalized)}", flush=True)
         try:
             with self._lock:
                 response = self._model.create_chat_completion(
@@ -108,4 +112,6 @@ class LocalChatModel:
         answer = message.get("content") if isinstance(message, dict) else None
         if not isinstance(answer, str) or not answer.strip():
             raise LocalInferenceError("Local model returned an empty answer.")
-        return answer.strip(), max(1, time.perf_counter_ns() - started_ns)
+        elapsed_ns = max(1, time.perf_counter_ns() - started_ns)
+        print(f"ARIES local inference completed; elapsed_ms={elapsed_ns / 1_000_000:.1f}; answer_chars={len(answer.strip())}", flush=True)
+        return answer.strip(), elapsed_ns

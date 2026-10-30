@@ -8,6 +8,7 @@
 int main() {
     using aries::core::UltraLowLatencyHarmonicEngine;
     using aries::core::compute_digital_root;
+    using aries::core::vortex_phase_state;
 
     for (std::uint64_t value = 0; value < 100000; ++value) {
         assert(UltraLowLatencyHarmonicEngine::fast_digital_root(value) ==
@@ -39,5 +40,10 @@ int main() {
     assert(UltraLowLatencyHarmonicEngine::count_harmonic_nodes(
         batch.data(), batch.size()) == 4);
     assert(UltraLowLatencyHarmonicEngine::count_harmonic_nodes(nullptr, 7) == 0);
+
+    constexpr std::array<std::uint8_t, 6> vortex{1, 2, 4, 8, 7, 5};
+    for (std::uint64_t step = 0; step < 600; ++step) {
+        assert(vortex_phase_state(step) == vortex[step % vortex.size()]);
+    }
     return 0;
 }

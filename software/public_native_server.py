@@ -23,11 +23,14 @@ MODEL_PATH = os.getenv("ARIES_NATIVE_MODEL", "/app/models/aries-native-ngram.jso
 MODEL = NativeModel(MODEL_PATH)
 NATIVE_MODEL_ID = "aries-native-ngram"
 UPSTREAM_BASE_URL, UPSTREAM_MODEL_ID, UPSTREAM_API_KEY = upstream_configuration()
+# Independent mode is the default: ARIES never sends prompts to an external AI provider.
+# Set ARIES_INDEPENDENT_MODE=0 only when an operator deliberately opts into an upstream.
+INDEPENDENT_MODE = os.getenv("ARIES_INDEPENDENT_MODE", "1").strip().lower() not in {"0", "false", "no", "off"}
 try:
     UPSTREAM_TIMEOUT_SECONDS = max(1.0, min(float(os.getenv("ARIES_UPSTREAM_TIMEOUT_SECONDS", "90")), 300.0))
 except ValueError:
     UPSTREAM_TIMEOUT_SECONDS = 90.0
-UPSTREAM_READY = bool(UPSTREAM_BASE_URL and UPSTREAM_MODEL_ID)
+UPSTREAM_READY = (not INDEPENDENT_MODE) and bool(UPSTREAM_BASE_URL and UPSTREAM_MODEL_ID)
 try:
     LOCAL_MODEL = LocalChatModel()
 except Exception as exc:
@@ -86,8 +89,9 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200, {
                 "service":"ARIES AI API","api_version":"1.0.10",
                 "status":"configured","inference_ready":ready,
-                "backend":"openai-compatible-upstream" if UPSTREAM_READY else ("local-llama-cpp" if LOCAL_MODEL_READY else "aries-native-char-ngram"),
+                "backend":"local-llama-cpp" if LOCAL_MODEL_READY else ("aries-native-char-ngram" if INDEPENDENT_MODE else "openai-compatible-upstream"),
                 "model_id":MODEL_ID,"native_reasoner_enabled":True,"native_reasoner_version":"0.2",
+                "independent_mode":INDEPENDENT_MODE,
                 "general_chat_upstream_configured":UPSTREAM_READY,
                 "general_chat_ready":UPSTREAM_READY or LOCAL_MODEL_READY,
                 "local_model_loaded":LOCAL_MODEL_READY,
@@ -103,11 +107,12 @@ class Handler(BaseHTTPRequestHandler):
                           "native_model_loaded":True,"deterministic_reasoner_loaded":True,
                           "local_model_loaded":LOCAL_MODEL_READY},
                 "inference_configured":True,
-                "backend":"openai-compatible-upstream" if UPSTREAM_READY else ("local-llama-cpp" if LOCAL_MODEL_READY else "native"),
+                "independent_mode":INDEPENDENT_MODE,
+                "backend":"local-llama-cpp" if LOCAL_MODEL_READY else ("native" if INDEPENDENT_MODE else "openai-compatible-upstream"),
                 "general_chat_ready":UPSTREAM_READY or LOCAL_MODEL_READY,
                 "model_format":"ARIES deterministic task engine with optional local Qwen2.5-1.5B-Instruct GGUF model and optional OpenAI-compatible backend",
                 "trained_characters":MODEL.trained_characters,
-                "next_step":"General chat backend is loaded." if LOCAL_MODEL_READY or UPSTREAM_READY else "General chat is not ready: configure a local GGUF model or ARIES_UPSTREAM_BASE_URL and ARIES_MODEL_ID; add ARIES_UPSTREAM_API_KEY when required."
+                "next_step":"Local ARIES model is loaded." if LOCAL_MODEL_READY else ("Independent mode is active. Install a compatible local GGUF model to enable general chat; built-in deterministic tasks remain available." if INDEPENDENT_MODE else ("General chat backend is loaded." if UPSTREAM_READY else "Configure a local GGUF model or explicitly opt into an OpenAI-compatible upstream."))
             })
         if path == "/v1/models":
             return self.send_json(200, {"object":"list","data":[
@@ -212,6 +217,13 @@ class Handler(BaseHTTPRequestHandler):
             local_model_elapsed_ns = None
             fast_path_cache_hit = False
             fast_path_elapsed_ns = 0
+            if answer is None and LOCAL_MODEL_READY:
+                answer, local_model_elapsed_ns = LOCAL_MODEL.generate(
+                    normalized_messages,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                )
+                local_model_used = True
             if answer is None and UPSTREAM_READY:
                 answer, upstream_elapsed_ns = request_upstream_answer(
                     normalized_messages,
@@ -223,13 +235,6 @@ class Handler(BaseHTTPRequestHandler):
                     timeout_seconds=UPSTREAM_TIMEOUT_SECONDS,
                 )
                 upstream_used = True
-            if answer is None and LOCAL_MODEL_READY:
-                answer, local_model_elapsed_ns = LOCAL_MODEL.generate(
-                    normalized_messages,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                )
-                local_model_used = True
             if answer is None:
                 answer, fast_path_cache_hit, fast_path_elapsed_ns = FAST_PATH.solve_with_metadata(prompt)
             if answer is None:
@@ -239,10 +244,9 @@ class Handler(BaseHTTPRequestHandler):
                     math_route = math_result["route"]
             if answer is None:
                 answer = (
-                    "I can handle supported calculations and built-in ARIES tasks, but general "
-                    "question answering is not connected yet. Configure ARIES_UPSTREAM_BASE_URL "
-                    "and ARIES_MODEL_ID for an OpenAI-compatible chat model, and set "
-                    "ARIES_UPSTREAM_API_KEY in the service environment if that provider requires a key."
+                    "I can handle supported calculations and built-in ARIES tasks, but the local "
+                    "general-purpose model is not installed. Add a compatible GGUF model file and "
+                    "set ARIES_GGUF_MODEL_PATH. Independent mode does not contact external AI providers."
                 )
             elapsed_ns = max(1, time.perf_counter_ns() - started_ns)
             LATENCY_MONITOR.record("chat_completion", elapsed_ns)

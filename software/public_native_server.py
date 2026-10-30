@@ -201,11 +201,23 @@ class Handler(BaseHTTPRequestHandler):
             if not user_messages:
                 return self.send_json(400, {"error":{"message":"At least one non-empty user message is required"}})
             prompt = user_messages[-1].strip()
-            reasoning_plan = analyze_request(prompt)
-            reasoning_context = build_reasoning_context(prompt)
-            system_index = next((i for i, item in enumerate(normalized_messages) if item["role"] == "system"), None)
-            if system_index is not None:
-                normalized_messages[system_index]["content"] += "\n\n" + reasoning_context
+            # Keep the latency-critical path lean. The full PRISE checklist is useful
+            # for long/explicit analysis tasks, but adding it to every short chat
+            # needlessly expands prompt prefill on the CPU-only local model.
+            lower_prompt = prompt.lower()
+            needs_reasoning_scaffold = (
+                len(prompt) > 280
+                or any(term in lower_prompt for term in (
+                    "prise", "mallin", "proof", "derive", "analyze", "analyse",
+                    "compare", "evaluate", "research", "step by step",
+                ))
+            )
+            reasoning_plan = analyze_request(prompt) if needs_reasoning_scaffold else None
+            if needs_reasoning_scaffold:
+                reasoning_context = build_reasoning_context(prompt)
+                system_index = next((i for i, item in enumerate(normalized_messages) if item["role"] == "system"), None)
+                if system_index is not None:
+                    normalized_messages[system_index]["content"] += "\n\n" + reasoning_context
             max_tokens = max(1,min(int(body.get("max_tokens",768)),2048))
             temperature = max(0.0,min(float(body.get("temperature",0.7)),2.0))
             started_ns = time.perf_counter_ns()
@@ -270,8 +282,8 @@ class Handler(BaseHTTPRequestHandler):
                     "local_model_inference_ns":local_model_elapsed_ns,
                     "model_type":"configured_chat_model" if upstream_used else ("local_instruct_model" if local_model_used else "native_task_engine_or_baseline"),
                     "math_route":math_route,
-                    "reasoning_scaffold_applied":True,
-                    "reasoning_goal":reasoning_plan["goal"]
+                    "reasoning_scaffold_applied":reasoning_plan is not None,
+                    "reasoning_goal":reasoning_plan["goal"] if reasoning_plan else "direct_chat"
                 }
             })
         except UpstreamInferenceError as exc:

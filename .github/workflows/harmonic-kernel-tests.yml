@@ -6,6 +6,8 @@ on:
     paths:
       - "include/aries_harmonic_kernel.hpp"
       - "include/aries_fast_kernel.hpp"
+      - "include/aries_tier0_engine.hpp"
+      - "tests/cpp/test_aries_tier0_engine.cpp"
       - "math_core/aries_harmonic_bridge.py"
       - "tests/cpp/test_aries_harmonic_kernel.cpp"
       - "tests/cpp/test_aries_fast_kernel.cpp"
@@ -46,6 +48,6 @@ jobs:
       - name: Configure C++20 tests
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build C++20 tests
-        run: cmake --build build --target test_aries_harmonic_kernel test_aries_fast_kernel --parallel 2
+        run: cmake --build build --target test_aries_harmonic_kernel test_aries_fast_kernel test_aries_tier0_engine --parallel 2
       - name: Run C++20 tests
         run: ctest --test-dir build --output-on-failure

@@ -19,7 +19,7 @@ class LocalChatModel:
             model_path
             or os.getenv(
                 "ARIES_GGUF_MODEL_PATH",
-                "/app/models/SmolLM2-360M-Instruct-Q3_K_M.gguf",
+                "/app/models/SmolLM2-135M-Instruct-Q4_K_M.gguf",
             )
         )
         if not path.is_file():

@@ -48,38 +48,6 @@ double percentile(std::array<double, kRounds> values, double p) {
     return values[index];
 }
 
-template <typename Reference, typename Candidate>
-void compare(const char* label,
-             const std::array<std::uint64_t, kInputCount>& inputs,
-             Reference reference_fn, Candidate candidate_fn) {
-    for (const auto value : inputs) {
-        if (reference_fn(value) != candidate_fn(value)) {
-            std::cerr << "FAIL: correctness gate failed for " << label << '\\n';
-            std::exit(1);
-        }
-    }
-
-    std::array<double, kRounds> reference{}, candidate{};
-    for (std::size_t round = 0; round < kRounds; ++round) {
-        if ((round & 1U) == 0) {
-            reference[round] = measure_ns_per_op(inputs, reference_fn);
-            candidate[round] = measure_ns_per_op(inputs, candidate_fn);
-        } else {
-            candidate[round] = measure_ns_per_op(inputs, candidate_fn);
-            reference[round] = measure_ns_per_op(inputs, reference_fn);
-        }
-    }
-
-    const double ref_p50 = percentile(reference, 0.50);
-    const double candidate_p50 = percentile(candidate, 0.50);
-    std::cout << label << "_correctness=PASS inputs=" << kInputCount << '\\n'
-              << label << "_reference_p50_ns_op=" << ref_p50 << '\\n'
-              << label << "_reference_p95_ns_op=" << percentile(reference, 0.95) << '\\n'
-              << label << "_candidate_p50_ns_op=" << candidate_p50 << '\\n'
-              << label << "_candidate_p95_ns_op=" << percentile(candidate, 0.95) << '\\n'
-              << label << "_candidate_speedup=" << (ref_p50 / candidate_p50) << "x\\n";
-}
-}
 
 int main() {
     using aries::core::compute_digital_root;

@@ -1,4 +1,5 @@
 #include "aries_fast_kernel.hpp"
+#include "aries_harmonic_kernel.hpp"
 
 #include <cassert>
 #include <cstdint>

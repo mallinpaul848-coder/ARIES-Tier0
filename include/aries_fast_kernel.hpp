@@ -26,6 +26,13 @@ inline constexpr std::array<std::uint8_t, 8> byte_weights{1, 4, 7, 1, 4, 7, 1, 4
     return value != 0 && value % 3 == 0;
 }
 
+// Vortex sequence is the powers-of-two cycle modulo 9: 1,2,4,8,7,5.
+// Keep it out of the hot predicate; use it only when a caller needs a phase label.
+[[nodiscard]] constexpr std::uint8_t vortex_phase_state(std::uint64_t step) noexcept {
+    constexpr std::array<std::uint8_t, 6> cycle{1, 2, 4, 8, 7, 5};
+    return cycle[step % cycle.size()];
+}
+
 class UltraLowLatencyHarmonicEngine {
 public:
     // Production digital root: compilers strength-reduce constant modulo.

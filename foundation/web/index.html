@@ -21,7 +21,8 @@ body:after{background-image:radial-gradient(2px 2px at 10% 20%,#fff,transparent)
 <main><section class="hero"><h1>Intelligence, <em>in motion.</em></h1><p>Your MALLIN AI workspace.</p></section>
 <section class="chat" aria-label="MALLIN AI chat"><div id="messages" class="messages" aria-live="polite"><div class="message assistant">Welcome to MALLIN AI. Ask a question to begin.</div></div><form id="form" class="composer"><textarea id="prompt" placeholder="Ask MALLIN AI anything…" aria-label="Message" required></textarea><button id="send" type="submit">Send ↗</button></form><div class="tools"><button id="check" type="button">Check model</button><button id="voice" type="button">Voice input</button><button id="speak" type="button">Read replies: off</button><button id="clear" type="button">Clear chat</button></div></section><p class="note">MALLIN AI chat interface. Model readiness is checked against the inference service.</p></main>
 <script>
-// Same-origin by default: self-hosted ARIES never silently routes prompts to a hosted provider.\nwindow.MALLIN_API_BASE = (window.MALLIN_API_BASE || window.location.origin).replace(/\/$/,"");
+// Same-origin by default: self-hosted ARIES never silently routes prompts to a hosted provider.
+window.MALLIN_API_BASE = (window.MALLIN_API_BASE || window.location.origin).replace(/\/$/,"");
 const $=s=>document.querySelector(s), messages=$("#messages"), promptBox=$("#prompt"), send=$("#send"), status=$("#status");
 let history=[], speakReplies=false;
 function addMessage(role,text,cls=role){const el=document.createElement("div");el.className="message "+cls;el.textContent=text;messages.appendChild(el);messages.scrollTop=messages.scrollHeight;return el}

@@ -1,7 +1,7 @@
 {
   "suite": "ARIES Native Bench v2",
   "suite_type": "project-owned diagnostic; not an official academic benchmark",
-  "timestamp_utc": "2026-11-03T07:15:54.729413+00:00",
+  "timestamp_utc": "2026-11-03T19:49:25.856405+00:00",
   "target": "https://aries-tier0-api-6qjh.onrender.com",
   "requested_model": "auto",
   "configuration": {
@@ -13,76 +13,76 @@
       "id": "math_01",
       "category": "arithmetic",
       "expected": "323",
-      "latency_ms": 75096.156,
+      "latency_ms": 75067.784,
       "error": "TimeoutError: The read operation timed out"
     },
     {
       "id": "math_02",
       "category": "arithmetic",
       "expected": "12",
-      "latency_ms": 75082.025,
+      "latency_ms": 75122.19,
       "error": "TimeoutError: The read operation timed out"
     },
     {
       "id": "math_03",
       "category": "arithmetic",
       "expected": "1045",
-      "latency_ms": 75096.545,
+      "latency_ms": 75084.319,
       "error": "TimeoutError: The read operation timed out"
     },
     {
       "id": "math_04",
       "category": "arithmetic",
       "expected": "633",
-      "latency_ms": 75072.55,
+      "latency_ms": 75089.044,
       "error": "TimeoutError: The read operation timed out"
     },
     {
       "id": "logic_01",
       "category": "reasoning",
       "expected": "yes",
-      "latency_ms": 75068.307,
+      "latency_ms": 75030.884,
       "error": "TimeoutError: The read operation timed out"
     },
     {
       "id": "logic_02",
       "category": "reasoning",
       "expected": "C",
-      "latency_ms": 75103.483,
+      "latency_ms": 75098.829,
       "error": "TimeoutError: The read operation timed out"
     },
     {
       "id": "logic_03",
       "category": "reasoning",
       "expected": "Friday",
-      "latency_ms": 75044.96,
+      "latency_ms": 75090.888,
       "error": "TimeoutError: The read operation timed out"
     },
     {
       "id": "instruction_01",
       "category": "instruction",
       "expected": "ARIES-OK",
-      "latency_ms": 75115.435,
+      "latency_ms": 75034.225,
       "error": "TimeoutError: The read operation timed out"
     },
     {
       "id": "instruction_02",
       "category": "instruction",
       "expected": "red, green, blue",
-      "latency_ms": 75110.45,
+      "latency_ms": 75088.684,
       "error": "TimeoutError: The read operation timed out"
     },
     {
       "id": "knowledge_01",
       "category": "knowledge",
       "expected": "H2O",
-      "latency_ms": 75065.499,
+      "latency_ms": 75082.952,
       "error": "TimeoutError: The read operation timed out"
     }
   ],
   "health": {
     "http_status": 200,
-    "latency_ms": 196.403,
+    "latency_ms": 462.397,
     "response": {
       "status": "ok",
       "service": "aries-ai-api"
@@ -90,7 +90,7 @@
   },
   "models": {
     "http_status": 200,
-    "latency_ms": 98.885,
+    "latency_ms": 301.583,
     "response": {
       "object": "list",
       "data": [
@@ -139,14 +139,14 @@
       }
     },
     "latency_sample_count": 10,
-    "latency_min_ms": 75044.96,
-    "latency_mean_ms": 75085.541,
-    "latency_p50_ms": 75089.09,
-    "latency_p90_ms": 75110.948,
-    "latency_p95_ms": 75113.192,
-    "latency_p99_ms": 75114.986,
-    "latency_max_ms": 75115.435,
-    "wall_clock_seconds": 750.856,
+    "latency_min_ms": 75030.884,
+    "latency_mean_ms": 75078.98,
+    "latency_p50_ms": 75086.501,
+    "latency_p90_ms": 75101.165,
+    "latency_p95_ms": 75111.678,
+    "latency_p99_ms": 75120.088,
+    "latency_max_ms": 75122.19,
+    "wall_clock_seconds": 750.79,
     "completed_requests_per_second": 0.0,
     "warning": "Small authored diagnostic only; not an official MMLU, GSM8K, BBH, or leaderboard score."
   }

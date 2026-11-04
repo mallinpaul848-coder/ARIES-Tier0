@@ -65,3 +65,7 @@ Measure full-request latency separately using the same model and request corpus.
 A faster profile function does not automatically make the chat service faster. The feature is beneficial only if the work it avoids exceeds its own computation cost and does not overload a slower route. Preserve correctness checks and compare tail latency, not only averages.
 
 No performance claim should be marked validated until the raw report, exact commit, environment, and reproducible command are retained.
+
+## CI artifact
+
+The API test workflow runs this isolated benchmark after the full pytest suite and uploads `gateway-profile-report.json` as the `mallin-prise-gateway-profile` artifact. Each report includes Python/platform/machine metadata and raw samples. The artifact is a CI-runner measurement; compare runs only when runner hardware and software environments are comparable. The report does not include end-to-end inference timings.

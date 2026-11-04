@@ -224,6 +224,8 @@ class Handler(BaseHTTPRequestHandler):
             upstream_elapsed_ns = None
             local_model_used = False
             local_model_elapsed_ns = None
+            local_model_lock_wait_ns = None
+            local_model_compute_ns = None
             fast_path_cache_hit = False
             fast_path_elapsed_ns = 0
             # Resolve bounded deterministic tasks before invoking a neural model.
@@ -237,7 +239,12 @@ class Handler(BaseHTTPRequestHandler):
                     answer = math_result["answer"]
                     math_route = math_result["route"]
             if answer is None and LOCAL_MODEL_READY:
-                answer, local_model_elapsed_ns = LOCAL_MODEL.generate(
+                (
+                    answer,
+                    local_model_elapsed_ns,
+                    local_model_lock_wait_ns,
+                    local_model_compute_ns,
+                ) = LOCAL_MODEL.generate_with_metadata(
                     normalized_messages,
                     max_tokens=max_tokens,
                     temperature=temperature,
@@ -280,6 +287,8 @@ class Handler(BaseHTTPRequestHandler):
                     "upstream_used":upstream_used,
                     "upstream_inference_ns":upstream_elapsed_ns,
                     "local_model_inference_ns":local_model_elapsed_ns,
+                    "local_model_lock_wait_ns":local_model_lock_wait_ns,
+                    "local_model_compute_ns":local_model_compute_ns,
                     "model_type":"configured_chat_model" if upstream_used else ("local_instruct_model" if local_model_used else "native_task_engine_or_baseline"),
                     "math_route":math_route,
                     "reasoning_scaffold_applied":reasoning_plan is not None,

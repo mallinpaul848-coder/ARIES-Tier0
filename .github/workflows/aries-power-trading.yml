@@ -29,7 +29,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: aries-power-trading-\${{ github.run_number }}
+          name: aries-power-trading-${{ github.run_number }}
           path: reports/aries-power-trading-microbench.json
           if-no-files-found: error
           retention-days: 90

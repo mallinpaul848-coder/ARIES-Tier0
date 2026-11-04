@@ -89,7 +89,23 @@ def test_local_chat_metadata_separates_lock_wait_from_model_compute():
 
 def test_local_chat_metadata_measures_lock_contention():
     model = build_model()
-    model._lock.acquire()
+    attempted = threading.Event()
+
+    class ObservedLock:
+        def __init__(self):
+            self.inner = threading.Lock()
+
+        def __enter__(self):
+            attempted.set()
+            self.inner.acquire()
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            self.inner.release()
+
+    observed_lock = ObservedLock()
+    observed_lock.inner.acquire()
+    model._lock = observed_lock
     results = []
     finished = threading.Event()
 
@@ -103,10 +119,8 @@ def test_local_chat_metadata_measures_lock_contention():
 
     worker = threading.Thread(target=run)
     worker.start()
-    # Wait until the worker has started and is attempting generation.
-    import time
-    time.sleep(0.03)
-    model._lock.release()
+    assert attempted.wait(timeout=2)
+    observed_lock.inner.release()
     worker.join(timeout=2)
     assert finished.is_set()
     assert results

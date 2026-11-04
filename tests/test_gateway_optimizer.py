@@ -33,3 +33,24 @@ def test_high_risk_is_flagged_without_claiming_answer_correctness():
 def test_gateway_profile_rejects_non_string_prompt():
     with pytest.raises(TypeError):
         analyze_gateway_request(None)
+
+
+def test_gateway_profile_benchmark_reports_scope_and_percentiles():
+    from aries_math.gateway_optimizer import benchmark_gateway_profile
+
+    report = benchmark_gateway_profile(["2 + 2", "Explain PRISE"], repeats=3)
+    assert report["benchmark"] == "mallin_prise_gateway_profile_only"
+    assert report["sample_count"] == 6
+    assert report["latency_ns"]["min"] <= report["latency_ns"]["p50"]
+    assert report["latency_ns"]["p50"] <= report["latency_ns"]["p95"]
+    assert report["latency_ns"]["p95"] <= report["latency_ns"]["max"]
+    assert "excludes HTTP" in report["scope"]
+
+
+def test_gateway_profile_benchmark_rejects_invalid_inputs():
+    from aries_math.gateway_optimizer import benchmark_gateway_profile
+
+    with pytest.raises(ValueError):
+        benchmark_gateway_profile(["prompt"], repeats=0)
+    with pytest.raises(ValueError):
+        benchmark_gateway_profile([], repeats=1)

@@ -20,7 +20,7 @@ def _contains_any(text: str, terms: tuple[str, ...]) -> bool:
 
 
 def analyze_gateway_request(prompt: str) -> dict[str, Any]:
-    """Compute an auditable Mallin–PRISE profile in linear time and bounded space."""
+    """Compute an auditable Mallin–PRISE profile in linear time and O(n) auxiliary space, where n is prompt length."""
     started_ns = time.perf_counter_ns()
     if not isinstance(prompt, str):
         raise TypeError("prompt must be a string")

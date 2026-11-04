@@ -78,3 +78,25 @@ def test_route_only_mode_preserves_routing_and_prise_decisions():
 def test_route_only_mode_still_rejects_non_string_prompt():
     with pytest.raises(TypeError):
         analyze_gateway_request(None, include_diagnostics=False)
+
+
+def test_paired_gateway_benchmark_compares_both_modes():
+    from tools.benchmark_gateway_profile import paired_benchmark
+
+    report = paired_benchmark(["2 + 2", "Review production security"], repeats=5)
+    assert report["benchmark"] == "mallin_prise_gateway_profile_paired_modes"
+    assert report["full_diagnostics"]["sample_count"] == 10
+    assert report["route_only"]["sample_count"] == 10
+    assert report["full_diagnostics"]["p50_ns"] > 0
+    assert report["route_only"]["p50_ns"] > 0
+    assert len(report["samples_ns"]["full_diagnostics"]) == 10
+    assert len(report["samples_ns"]["route_only"]) == 10
+
+
+def test_paired_gateway_benchmark_rejects_invalid_inputs():
+    from tools.benchmark_gateway_profile import paired_benchmark
+
+    with pytest.raises(ValueError):
+        paired_benchmark([], repeats=1)
+    with pytest.raises(ValueError):
+        paired_benchmark(["prompt"], repeats=0)

@@ -70,3 +70,44 @@ def test_local_chat_requires_user_message():
     model = build_model()
     with pytest.raises(LocalInferenceError, match="user message"):
         model.generate([{"role": "assistant", "content": "Previous answer"}])
+
+
+def test_local_chat_metadata_separates_lock_wait_from_model_compute():
+    model = build_model()
+    answer, total_ns, lock_wait_ns, compute_ns = model.generate_with_metadata(
+        [{"role": "user", "content": "What is 2 + 2?"}],
+        max_tokens=12,
+        temperature=0,
+    )
+    assert answer == "Paris"
+    assert total_ns > 0
+    assert lock_wait_ns >= 0
+    assert compute_ns > 0
+    assert total_ns >= lock_wait_ns
+    assert total_ns >= compute_ns
+
+
+def test_local_chat_metadata_measures_lock_contention():
+    model = build_model()
+    model._lock.acquire()
+    results = []
+    finished = threading.Event()
+
+    def run():
+        try:
+            results.append(model.generate_with_metadata(
+                [{"role": "user", "content": "Hello"}]
+            ))
+        finally:
+            finished.set()
+
+    worker = threading.Thread(target=run)
+    worker.start()
+    # Wait until the worker has started and is attempting generation.
+    import time
+    time.sleep(0.03)
+    model._lock.release()
+    worker.join(timeout=2)
+    assert finished.is_set()
+    assert results
+    assert results[0][2] > 0

@@ -9,7 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 from native_runtime import NativeModel, answer_known_question
 from native_reasoner import solve
-from latency_engine import FastPathEngine, LatencyMonitor
+from latency_engine import FastPathEngine, LatencyMonitor, resolve_deterministic_routes
 from upstream_backend import UpstreamInferenceError, request_upstream_answer, upstream_configuration
 from local_model import LocalChatModel, LocalInferenceError
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -221,14 +221,15 @@ class Handler(BaseHTTPRequestHandler):
             max_tokens = max(1,min(int(body.get("max_tokens",768)),2048))
             temperature = max(0.0,min(float(body.get("temperature",0.7)),2.0))
             started_ns = time.perf_counter_ns()
-            answer = answer_known_question(prompt)
-            math_route = None
+            answer, fast_path_cache_hit, fast_path_elapsed_ns, math_route, route_name = (
+                resolve_deterministic_routes(
+                    prompt, answer_known_question, FAST_PATH, route_math_prompt
+                )
+            )
             upstream_used = False
             upstream_elapsed_ns = None
             local_model_used = False
             local_model_elapsed_ns = None
-            fast_path_cache_hit = False
-            fast_path_elapsed_ns = 0
             if answer is None and LOCAL_MODEL_READY:
                 answer, local_model_elapsed_ns = LOCAL_MODEL.generate(
                     normalized_messages,
@@ -247,13 +248,6 @@ class Handler(BaseHTTPRequestHandler):
                     timeout_seconds=UPSTREAM_TIMEOUT_SECONDS,
                 )
                 upstream_used = True
-            if answer is None:
-                answer, fast_path_cache_hit, fast_path_elapsed_ns = FAST_PATH.solve_with_metadata(prompt)
-            if answer is None:
-                math_result = route_math_prompt(prompt)
-                if math_result is not None:
-                    answer = math_result["answer"]
-                    math_route = math_result["route"]
             if answer is None:
                 answer = (
                     "I can handle supported calculations and built-in ARIES tasks, but the local "

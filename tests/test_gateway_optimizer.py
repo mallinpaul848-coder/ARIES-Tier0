@@ -26,6 +26,7 @@ def test_high_risk_is_flagged_without_claiming_answer_correctness():
     result = analyze_gateway_request("Review this production security credential change.")
     assert result["routing"]["high_risk_review_flag"] is True
     assert result["routing"]["hint"] == "review_first"
+    assert result["routing"]["reasoning_scaffold_recommended"] is True
     assert result["prise"]["score_is_probability"] is False
 
 

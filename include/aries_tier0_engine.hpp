@@ -55,10 +55,13 @@ public:
         if (tail - head >= Capacity) return false;
 
         const auto root = digital_root(payload);
+        // A nonzero digital root is 3, 6, or 9 exactly when payload is divisible by 3.
+        // Reuse the already-computed root instead of performing a second remainder operation.
+        const bool harmonic = root == 3U || root == 6U || root == 9U;
         const Node node{
             payload,
             payload * static_cast<std::uint64_t>(root), // unsigned wrap is defined
-            payload != 0 && payload % 3U == 0U
+            harmonic
         };
 
         ring_[tail & (Capacity - 1)] = node;

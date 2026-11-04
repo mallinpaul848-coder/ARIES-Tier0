@@ -50,6 +50,19 @@ class LocalChatModel:
         max_tokens: int = 128,
         temperature: float = 0.2,
     ) -> tuple[str, int]:
+        """Backward-compatible generation API; elapsed time includes lock wait."""
+        answer, elapsed_ns, _lock_wait_ns, _compute_ns = self.generate_with_metadata(
+            messages, max_tokens=max_tokens, temperature=temperature
+        )
+        return answer, elapsed_ns
+
+    def generate_with_metadata(
+        self,
+        messages: list[dict],
+        max_tokens: int = 128,
+        temperature: float = 0.2,
+    ) -> tuple[str, int, int, int]:
+        """Return answer, total elapsed, model-lock wait, and model-call time."""
         normalized = []
         for item in messages:
             if not isinstance(item, dict):
@@ -92,9 +105,13 @@ class LocalChatModel:
         recent_messages = [item for item in normalized if item["role"] != "system"][-4:]
         normalized = [system_message, *recent_messages]
         started_ns = time.perf_counter_ns()
+        lock_wait_started_ns = time.perf_counter_ns()
         print(f"ARIES local inference started; messages={len(recent_messages)}; prompt_chars={sum(len(x["content"]) for x in normalized)}", flush=True)
         try:
             with self._lock:
+                lock_acquired_ns = time.perf_counter_ns()
+                lock_wait_ns = max(0, lock_acquired_ns - lock_wait_started_ns)
+                compute_started_ns = lock_acquired_ns
                 response = self._model.create_chat_completion(
                     messages=normalized,
                     max_tokens=max(1, min(int(max_tokens), 384)),
@@ -112,6 +129,8 @@ class LocalChatModel:
         answer = message.get("content") if isinstance(message, dict) else None
         if not isinstance(answer, str) or not answer.strip():
             raise LocalInferenceError("Local model returned an empty answer.")
-        elapsed_ns = max(1, time.perf_counter_ns() - started_ns)
-        print(f"ARIES local inference completed; elapsed_ms={elapsed_ns / 1_000_000:.1f}; answer_chars={len(answer.strip())}", flush=True)
-        return answer.strip(), elapsed_ns
+        finished_ns = time.perf_counter_ns()
+        elapsed_ns = max(1, finished_ns - started_ns)
+        compute_ns = max(0, finished_ns - compute_started_ns)
+        print(f"ARIES local inference completed; elapsed_ms={elapsed_ns / 1_000_000:.1f}; lock_wait_ms={lock_wait_ns / 1_000_000:.1f}; answer_chars={len(answer.strip())}", flush=True)
+        return answer.strip(), elapsed_ns, lock_wait_ns, compute_ns

@@ -33,3 +33,70 @@ def test_high_risk_is_flagged_without_claiming_answer_correctness():
 def test_gateway_profile_rejects_non_string_prompt():
     with pytest.raises(TypeError):
         analyze_gateway_request(None)
+
+
+def test_gateway_profile_benchmark_reports_scope_and_percentiles():
+    from aries_math.gateway_optimizer import benchmark_gateway_profile
+
+    report = benchmark_gateway_profile(["2 + 2", "Explain PRISE"], repeats=3)
+    assert report["benchmark"] == "mallin_prise_gateway_profile_only"
+    assert report["sample_count"] == 6
+    assert report["latency_ns"]["min"] <= report["latency_ns"]["p50"]
+    assert report["latency_ns"]["p50"] <= report["latency_ns"]["p95"]
+    assert report["latency_ns"]["p95"] <= report["latency_ns"]["max"]
+    assert "excludes HTTP" in report["scope"]
+
+
+def test_gateway_profile_benchmark_rejects_invalid_inputs():
+    from aries_math.gateway_optimizer import benchmark_gateway_profile
+
+    with pytest.raises(ValueError):
+        benchmark_gateway_profile(["prompt"], repeats=0)
+    with pytest.raises(ValueError):
+        benchmark_gateway_profile([], repeats=1)
+
+
+def test_route_only_mode_preserves_routing_and_prise_decisions():
+    prompts = [
+        "2 + 2",
+        "Urgent production security review",
+        "Compare two approaches and derive a proof",
+        "A" * 400,
+        "ordinary short chat",
+    ]
+    for prompt in prompts:
+        full = analyze_gateway_request(prompt)
+        fast = analyze_gateway_request(prompt, include_diagnostics=False)
+        assert fast["routing"] == full["routing"]
+        assert fast["prise"] == full["prise"]
+        assert fast["profile_mode"] == "route_only"
+        assert fast["fingerprint_sha256"] is None
+        assert "omitted" in fast["harmonic"]
+        assert fast["elapsed_ns"] >= 0
+
+
+def test_route_only_mode_still_rejects_non_string_prompt():
+    with pytest.raises(TypeError):
+        analyze_gateway_request(None, include_diagnostics=False)
+
+
+def test_paired_gateway_benchmark_compares_both_modes():
+    from tools.benchmark_gateway_profile import paired_benchmark
+
+    report = paired_benchmark(["2 + 2", "Review production security"], repeats=5)
+    assert report["benchmark"] == "mallin_prise_gateway_profile_paired_modes"
+    assert report["full_diagnostics"]["sample_count"] == 10
+    assert report["route_only"]["sample_count"] == 10
+    assert report["full_diagnostics"]["p50_ns"] > 0
+    assert report["route_only"]["p50_ns"] > 0
+    assert len(report["samples_ns"]["full_diagnostics"]) == 10
+    assert len(report["samples_ns"]["route_only"]) == 10
+
+
+def test_paired_gateway_benchmark_rejects_invalid_inputs():
+    from tools.benchmark_gateway_profile import paired_benchmark
+
+    with pytest.raises(ValueError):
+        paired_benchmark([], repeats=1)
+    with pytest.raises(ValueError):
+        paired_benchmark(["prompt"], repeats=0)

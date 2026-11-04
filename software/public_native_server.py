@@ -208,14 +208,7 @@ class Handler(BaseHTTPRequestHandler):
             # Keep the latency-critical path lean. The full PRISE checklist is useful
             # for long/explicit analysis tasks, but adding it to every short chat
             # needlessly expands prompt prefill on the CPU-only local model.
-            lower_prompt = prompt.lower()
-            needs_reasoning_scaffold = (
-                len(prompt) > 280
-                or any(term in lower_prompt for term in (
-                    "prise", "mallin", "proof", "derive", "analyze", "analyse",
-                    "compare", "evaluate", "research", "step by step",
-                ))
-            )
+            needs_reasoning_scaffold = gateway_profile["routing"]["reasoning_scaffold_recommended"]
             reasoning_plan = analyze_request(prompt) if needs_reasoning_scaffold else None
             if needs_reasoning_scaffold:
                 reasoning_context = build_reasoning_context(prompt, reasoning_plan)

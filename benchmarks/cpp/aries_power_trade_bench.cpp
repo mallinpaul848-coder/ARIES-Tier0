@@ -128,8 +128,8 @@ Result run(const std::vector<Event>& events, bool with_aries) {
     return r;
 }
 
-void print_result(const char* name, const Result& r) {
-    std::cout << "  \"" << name << "\": {"
+void print_result(const Result& r) {
+    std::cout << "{"
               << "\"wall_ms\":" << r.wall_ms << ","
               << "\"cpu_ms\":" << r.cpu_ms << ","
               << "\"package_energy_j\":";
@@ -175,9 +175,9 @@ int main(int argc, char** argv) {
               << "\"energy_sensor\":\"Intel RAPL package counter; null when unavailable; whole-package, not process-isolated\","
               << "\"action_counts_match\":" << (parity ? "true" : "false") << ","
               << "\"baseline\":";
-    print_result("baseline", baseline);
+    print_result(baseline);
     std::cout << ",\"aries_feature_path\":";
-    print_result("aries_feature_path", aries);
+    print_result(aries);
     std::cout << ",\"interpretation\":["
               << "\"Feature descriptors do not change the baseline trading action.\","
               << "\"Latency percentiles use a 1-in-256 event sample; sampled timings include clock-call overhead.\","

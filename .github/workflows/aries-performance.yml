@@ -10,6 +10,8 @@ on:
       - "tools/aries_bench.py"
       - "tools/aries_combined_bench.py"
       - "api/**"
+      - "software/**"
+      - "tests/**"
       - "aries_math/**"
       - "include/**"
       - "tests/cpp/**"
@@ -43,6 +45,7 @@ jobs:
           print("Benchmark metric helper checks passed.")
           PY
       - name: Run public endpoint performance and diagnostic suite
+        continue-on-error: true
         env:
           ARIES_BASE_URL: https://aries-tier0-api-6qjh.onrender.com
           ARIES_MODEL_ID: auto

@@ -111,3 +111,47 @@ def analyze_gateway_request(prompt: str) -> dict[str, Any]:
         },
         "elapsed_ns": elapsed_ns,
     }
+
+
+
+def benchmark_gateway_profile(prompts: list[str], repeats: int = 5) -> dict[str, Any]:
+    """Measure profiling overhead only; does not measure model inference latency.
+
+    Each prompt is analyzed repeatedly. The report includes raw samples and
+    robust percentiles so callers can compare this feature cost against a
+    separately measured baseline on the same machine.
+    """
+    if repeats < 1:
+        raise ValueError("repeats must be >= 1")
+    if not prompts:
+        raise ValueError("prompts must not be empty")
+    samples: list[int] = []
+    for _ in range(repeats):
+        for prompt in prompts:
+            result = analyze_gateway_request(prompt)
+            samples.append(int(result["elapsed_ns"]))
+    ordered = sorted(samples)
+
+    def percentile(p: float) -> float:
+        pos = (len(ordered) - 1) * p
+        lo = int(pos)
+        hi = min(lo + 1, len(ordered) - 1)
+        frac = pos - lo
+        return ordered[lo] * (1.0 - frac) + ordered[hi] * frac
+
+    return {
+        "benchmark": "mallin_prise_gateway_profile_only",
+        "scope": "feature computation only; excludes HTTP, queueing, model prefill, and generation",
+        "prompt_count": len(prompts),
+        "repeats": repeats,
+        "sample_count": len(samples),
+        "latency_ns": {
+            "min": min(samples),
+            "mean": sum(samples) / len(samples),
+            "p50": percentile(0.50),
+            "p95": percentile(0.95),
+            "p99": percentile(0.99),
+            "max": max(samples),
+        },
+        "samples_ns": samples,
+    }

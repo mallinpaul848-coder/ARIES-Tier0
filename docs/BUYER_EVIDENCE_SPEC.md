@@ -65,3 +65,20 @@ python -m unittest tests.test_deterministic_core -v
 Use concurrency 1 first on CPU-limited hosts. Higher concurrency is an intentional load test and may overload small/free instances.
 
 See `reports/README.md` for the report contract. Empty or missing measurements must remain null; do not replace them with zero.
+
+## 7. Power and market-event pilot
+
+The project-owned `tools/aries_power_trade_bench.py` compares a synthetic
+market-event decision baseline with the same decision rule plus PRISE,
+digital-root, and vortex descriptors. It records event-level software latency,
+throughput, action-count parity, process CPU time, and Linux package energy
+when readable RAPL telemetry exists. Missing energy measurements remain null.
+
+This is a preliminary local microbenchmark only. It does not measure exchange
+tick-to-trade latency, network/order-gateway latency, trading profitability,
+GPU power, or data-center energy savings. The descriptors do not alter the
+baseline trading action, so this experiment measures their computational
+overhead rather than claiming a trading edge. HFT or power-saving claims require
+production-like market-data replay, end-to-end p50/p99/p99.9 measurements,
+risk-control tests, isolated calibrated energy measurement, and independent
+reproduction on disclosed hardware.

@@ -1,7 +1,7 @@
 {
   "suite": "ARIES Native Bench v2",
   "suite_type": "project-owned diagnostic; not an official academic benchmark",
-  "timestamp_utc": "2026-11-04T05:21:12.328135+00:00",
+  "timestamp_utc": "2026-11-04T05:23:49.412585+00:00",
   "target": "https://aries-tier0-api-6qjh.onrender.com",
   "requested_model": "auto",
   "configuration": {
@@ -14,7 +14,7 @@
       "category": "arithmetic",
       "expected": "323",
       "http_status": 200,
-      "latency_ms": 4900.116,
+      "latency_ms": 3496.747,
       "actual": "323",
       "nonempty": true,
       "passed_exact_match": true,
@@ -26,7 +26,7 @@
       "category": "arithmetic",
       "expected": "12",
       "http_status": 200,
-      "latency_ms": 4998.621,
+      "latency_ms": 599.292,
       "actual": "12",
       "nonempty": true,
       "passed_exact_match": true,
@@ -38,7 +38,7 @@
       "category": "arithmetic",
       "expected": "1045",
       "http_status": 200,
-      "latency_ms": 4902.495,
+      "latency_ms": 6695.065,
       "actual": "1045",
       "nonempty": true,
       "passed_exact_match": true,
@@ -50,7 +50,7 @@
       "category": "arithmetic",
       "expected": "633",
       "http_status": 200,
-      "latency_ms": 816.227,
+      "latency_ms": 3795.641,
       "actual": "633",
       "nonempty": true,
       "passed_exact_match": true,
@@ -62,7 +62,7 @@
       "category": "reasoning",
       "expected": "yes",
       "http_status": 200,
-      "latency_ms": 3383.721,
+      "latency_ms": 599.303,
       "actual": "yes",
       "nonempty": true,
       "passed_exact_match": true,
@@ -74,7 +74,7 @@
       "category": "reasoning",
       "expected": "C",
       "http_status": 200,
-      "latency_ms": 2897.831,
+      "latency_ms": 2399.582,
       "actual": "C",
       "nonempty": true,
       "passed_exact_match": true,
@@ -86,7 +86,7 @@
       "category": "reasoning",
       "expected": "Friday",
       "http_status": 200,
-      "latency_ms": 800.877,
+      "latency_ms": 1299.839,
       "actual": "Friday",
       "nonempty": true,
       "passed_exact_match": true,
@@ -98,7 +98,7 @@
       "category": "instruction",
       "expected": "ARIES-OK",
       "http_status": 200,
-      "latency_ms": 603.047,
+      "latency_ms": 1199.741,
       "actual": "ARIES-OK",
       "nonempty": true,
       "passed_exact_match": true,
@@ -110,7 +110,7 @@
       "category": "instruction",
       "expected": "red, green, blue",
       "http_status": 200,
-      "latency_ms": 1401.667,
+      "latency_ms": 3799.773,
       "actual": "red, green, blue",
       "nonempty": true,
       "passed_exact_match": true,
@@ -122,7 +122,7 @@
       "category": "knowledge",
       "expected": "H2O",
       "http_status": 200,
-      "latency_ms": 792.807,
+      "latency_ms": 1400.018,
       "actual": "H2O",
       "nonempty": true,
       "passed_exact_match": true,
@@ -133,41 +133,46 @@
       "id": "reasoning_04",
       "category": "reasoning",
       "expected": "9",
-      "latency_ms": 75079.932,
-      "error": "TimeoutError: The read operation timed out"
+      "http_status": 502,
+      "latency_ms": 48092.233,
+      "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     },
     {
       "id": "reasoning_05",
       "category": "reasoning",
       "expected": "5 minutes",
-      "latency_ms": 75089.215,
-      "error": "TimeoutError: The read operation timed out"
+      "http_status": 502,
+      "latency_ms": 46692.099,
+      "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     },
     {
       "id": "reasoning_06",
       "category": "reasoning",
       "expected": "5 cents",
-      "latency_ms": 75111.281,
-      "error": "TimeoutError: The read operation timed out"
+      "http_status": 502,
+      "latency_ms": 46193.742,
+      "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     },
     {
       "id": "context_01",
       "category": "context_memory",
       "expected": "MALLIN-47",
-      "latency_ms": 75106.053,
-      "error": "TimeoutError: The read operation timed out"
+      "http_status": 502,
+      "latency_ms": 45294.159,
+      "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     },
     {
       "id": "context_02",
       "category": "context_memory",
       "expected": "2 threads, 2048 tokens",
-      "latency_ms": 75072.025,
-      "error": "TimeoutError: The read operation timed out"
+      "http_status": 502,
+      "latency_ms": 33985.239,
+      "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     }
   ],
   "health": {
     "http_status": 200,
-    "latency_ms": 418.291,
+    "latency_ms": 2636.554,
     "response": {
       "status": "ok",
       "service": "aries-ai-api"
@@ -175,7 +180,7 @@
   },
   "models": {
     "http_status": 200,
-    "latency_ms": 499.549,
+    "latency_ms": 402.739,
     "response": {
       "object": "list",
       "data": [
@@ -230,15 +235,15 @@
       }
     },
     "latency_sample_count": 15,
-    "latency_min_ms": 603.047,
-    "latency_mean_ms": 26730.394,
-    "latency_p50_ms": 4900.116,
-    "latency_p90_ms": 75099.318,
-    "latency_p95_ms": 75107.621,
-    "latency_p99_ms": 75110.549,
-    "latency_max_ms": 75111.281,
-    "wall_clock_seconds": 155.854,
-    "completed_requests_per_second": 0.064,
+    "latency_min_ms": 599.292,
+    "latency_mean_ms": 16369.498,
+    "latency_p50_ms": 3795.641,
+    "latency_p90_ms": 46492.756,
+    "latency_p95_ms": 47112.139,
+    "latency_p99_ms": 47896.214,
+    "latency_max_ms": 48092.233,
+    "wall_clock_seconds": 87.444,
+    "completed_requests_per_second": 0.114,
     "warning": "Small authored diagnostic only; not an official MMLU, GSM8K, BBH, or leaderboard score."
   }
 }

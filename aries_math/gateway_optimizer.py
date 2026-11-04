@@ -129,7 +129,9 @@ def analyze_gateway_request(prompt: str, *, include_diagnostics: bool = True) ->
 
 
 
-def benchmark_gateway_profile(prompts: list[str], repeats: int = 5) -> dict[str, Any]:
+def benchmark_gateway_profile(
+    prompts: list[str], repeats: int = 5, *, include_diagnostics: bool = True
+) -> dict[str, Any]:
     """Measure profiling overhead only; does not measure model inference latency.
 
     Each prompt is analyzed repeatedly. The report includes raw samples and
@@ -142,12 +144,12 @@ def benchmark_gateway_profile(prompts: list[str], repeats: int = 5) -> dict[str,
         raise ValueError("prompts must not be empty")
     # One unrecorded pass reduces first-call/import/cache effects in the samples.
     for prompt in prompts:
-        analyze_gateway_request(prompt)
+        analyze_gateway_request(prompt, include_diagnostics=include_diagnostics)
     samples: list[int] = []
     for _ in range(repeats):
         for prompt in prompts:
             started = time.perf_counter_ns()
-            analyze_gateway_request(prompt)
+            analyze_gateway_request(prompt, include_diagnostics=include_diagnostics)
             # Measure the complete function call, including hashing and result construction.
             samples.append(max(0, time.perf_counter_ns() - started))
     ordered = sorted(samples)
@@ -161,7 +163,8 @@ def benchmark_gateway_profile(prompts: list[str], repeats: int = 5) -> dict[str,
 
     return {
         "benchmark": "mallin_prise_gateway_profile_only",
-        "scope": "complete profile function call including normalization, feature calculation, hashing, and result construction; excludes HTTP, queueing, model prefill, and generation",
+        "profile_mode": "full_diagnostics" if include_diagnostics else "route_only",
+        "scope": "complete profile function call; route_only skips harmonic diagnostics and hashing; excludes HTTP, queueing, model prefill, and generation",
         "prompt_count": len(prompts),
         "repeats": repeats,
         "warmup_passes": 1,

@@ -54,3 +54,27 @@ def test_gateway_profile_benchmark_rejects_invalid_inputs():
         benchmark_gateway_profile(["prompt"], repeats=0)
     with pytest.raises(ValueError):
         benchmark_gateway_profile([], repeats=1)
+
+
+def test_route_only_mode_preserves_routing_and_prise_decisions():
+    prompts = [
+        "2 + 2",
+        "Urgent production security review",
+        "Compare two approaches and derive a proof",
+        "A" * 400,
+        "ordinary short chat",
+    ]
+    for prompt in prompts:
+        full = analyze_gateway_request(prompt)
+        fast = analyze_gateway_request(prompt, include_diagnostics=False)
+        assert fast["routing"] == full["routing"]
+        assert fast["prise"] == full["prise"]
+        assert fast["profile_mode"] == "route_only"
+        assert fast["fingerprint_sha256"] is None
+        assert "omitted" in fast["harmonic"]
+        assert fast["elapsed_ns"] >= 0
+
+
+def test_route_only_mode_still_rejects_non_string_prompt():
+    with pytest.raises(TypeError):
+        analyze_gateway_request(None, include_diagnostics=False)

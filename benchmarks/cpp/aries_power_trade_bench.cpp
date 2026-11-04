@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <iostream>
 #include <numeric>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -35,8 +36,28 @@ std::int32_t baseline_decision(const Event& e) noexcept {
     return 0;
 }
 
+struct RaplCounter {
+    std::string energy_path{"/sys/class/powercap/intel-rapl:0/energy_uj"};
+    std::string max_path{"/sys/class/powercap/intel-rapl:0/max_energy_range_uj"};
+    std::optional<std::uint64_t> read(const std::string& path) const {
+        std::ifstream in(path);
+        std::uint64_t value{};
+        if (!in || !(in >> value)) return std::nullopt;
+        return value;
+    }
+    static std::optional<double> delta_joules(std::uint64_t before, std::uint64_t after,
+                                               std::uint64_t max_range) {
+        if (max_range == 0) return std::nullopt;
+        const std::uint64_t delta = after >= before ? after - before
+                                                    : (max_range - before) + after;
+        return static_cast<double>(delta) / 1.0e6;
+    }
+};
+
+// RAPL is a whole-package sensor: it cannot isolate energy used by this process.
 struct Result {
     double wall_ms{}, cpu_ms{}, events_per_second{};
+    std::optional<double> package_energy_j, package_joules_per_event;
     double p50_ns{}, p95_ns{}, p99_ns{}, mean_ns{}, max_ns{};
     std::array<std::uint64_t, 3> actions{}; // hold, sell, buy
     std::uint64_t checksum{};
@@ -54,6 +75,9 @@ Result run(const std::vector<Event>& events, bool with_aries) {
     Result r;
     std::vector<double> latency;
     latency.reserve((events.size() + 255U) / 256U);
+    const RaplCounter rapl;
+    const auto energy_before = rapl.read(rapl.energy_path);
+    const auto energy_max = rapl.read(rapl.max_path);
     const auto cpu_start = std::clock();
     const auto wall_start = Clock::now();
     for (std::size_t i = 0; i < events.size(); ++i) {
@@ -86,6 +110,12 @@ Result run(const std::vector<Event>& events, bool with_aries) {
     }
     const auto wall_end = Clock::now();
     const auto cpu_end = std::clock();
+    const auto energy_after = rapl.read(rapl.energy_path);
+    if (energy_before && energy_after && energy_max) {
+        r.package_energy_j = RaplCounter::delta_joules(*energy_before, *energy_after, *energy_max);
+        if (r.package_energy_j)
+            r.package_joules_per_event = *r.package_energy_j / static_cast<double>(events.size());
+    }
     r.wall_ms = std::chrono::duration<double, std::milli>(wall_end - wall_start).count();
     r.cpu_ms = 1000.0 * static_cast<double>(cpu_end - cpu_start) / CLOCKS_PER_SEC;
     r.events_per_second = events.size() / (r.wall_ms / 1000.0);
@@ -102,7 +132,13 @@ void print_result(const char* name, const Result& r) {
     std::cout << "  \"" << name << "\": {"
               << "\"wall_ms\":" << r.wall_ms << ","
               << "\"cpu_ms\":" << r.cpu_ms << ","
-              << "\"events_per_second\":" << r.events_per_second << ","
+              << "\"package_energy_j\":";
+    if (r.package_energy_j) std::cout << *r.package_energy_j;
+    else std::cout << "null";
+    std::cout << ",\"package_joules_per_event\":";
+    if (r.package_joules_per_event) std::cout << *r.package_joules_per_event;
+    else std::cout << "null";
+    std::cout << ",\"events_per_second\":" << r.events_per_second << ","
               << "\"latency_ns\":{\"mean\":" << r.mean_ns
               << ",\"p50\":" << r.p50_ns << ",\"p95\":" << r.p95_ns
               << ",\"p99\":" << r.p99_ns << ",\"max\":" << r.max_ns << "},"
@@ -135,7 +171,8 @@ int main(int argc, char** argv) {
     std::cout << std::fixed << std::setprecision(3)
               << "{\"suite\":\"ARIES native synthetic market-event benchmark\","
               << "\"events\":" << count << ","
-              << "\"scope\":\"single-process decision-path microbenchmark; not exchange HFT\","
+              << "\"scope\":\"synthetic decision-path microbenchmark; not exchange HFT\","
+              << "\"energy_sensor\":\"Intel RAPL package counter; null when unavailable; whole-package, not process-isolated\","
               << "\"action_counts_match\":" << (parity ? "true" : "false") << ","
               << "\"baseline\":";
     print_result("baseline", baseline);
@@ -144,6 +181,8 @@ int main(int argc, char** argv) {
     std::cout << ",\"interpretation\":["
               << "\"Feature descriptors do not change the baseline trading action.\","
               << "\"Latency percentiles use a 1-in-256 event sample; sampled timings include clock-call overhead.\","
-              << "\"No network, order routing, fills, PnL, or calibrated energy measurement.\"]}\n";
+              << "\"No network, order routing, fills, or PnL.\","
+              << "\"RAPL package energy includes other system activity and is not process-isolated.\","
+              << "\"Repeat paired trials on an otherwise idle physical host before claiming an energy saving.\"]}\n";
     return parity ? 0 : 3;
 }

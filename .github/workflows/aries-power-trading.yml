@@ -1,0 +1,35 @@
+name: ARIES Power and Trading Microbenchmark
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "tools/aries_power_trade_bench.py"
+      - "aries_math/prise_research_engine.py"
+      - ".github/workflows/aries-power-trading.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  local-microbenchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate and run deterministic comparison
+        run: |
+          python -m py_compile tools/aries_power_trade_bench.py aries_math/prise_research_engine.py
+          python tools/aries_power_trade_bench.py --events 100000 --warmup 2000 --output reports/aries-power-trading-microbench.json
+      - name: Upload measured report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-power-trading-\${{ github.run_number }}
+          path: reports/aries-power-trading-microbench.json
+          if-no-files-found: error
+          retention-days: 90

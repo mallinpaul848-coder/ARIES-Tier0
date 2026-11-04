@@ -87,20 +87,18 @@ Result run(const std::vector<Event>& events, bool with_aries) {
         const auto start = sample ? Clock::now() : Clock::time_point{};
         const auto action = baseline_decision(e);
         if (with_aries) {
-            const auto abs_delta = static_cast<std::uint64_t>(std::abs(e.delta));
-            const auto abs_imbalance = static_cast<std::uint64_t>(std::abs(e.imbalance));
-            const std::uint64_t magnitude = abs_delta + abs_imbalance +
-                static_cast<std::uint64_t>(e.risk) + e.size;
-            // Risk-gated path: terminal hold events skip downstream descriptors.
+            // Terminal risk holds are decided before optional descriptors are evaluated.
             if (e.risk < 90) {
-                const auto root = aries::core::UltraLowLatencyHarmonicEngine::fast_digital_root(magnitude);
-                // Phase is intentionally excluded: no decision consumes it on this hot path.
-                const std::uint64_t feature_score =
-                    (static_cast<std::uint64_t>(e.size) + abs_delta + abs_imbalance) * root;
-                r.checksum += feature_score;
-            } else {
-                r.checksum += static_cast<std::uint64_t>(e.size) + abs_delta;
+                const auto magnitude =
+                    static_cast<std::uint64_t>(std::abs(e.delta)) +
+                    static_cast<std::uint64_t>(std::abs(e.imbalance)) +
+                    static_cast<std::uint64_t>(e.risk) + e.size;
+                // If the consumer only needs the 3/6/9 class, use the equivalent
+                // modulo-3 predicate; do not compute a full digital root or phase.
+                const auto harmonic = aries::core::is_harmonic_node_fast(magnitude);
+                r.checksum += static_cast<std::uint64_t>(harmonic);
             }
+            r.checksum += static_cast<std::uint64_t>(e.size);
         } else {
             r.checksum += static_cast<std::uint64_t>(e.size) +
                           static_cast<std::uint64_t>(std::abs(e.delta));
@@ -182,7 +180,7 @@ int main(int argc, char** argv) {
     std::cout << ",\"aries_feature_path\":";
     print_result(aries);
     std::cout << ",\"interpretation\":["
-              << "\"Risk-gated feature path skips descriptors for terminal hold events; phase is excluded because no decision consumes it.\","
+              << "\"Risk-gated feature path computes only the needed 3/6/9 class with modulo 3; full root and unused phase are skipped.\","
               << "\"Latency percentiles use a 1-in-256 event sample; sampled timings include clock-call overhead.\","
               << "\"No network, order routing, fills, or PnL.\","
               << "\"RAPL package energy includes other system activity and is not process-isolated.\","

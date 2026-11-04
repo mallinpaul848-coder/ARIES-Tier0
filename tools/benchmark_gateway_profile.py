@@ -8,6 +8,7 @@ Examples:
 from __future__ import annotations
 
 import argparse
+from hashlib import sha256
 import json
 import os
 import platform
@@ -50,6 +51,8 @@ def main() -> int:
         prompts = DEFAULT_PROMPTS
 
     report = benchmark_gateway_profile(prompts, repeats=args.repeats)
+    corpus_bytes = json.dumps(prompts, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    report["prompt_corpus_sha256"] = sha256(corpus_bytes).hexdigest()
     report["environment"] = {
         "python_version": sys.version.split()[0],
         "platform": platform.platform(),

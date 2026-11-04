@@ -19,19 +19,27 @@ def _contains_any(text: str, terms: tuple[str, ...]) -> bool:
     return any(term in text for term in terms)
 
 
-def analyze_gateway_request(prompt: str) -> dict[str, Any]:
-    """Compute an auditable Mallin–PRISE profile in linear time and O(n) auxiliary space, where n is prompt length."""
+def analyze_gateway_request(prompt: str, *, include_diagnostics: bool = True) -> dict[str, Any]:
+    """Compute a PRISE route profile, optionally adding full harmonic diagnostics.
+
+    The latency-critical gateway uses route-only mode. Full diagnostics remain
+    available to research endpoints and benchmark tooling.
+    """
     started_ns = time.perf_counter_ns()
     if not isinstance(prompt, str):
         raise TypeError("prompt must be a string")
     normalized = " ".join(prompt.strip().split())
     lower = normalized.casefold()
-    words = normalized.split()
-    encoded = normalized.encode("utf-8")
-    byte_count = len(encoded)
-    char_sum = sum(encoded)
-    digit_count = sum(ch.isdigit() for ch in normalized)
-    punctuation_count = sum(ch in string.punctuation for ch in normalized)
+    if include_diagnostics:
+        encoded = normalized.encode("utf-8")
+        byte_count = len(encoded)
+        char_sum = sum(encoded)
+        digit_count = sum(ch.isdigit() for ch in normalized)
+        punctuation_count = sum(ch in string.punctuation for ch in normalized)
+        word_count = len(normalized.split())
+    else:
+        encoded = None
+        byte_count = char_sum = digit_count = punctuation_count = word_count = 0
 
     # PRISE dimensions are transparent keyword heuristics, not probabilities.
     priority = 1.0 if _contains_any(lower, ("urgent", "priority", "deadline", "asap")) else 0.25
@@ -53,13 +61,17 @@ def analyze_gateway_request(prompt: str) -> dict[str, Any]:
         systemic=systemic, emergent=emergent,
     )
 
-    # 3–6–9 and Phase-8 are deterministic descriptors, not correctness tests.
-    root = DigitalRootSystem.compute(char_sum)
-    phase = phase8(float(len(words)), float((digit_count + punctuation_count) % 8))
-    helixo = helixo_features((
-        float(byte_count), float(len(words)), float(digit_count),
-        float(punctuation_count),
-    ))
+    # 3–6–9, Phase-8, Helixo and hashing are descriptive diagnostics. They
+    # are skipped on the hot path because none changes the routing decision.
+    if include_diagnostics:
+        root = DigitalRootSystem.compute(char_sum)
+        phase = phase8(float(word_count), float((digit_count + punctuation_count) % 8))
+        helixo = helixo_features((
+            float(byte_count), float(word_count), float(digit_count),
+            float(punctuation_count),
+        ))
+    else:
+        root = phase = helixo = None
     risk_review = risk >= 1.0
     needs_scaffold = (
         risk_review
@@ -79,21 +91,24 @@ def analyze_gateway_request(prompt: str) -> dict[str, Any]:
     elapsed_ns = max(0, time.perf_counter_ns() - started_ns)
     return {
         "version": "1.0.0",
-        "fingerprint_sha256": sha256(encoded).hexdigest(),
-        "fingerprint_scope": "exact whitespace-normalized UTF-8 prompt; case preserved",
+        "profile_mode": "full_diagnostics" if include_diagnostics else "route_only",
+        "fingerprint_sha256": sha256(encoded).hexdigest() if encoded is not None else None,
+        "fingerprint_scope": "exact whitespace-normalized UTF-8 prompt; case preserved" if include_diagnostics else "omitted on latency-critical route",
         "input": {
             "byte_count": byte_count,
-            "word_count": len(words),
+            "word_count": word_count,
             "digit_count": digit_count,
             "punctuation_count": punctuation_count,
         },
-        "harmonic": {
+        "harmonic": ({
             "byte_sum_digital_root": root,
             "is_3_6_9_node": root in (3, 6, 9),
             "phase8": phase,
             "helixo": helixo,
             "interpretation": "descriptive routing features only; not an answer-quality score",
-        },
+        } if include_diagnostics else {
+            "omitted": "non-routing harmonic calculations skipped on latency-critical path"
+        }),
         "prise": {
             "profile": {
                 "priority": priority, "risk": risk, "impact": impact,

@@ -203,7 +203,7 @@ class Handler(BaseHTTPRequestHandler):
             if not user_messages:
                 return self.send_json(400, {"error":{"message":"At least one non-empty user message is required"}})
             prompt = user_messages[-1].strip()
-            gateway_profile = analyze_gateway_request(prompt)
+            gateway_profile = analyze_gateway_request(prompt, include_diagnostics=False)
             LATENCY_MONITOR.record("gateway_profile", gateway_profile["elapsed_ns"])
             # Keep the latency-critical path lean. The full PRISE checklist is useful
             # for long/explicit analysis tasks, but adding it to every short chat

@@ -60,14 +60,15 @@ def analyze_gateway_request(prompt: str) -> dict[str, Any]:
         float(byte_count), float(len(words)), float(digit_count),
         float(punctuation_count),
     ))
+    risk_review = risk >= 1.0
     needs_scaffold = (
-        len(normalized) > 280
+        risk_review
+        or len(normalized) > 280
         or _contains_any(lower, (
             "prise", "mallin", "proof", "derive", "analyze", "analyse",
             "compare", "evaluate", "research", "step by step",
         ))
     )
-    risk_review = risk >= 1.0
     if risk_review:
         route_hint = "review_first"
     elif needs_scaffold:

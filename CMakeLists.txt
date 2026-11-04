@@ -10,10 +10,6 @@ option(ARIES_ENABLE_AVX512 "Compile the optional AVX-512 path (requires compatib
 add_executable(aries_gateway src/main.cpp)
 target_include_directories(aries_gateway PRIVATE include)
 
-# Native synthetic market-event benchmark; opt-in at runtime, no production behavior change.
-add_executable(aries_power_trade_bench benchmarks/cpp/aries_power_trade_bench.cpp)
-target_include_directories(aries_power_trade_bench PRIVATE include)
-
 if(MSVC)
   target_compile_options(aries_gateway PRIVATE /O2 /W4)
 else()
@@ -42,6 +38,11 @@ add_test(NAME aries_tier0_engine COMMAND test_aries_tier0_engine)
 
 add_executable(aries_power_trade_bench benchmarks/cpp/aries_power_trade_bench.cpp)
 target_include_directories(aries_power_trade_bench PRIVATE include)
+if(MSVC)
+  target_compile_options(aries_power_trade_bench PRIVATE /O2 /W4)
+else()
+  target_compile_options(aries_power_trade_bench PRIVATE -O3 -Wall -Wextra -Wpedantic)
+endif()
 if(BUILD_TESTING)
   add_test(NAME aries_power_trade_smoke COMMAND aries_power_trade_bench 20000)
 endif()

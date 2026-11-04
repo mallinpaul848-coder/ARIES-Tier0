@@ -1,7 +1,7 @@
 {
   "suite": "ARIES Native Bench v2",
   "suite_type": "project-owned diagnostic; not an official academic benchmark",
-  "timestamp_utc": "2026-11-04T04:30:03.370839+00:00",
+  "timestamp_utc": "2026-11-04T04:30:13.788202+00:00",
   "target": "https://aries-tier0-api-6qjh.onrender.com",
   "requested_model": "auto",
   "configuration": {
@@ -14,7 +14,7 @@
       "category": "arithmetic",
       "expected": "323",
       "http_status": 200,
-      "latency_ms": 306.495,
+      "latency_ms": 501.516,
       "actual": "323",
       "nonempty": true,
       "passed_exact_match": true,
@@ -26,7 +26,7 @@
       "category": "arithmetic",
       "expected": "12",
       "http_status": 200,
-      "latency_ms": 495.721,
+      "latency_ms": 496.671,
       "actual": "12",
       "nonempty": true,
       "passed_exact_match": true,
@@ -38,7 +38,7 @@
       "category": "arithmetic",
       "expected": "1045",
       "http_status": 200,
-      "latency_ms": 300.342,
+      "latency_ms": 301.037,
       "actual": "1045",
       "nonempty": true,
       "passed_exact_match": true,
@@ -50,7 +50,7 @@
       "category": "arithmetic",
       "expected": "633",
       "http_status": 200,
-      "latency_ms": 297.952,
+      "latency_ms": 200.833,
       "actual": "633",
       "nonempty": true,
       "passed_exact_match": true,
@@ -62,7 +62,7 @@
       "category": "reasoning",
       "expected": "yes",
       "http_status": 200,
-      "latency_ms": 202.854,
+      "latency_ms": 397.242,
       "actual": "yes",
       "nonempty": true,
       "passed_exact_match": true,
@@ -74,7 +74,7 @@
       "category": "reasoning",
       "expected": "C",
       "http_status": 200,
-      "latency_ms": 299.911,
+      "latency_ms": 299.05,
       "actual": "C",
       "nonempty": true,
       "passed_exact_match": true,
@@ -86,7 +86,7 @@
       "category": "reasoning",
       "expected": "Friday",
       "http_status": 200,
-      "latency_ms": 297.02,
+      "latency_ms": 300.674,
       "actual": "Friday",
       "nonempty": true,
       "passed_exact_match": true,
@@ -98,7 +98,7 @@
       "category": "instruction",
       "expected": "ARIES-OK",
       "http_status": 200,
-      "latency_ms": 303.981,
+      "latency_ms": 299.928,
       "actual": "ARIES-OK",
       "nonempty": true,
       "passed_exact_match": true,
@@ -110,7 +110,7 @@
       "category": "instruction",
       "expected": "red, green, blue",
       "http_status": 200,
-      "latency_ms": 304.743,
+      "latency_ms": 401.145,
       "actual": "red, green, blue",
       "nonempty": true,
       "passed_exact_match": true,
@@ -122,7 +122,7 @@
       "category": "knowledge",
       "expected": "H2O",
       "http_status": 200,
-      "latency_ms": 193.054,
+      "latency_ms": 402.903,
       "actual": "H2O",
       "nonempty": true,
       "passed_exact_match": true,
@@ -134,7 +134,7 @@
       "category": "reasoning",
       "expected": "9",
       "http_status": 502,
-      "latency_ms": 24317.807,
+      "latency_ms": 13212.958,
       "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     },
     {
@@ -142,7 +142,7 @@
       "category": "reasoning",
       "expected": "5 minutes",
       "http_status": 502,
-      "latency_ms": 55921.522,
+      "latency_ms": 56175.655,
       "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     },
     {
@@ -150,27 +150,27 @@
       "category": "reasoning",
       "expected": "5 cents",
       "http_status": 502,
-      "latency_ms": 34954.0,
+      "latency_ms": 34883.699,
       "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     },
     {
       "id": "context_01",
       "category": "context_memory",
       "expected": "MALLIN-47",
-      "latency_ms": 75054.119,
+      "latency_ms": 75026.155,
       "error": "TimeoutError: The read operation timed out"
     },
     {
       "id": "context_02",
       "category": "context_memory",
       "expected": "2 threads, 2048 tokens",
-      "latency_ms": 75029.895,
+      "latency_ms": 75094.938,
       "error": "TimeoutError: The read operation timed out"
     }
   ],
   "health": {
     "http_status": 200,
-    "latency_ms": 292.449,
+    "latency_ms": 279.879,
     "response": {
       "status": "ok",
       "service": "aries-ai-api"
@@ -178,7 +178,7 @@
   },
   "models": {
     "http_status": 200,
-    "latency_ms": 298.16,
+    "latency_ms": 395.647,
     "response": {
       "object": "list",
       "data": [
@@ -233,15 +233,15 @@
       }
     },
     "latency_sample_count": 15,
-    "latency_min_ms": 193.054,
-    "latency_mean_ms": 17885.294,
-    "latency_p50_ms": 304.743,
-    "latency_p90_ms": 67386.546,
-    "latency_p95_ms": 75037.162,
-    "latency_p99_ms": 75050.728,
-    "latency_max_ms": 75054.119,
-    "wall_clock_seconds": 268.873,
-    "completed_requests_per_second": 0.037,
+    "latency_min_ms": 200.833,
+    "latency_mean_ms": 17199.627,
+    "latency_p50_ms": 402.903,
+    "latency_p90_ms": 67485.955,
+    "latency_p95_ms": 75046.79,
+    "latency_p99_ms": 75085.308,
+    "latency_max_ms": 75094.938,
+    "wall_clock_seconds": 258.402,
+    "completed_requests_per_second": 0.039,
     "warning": "Small authored diagnostic only; not an official MMLU, GSM8K, BBH, or leaderboard score."
   }
 }

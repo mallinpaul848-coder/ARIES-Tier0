@@ -1,7 +1,7 @@
 {
   "suite": "ARIES Native Bench v2",
   "suite_type": "project-owned diagnostic; not an official academic benchmark",
-  "timestamp_utc": "2026-11-04T05:25:19.962864+00:00",
+  "timestamp_utc": "2026-11-04T05:25:19.732683+00:00",
   "target": "https://aries-tier0-api-6qjh.onrender.com",
   "requested_model": "auto",
   "configuration": {
@@ -14,7 +14,7 @@
       "category": "arithmetic",
       "expected": "323",
       "http_status": 200,
-      "latency_ms": 6897.239,
+      "latency_ms": 307.702,
       "actual": "323",
       "nonempty": true,
       "passed_exact_match": true,
@@ -26,7 +26,7 @@
       "category": "arithmetic",
       "expected": "12",
       "http_status": 200,
-      "latency_ms": 5698.105,
+      "latency_ms": 306.005,
       "actual": "12",
       "nonempty": true,
       "passed_exact_match": true,
@@ -37,24 +37,32 @@
       "id": "math_03",
       "category": "arithmetic",
       "expected": "1045",
-      "http_status": 502,
-      "latency_ms": 4408.9,
-      "error": ""
+      "http_status": 200,
+      "latency_ms": 2006.212,
+      "actual": "1045",
+      "nonempty": true,
+      "passed_exact_match": true,
+      "prompt_tokens": 46,
+      "completion_tokens": 4
     },
     {
       "id": "math_04",
       "category": "arithmetic",
       "expected": "633",
-      "http_status": 502,
-      "latency_ms": 4409.756,
-      "error": ""
+      "http_status": 200,
+      "latency_ms": 4805.931,
+      "actual": "633",
+      "nonempty": true,
+      "passed_exact_match": true,
+      "prompt_tokens": 47,
+      "completion_tokens": 3
     },
     {
       "id": "logic_01",
       "category": "reasoning",
       "expected": "yes",
       "http_status": 200,
-      "latency_ms": 688.866,
+      "latency_ms": 1095.608,
       "actual": "yes",
       "nonempty": true,
       "passed_exact_match": true,
@@ -66,7 +74,7 @@
       "category": "reasoning",
       "expected": "C",
       "http_status": 200,
-      "latency_ms": 587.473,
+      "latency_ms": 5793.805,
       "actual": "C",
       "nonempty": true,
       "passed_exact_match": true,
@@ -78,7 +86,7 @@
       "category": "reasoning",
       "expected": "Friday",
       "http_status": 200,
-      "latency_ms": 999.628,
+      "latency_ms": 5101.695,
       "actual": "Friday",
       "nonempty": true,
       "passed_exact_match": true,
@@ -90,7 +98,7 @@
       "category": "instruction",
       "expected": "ARIES-OK",
       "http_status": 200,
-      "latency_ms": 299.734,
+      "latency_ms": 794.817,
       "actual": "ARIES-OK",
       "nonempty": true,
       "passed_exact_match": true,
@@ -102,7 +110,7 @@
       "category": "instruction",
       "expected": "red, green, blue",
       "http_status": 200,
-      "latency_ms": 1602.843,
+      "latency_ms": 1699.039,
       "actual": "red, green, blue",
       "nonempty": true,
       "passed_exact_match": true,
@@ -114,7 +122,7 @@
       "category": "knowledge",
       "expected": "H2O",
       "http_status": 200,
-      "latency_ms": 3600.567,
+      "latency_ms": 2300.056,
       "actual": "H2O",
       "nonempty": true,
       "passed_exact_match": true,
@@ -126,7 +134,7 @@
       "category": "reasoning",
       "expected": "9",
       "http_status": 502,
-      "latency_ms": 50374.594,
+      "latency_ms": 53067.388,
       "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     },
     {
@@ -134,7 +142,7 @@
       "category": "reasoning",
       "expected": "5 minutes",
       "http_status": 502,
-      "latency_ms": 49482.233,
+      "latency_ms": 51776.519,
       "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     },
     {
@@ -142,7 +150,7 @@
       "category": "reasoning",
       "expected": "5 cents",
       "http_status": 502,
-      "latency_ms": 49374.816,
+      "latency_ms": 51373.606,
       "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     },
     {
@@ -150,7 +158,7 @@
       "category": "context_memory",
       "expected": "MALLIN-47",
       "http_status": 502,
-      "latency_ms": 47073.697,
+      "latency_ms": 51073.673,
       "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     },
     {
@@ -158,13 +166,13 @@
       "category": "context_memory",
       "expected": "2 threads, 2048 tokens",
       "http_status": 502,
-      "latency_ms": 34367.746,
+      "latency_ms": 34372.617,
       "error": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>502</title>\n    <style>@font-face {\n  font-family: \"Roobert\";\n  font-weight: 500;\n  font-style: normal;\n  font-stretch: normal;\n  src: url(\"data:font/woff2;base64,d09GMk9UVE8AAKewAAwAAAABa6QAAKdfAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYKmehqCHhuC4UocpRQGYACLBgE2AiQDkygEBgWFRwcgW8pqkQKZcr0u0nk2H+gc25rBL5CqkDOqYXNqo87dNmL1mgByHi4yIGwcgLFJz2f/////f/pSkaHKgl52HEgorIWX0m0/lzuLglQtUxbMiGh9qonlnolc+1JbmihzmbbylQ/Xs2Knu/rUH62ibhOWZkpgVpo4nLnvzMOZ87/06Lk2hMnbe1EpM1cUezJlZtqCZIKYIPYeoS6VhFPJXNa5j7Y8LmH67MF2qJYI49/FNzQbwX7cqeRUbzyDffdLybw5cxRTIbdy4y5BVskcP6vu3uo+6GtnQl/up3nkVnDZmKlEpYHB1w/usr46inVsWjdEIE2gBgoC36WYsC4qXJjwYb9YbH9vayYROp/tXkp72nOEOvigu6g0+gsN/z6hg7+Ga7wNb8j2p2kypxDmhZipdHuzSaKxAmIassxsPiDbztOUdESnEj+YhrsptpjfP0Hqxu9m0n7j/zGR6I7LbDy56KLRVoGx6yFqcqyz6j2en9u998cYY4wxBowxxhjRI2rAqBAp6RKUahWwULEQCwsLURAJI7GwEBUQEbERFaMoFbH8cO4rM0neNG3/64f8LjCo"
     }
   ],
   "health": {
     "http_status": 200,
-    "latency_ms": 592.621,
+    "latency_ms": 322.495,
     "response": {
       "status": "ok",
       "service": "aries-ai-api"
@@ -172,7 +180,7 @@
   },
   "models": {
     "http_status": 200,
-    "latency_ms": 1802.701,
+    "latency_ms": 798.66,
     "response": {
       "object": "list",
       "data": [
@@ -227,15 +235,15 @@
       }
     },
     "latency_sample_count": 15,
-    "latency_min_ms": 299.734,
-    "latency_mean_ms": 17324.413,
-    "latency_p50_ms": 4409.756,
-    "latency_p90_ms": 49439.266,
-    "latency_p95_ms": 49749.941,
-    "latency_p99_ms": 50249.663,
-    "latency_max_ms": 50374.594,
-    "wall_clock_seconds": 91.084,
-    "completed_requests_per_second": 0.088,
+    "latency_min_ms": 306.005,
+    "latency_mean_ms": 17724.978,
+    "latency_p50_ms": 4805.931,
+    "latency_p90_ms": 51615.354,
+    "latency_p95_ms": 52163.78,
+    "latency_p99_ms": 52886.666,
+    "latency_max_ms": 53067.388,
+    "wall_clock_seconds": 92.639,
+    "completed_requests_per_second": 0.108,
     "warning": "Small authored diagnostic only; not an official MMLU, GSM8K, BBH, or leaderboard score."
   }
 }

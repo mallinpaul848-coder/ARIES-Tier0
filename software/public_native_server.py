@@ -229,6 +229,16 @@ class Handler(BaseHTTPRequestHandler):
             local_model_elapsed_ns = None
             fast_path_cache_hit = False
             fast_path_elapsed_ns = 0
+            # Resolve bounded deterministic tasks before invoking a neural model.
+            # This keeps arithmetic, supported reasoning, and cache hits off the
+            # expensive CPU inference path while preserving model fallback for unknown prompts.
+            if answer is None:
+                answer, fast_path_cache_hit, fast_path_elapsed_ns = FAST_PATH.solve_with_metadata(prompt)
+            if answer is None:
+                math_result = route_math_prompt(prompt)
+                if math_result is not None:
+                    answer = math_result["answer"]
+                    math_route = math_result["route"]
             if answer is None and LOCAL_MODEL_READY:
                 answer, local_model_elapsed_ns = LOCAL_MODEL.generate(
                     normalized_messages,
@@ -247,13 +257,6 @@ class Handler(BaseHTTPRequestHandler):
                     timeout_seconds=UPSTREAM_TIMEOUT_SECONDS,
                 )
                 upstream_used = True
-            if answer is None:
-                answer, fast_path_cache_hit, fast_path_elapsed_ns = FAST_PATH.solve_with_metadata(prompt)
-            if answer is None:
-                math_result = route_math_prompt(prompt)
-                if math_result is not None:
-                    answer = math_result["answer"]
-                    math_route = math_result["route"]
             if answer is None:
                 answer = (
                     "I can handle supported calculations and built-in ARIES tasks, but the local "

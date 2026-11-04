@@ -10,6 +10,10 @@ option(ARIES_ENABLE_AVX512 "Compile the optional AVX-512 path (requires compatib
 add_executable(aries_gateway src/main.cpp)
 target_include_directories(aries_gateway PRIVATE include)
 
+# Native synthetic market-event benchmark; opt-in at runtime, no production behavior change.
+add_executable(aries_power_trade_bench benchmarks/cpp/aries_power_trade_bench.cpp)
+target_include_directories(aries_power_trade_bench PRIVATE include)
+
 if(MSVC)
   target_compile_options(aries_gateway PRIVATE /O2 /W4)
 else()

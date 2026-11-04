@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import platform
 from pathlib import Path
 import sys
 
@@ -50,8 +52,11 @@ def main() -> int:
     report = benchmark_gateway_profile(prompts, repeats=args.repeats)
     report["environment"] = {
         "python_version": sys.version.split()[0],
-        "platform": sys.platform,
-        "note": "Record CPU model, OS version, power mode, and commit SHA alongside this report for comparisons.",
+        "platform": platform.platform(),
+        "machine": platform.machine(),
+        "processor": platform.processor() or os.environ.get("PROCESSOR_IDENTIFIER", "unknown"),
+        "cpu_count": os.cpu_count(),
+        "note": "Record the exact commit SHA and power/thermal conditions alongside this report for comparisons.",
     }
     rendered = json.dumps(report, indent=2, sort_keys=True)
     if args.output:

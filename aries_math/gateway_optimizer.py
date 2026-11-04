@@ -128,8 +128,10 @@ def benchmark_gateway_profile(prompts: list[str], repeats: int = 5) -> dict[str,
     samples: list[int] = []
     for _ in range(repeats):
         for prompt in prompts:
-            result = analyze_gateway_request(prompt)
-            samples.append(int(result["elapsed_ns"]))
+            started = time.perf_counter_ns()
+            analyze_gateway_request(prompt)
+            # Measure the complete function call, including hashing and result construction.
+            samples.append(max(0, time.perf_counter_ns() - started))
     ordered = sorted(samples)
 
     def percentile(p: float) -> float:
@@ -141,7 +143,7 @@ def benchmark_gateway_profile(prompts: list[str], repeats: int = 5) -> dict[str,
 
     return {
         "benchmark": "mallin_prise_gateway_profile_only",
-        "scope": "feature computation only; excludes HTTP, queueing, model prefill, and generation",
+        "scope": "complete profile function call including normalization, feature calculation, hashing, and result construction; excludes HTTP, queueing, model prefill, and generation",
         "prompt_count": len(prompts),
         "repeats": repeats,
         "sample_count": len(samples),

@@ -53,11 +53,14 @@ double percentile(const std::vector<double>& sorted, double p) {
 Result run(const std::vector<Event>& events, bool with_aries) {
     Result r;
     std::vector<double> latency;
-    latency.reserve(events.size());
+    latency.reserve((events.size() + 255U) / 256U);
     const auto cpu_start = std::clock();
     const auto wall_start = Clock::now();
-    for (const auto& e : events) {
-        const auto start = Clock::now();
+    for (std::size_t i = 0; i < events.size(); ++i) {
+        const auto& e = events[i];
+        // Sample one event in every 256 to reduce timer instrumentation overhead.
+        const bool sample = (i & 255U) == 0U;
+        const auto start = sample ? Clock::now() : Clock::time_point{};
         const auto action = baseline_decision(e);
         if (with_aries) {
             const std::uint64_t magnitude =
@@ -76,8 +79,10 @@ Result run(const std::vector<Event>& events, bool with_aries) {
                           static_cast<std::uint64_t>(std::abs(e.delta));
         }
         r.actions[static_cast<std::size_t>(action + 1)]++;
-        const auto end = Clock::now();
-        latency.push_back(std::chrono::duration<double, std::nano>(end - start).count());
+        if (sample) {
+            const auto end = Clock::now();
+            latency.push_back(std::chrono::duration<double, std::nano>(end - start).count());
+        }
     }
     const auto wall_end = Clock::now();
     const auto cpu_end = std::clock();
@@ -138,7 +143,7 @@ int main(int argc, char** argv) {
     print_result("aries_feature_path", aries);
     std::cout << ",\"interpretation\":["
               << "\"Feature descriptors do not change the baseline trading action.\","
-              << "\"Per-event timings include clock-call overhead.\","
+              << "\"Latency percentiles use a 1-in-256 event sample; sampled timings include clock-call overhead.\","
               << "\"No network, order routing, fills, PnL, or calibrated energy measurement.\"]}\n";
     return parity ? 0 : 3;
 }

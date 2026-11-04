@@ -7,6 +7,7 @@ on:
     paths:
       - "tools/aries_power_trade_bench.py"
       - "aries_math/prise_research_engine.py"
+      - "tests/test_power_trade_bench.py"
       - ".github/workflows/aries-power-trading.yml"
 
 permissions:
@@ -21,6 +22,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Run regression tests
+        run: python -m unittest discover -s tests -v
       - name: Validate and run deterministic comparison
         run: |
           python -m py_compile tools/aries_power_trade_bench.py aries_math/prise_research_engine.py

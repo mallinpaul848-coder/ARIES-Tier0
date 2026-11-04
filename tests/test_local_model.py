@@ -51,8 +51,13 @@ def test_local_chat_keeps_system_prompt_and_only_recent_messages():
     model.generate(history)
     forwarded = model._model.payload["messages"]
     assert forwarded[0] == {"role": "system", "content": "Custom ARIES instructions"}
-    assert len(forwarded) == 9
-    assert forwarded[-1]["content"] == "Question 11"
+    assert len(forwarded) == 5
+    assert [item["content"] for item in forwarded[1:]] == [
+        "Question 8",
+        "Question 9",
+        "Question 10",
+        "Question 11",
+    ]
 
 
 def test_local_chat_rejects_empty_model_output():

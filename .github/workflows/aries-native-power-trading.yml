@@ -1,0 +1,39 @@
+name: ARIES Native Power and Trading Benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "benchmarks/cpp/aries_power_trade_bench.cpp"
+      - "include/aries_fast_kernel.hpp"
+      - "CMakeLists.txt"
+      - ".github/workflows/aries-native-power-trading.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  native-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure optimized C++20 build
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+      - name: Compile ARIES and benchmark
+        run: cmake --build build --config Release --parallel 2
+      - name: Run existing and new regression tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Capture native benchmark report
+        run: |
+          mkdir -p reports
+          ./build/aries_power_trade_bench 500000 > reports/aries-native-power-trading.json
+          cat reports/aries-native-power-trading.json
+      - name: Upload native benchmark report
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-native-power-trading-${{ github.run_number }}
+          path: reports/aries-native-power-trading.json
+          if-no-files-found: error
+          retention-days: 90

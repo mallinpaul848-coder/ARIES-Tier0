@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from aries_math.prise_unified import (ARIESExecutionEngine, PRISEProblem, exact_sat_bruteforce)
 from aries_math.chat_router import route_math_prompt
 from aries_math.reasoning_integration import analyze_request, build_reasoning_context
+from aries_math.gateway_optimizer import analyze_gateway_request
 
 MATH_ENGINE = ARIESExecutionEngine()
 
@@ -131,7 +132,8 @@ class Handler(BaseHTTPRequestHandler):
                 "module":"ARIES PRISE unified mathematics",
                 "available_operators":["digital_root_369","toroidal_geometry","helixo_spiral",
                     "sample_signal_diagnostics","euler_characteristic","finite_euler_product",
-                    "prise_scoring","small_instance_exact_sat"],
+                    "prise_scoring","small_instance_exact_sat",
+                    "mallin_prise_gateway_profile","digital_root_369","phase8","helixo_features"],
                 "p_vs_np_status":"No proof of P=NP or P!=NP is claimed.",
                 "latency_claim":"MEASURE_REQUIRED"
             })
@@ -201,17 +203,12 @@ class Handler(BaseHTTPRequestHandler):
             if not user_messages:
                 return self.send_json(400, {"error":{"message":"At least one non-empty user message is required"}})
             prompt = user_messages[-1].strip()
+            gateway_profile = analyze_gateway_request(prompt)
+            LATENCY_MONITOR.record("gateway_profile", gateway_profile["elapsed_ns"])
             # Keep the latency-critical path lean. The full PRISE checklist is useful
             # for long/explicit analysis tasks, but adding it to every short chat
             # needlessly expands prompt prefill on the CPU-only local model.
-            lower_prompt = prompt.lower()
-            needs_reasoning_scaffold = (
-                len(prompt) > 280
-                or any(term in lower_prompt for term in (
-                    "prise", "mallin", "proof", "derive", "analyze", "analyse",
-                    "compare", "evaluate", "research", "step by step",
-                ))
-            )
+            needs_reasoning_scaffold = gateway_profile["routing"]["reasoning_scaffold_recommended"]
             reasoning_plan = analyze_request(prompt) if needs_reasoning_scaffold else None
             if needs_reasoning_scaffold:
                 reasoning_context = build_reasoning_context(prompt, reasoning_plan)
@@ -286,7 +283,8 @@ class Handler(BaseHTTPRequestHandler):
                     "model_type":"configured_chat_model" if upstream_used else ("local_instruct_model" if local_model_used else "native_task_engine_or_baseline"),
                     "math_route":math_route,
                     "reasoning_scaffold_applied":reasoning_plan is not None,
-                    "reasoning_goal":reasoning_plan["goal"] if reasoning_plan else "direct_chat"
+                    "reasoning_goal":reasoning_plan["goal"] if reasoning_plan else "direct_chat",
+                    "mallin_gateway_profile":gateway_profile
                 }
             })
         except UpstreamInferenceError as exc:

@@ -81,3 +81,49 @@ def test_latency_monitor_rejects_invalid_samples():
         monitor.record("chat", -1)
     with pytest.raises(ValueError):
         monitor.record("", 1)
+
+
+def test_deterministic_routes_run_before_generative_fallback():
+    from software.latency_engine import resolve_deterministic_routes
+
+    calls = []
+    engine = FastPathEngine(lambda prompt: calls.append("fast") or "cached calculation", max_entries=4)
+    def known(prompt):
+        calls.append("known")
+        return None
+    def math_router(prompt):
+        calls.append("math")
+        return {"route": "math_test", "answer": "math result"}
+
+    result = resolve_deterministic_routes("17 * 19", known, engine, math_router)
+    assert result[0] == "cached calculation"
+    assert result[4] == "deterministic_fast_path"
+    assert calls == ["known", "fast"]
+
+
+def test_math_route_runs_after_fast_path_miss_and_before_model():
+    from software.latency_engine import resolve_deterministic_routes
+
+    calls = []
+    engine = FastPathEngine(lambda prompt: calls.append("fast") or None, max_entries=4)
+    def known(prompt):
+        calls.append("known")
+        return None
+    def math_router(prompt):
+        calls.append("math")
+        return {"route": "phase8_vector", "answer": "math result"}
+
+    result = resolve_deterministic_routes("phase 8 1,2", known, engine, math_router)
+    assert result[0] == "math result"
+    assert result[3] == "phase8_vector"
+    assert result[4] == "math_router"
+    assert calls == ["known", "fast", "math"]
+
+
+def test_unknown_prompt_is_left_for_generative_fallback():
+    from software.latency_engine import resolve_deterministic_routes
+
+    engine = FastPathEngine(lambda prompt: None, max_entries=4)
+    result = resolve_deterministic_routes("tell me a story", lambda _p: None, engine, lambda _p: None)
+    assert result[0] is None
+    assert result[4] == "generative_fallback"

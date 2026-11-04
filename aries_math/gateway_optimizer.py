@@ -125,6 +125,9 @@ def benchmark_gateway_profile(prompts: list[str], repeats: int = 5) -> dict[str,
         raise ValueError("repeats must be >= 1")
     if not prompts:
         raise ValueError("prompts must not be empty")
+    # One unrecorded pass reduces first-call/import/cache effects in the samples.
+    for prompt in prompts:
+        analyze_gateway_request(prompt)
     samples: list[int] = []
     for _ in range(repeats):
         for prompt in prompts:
@@ -146,6 +149,7 @@ def benchmark_gateway_profile(prompts: list[str], repeats: int = 5) -> dict[str,
         "scope": "complete profile function call including normalization, feature calculation, hashing, and result construction; excludes HTTP, queueing, model prefill, and generation",
         "prompt_count": len(prompts),
         "repeats": repeats,
+        "warmup_passes": 1,
         "sample_count": len(samples),
         "latency_ns": {
             "min": min(samples),

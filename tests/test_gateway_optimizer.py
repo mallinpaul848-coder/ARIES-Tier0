@@ -13,7 +13,7 @@ def test_gateway_profile_is_deterministic_and_preserves_case():
 
 
 def test_gateway_profile_merges_prise_369_phase8_and_helixo():
-    result = analyze_gateway_request("Urgent: benchmark Gateway integration; prove latency.")
+    result = analyze_gateway_request("Urgent: benchmark Gateway integration; research latency.")
     assert result["prise"]["profile"]["priority"] == 1.0
     assert result["prise"]["profile"]["impact"] == 1.0
     assert result["harmonic"]["phase8"]["phase"] in range(8)

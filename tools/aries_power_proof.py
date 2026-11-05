@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 import urllib.request, urllib.error
 
 CASES = [
-    ("2+2", "What is 2 + 2? Reply with the number only.", "4"),
     ("17x19", "What is 17 times 19? Reply with the number only.", "323"),
     ("1000-37", "What is 1000 minus 37? Reply with the number only.", "963"),
     ("12x12", "What is 12 times 12? Reply with the number only.", "144"),
@@ -191,17 +190,18 @@ def main():
     for k,bv in b["idle_adjusted_joules_per_success"].items():
         cv=c["idle_adjusted_joules_per_success"].get(k)
         changes[k]=round(100*(cv-bv)/bv,3) if bv not in (None,0) and cv is not None and bv > 0 and cv > 0 else None
-    same=(b["requests"]==c["requests"] and b["successful"]==c["successful"] and
-          b["exact_matches"]==c["exact_matches"])
+    same=(b["requests"]==c["requests"] and c["requests"]>0 and
+          b["successful"]==b["requests"] and c["successful"]==c["requests"] and
+          b["exact_matches"]==b["requests"] and c["exact_matches"]==c["requests"])
     measured=bool(ds) and all(v is not None for v in changes.values())
     savings=all(v<0 for v in changes.values()) if measured and changes else False
     report={"suite":"ARIES paired same-host power proof","created_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
       "host":host_metadata(),
       "method":{"requests_per_phase":a.requests,"repeats_per_variant":a.repeats,
-        "concurrency":a.concurrency,"warmup_per_endpoint":a.warmup,"alternating_order":True,
+        "concurrency":a.concurrency,"warmup_per_endpoint":a.warmup,"alternating_order":True,"both_variants_resident_on_same_host":True,
         "idle_adjustment":"For each active phase, measure a no-request idle window of equal wall duration immediately after it; report gross and idle-adjusted energy separately.",
         "energy_meter":"Linux powercap/RAPL" if ds else "UNAVAILABLE",
-        "domains":[d["name"] for d in ds],"workload":"fixed six-case deterministic request mix",
+        "domains":[d["name"] for d in ds],"workload":"fixed five-case deterministic arithmetic mix; excludes 2+2 known-question shortcut so requests exercise the fast-path ablation stage",
         "limits":"Idle subtraction is a local adjacent-window estimate and can be affected by host drift; RAPL covers only reported CPU/package/DRAM domains, not whole-system wall power. Hosted/cloud remote targets prohibited."},
       "aggregate":aggregate,"energy_change_candidate_vs_baseline_pct":changes,
       "equal_work_gate_passed":same,"energy_savings_observed":bool(same and measured and savings),

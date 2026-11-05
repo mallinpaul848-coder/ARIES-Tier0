@@ -93,7 +93,8 @@ def summarize(results: list[dict], concurrency: int, wall_seconds: float, expect
         },
         "exact_matches": sum(" ".join(str(r["answer"]).strip().lower().split()).strip(" .!?") == " ".join(x.strip().lower().split()).strip(" .!?" ) for r, x in zip(results, expected)) if expected else None,
         "exact_match_rate_percent": round(100 * sum(" ".join(str(r["answer"]).strip().lower().split()).strip(" .!?") == " ".join(x.strip().lower().split()).strip(" .!?" ) for r, x in zip(results, expected)) / len(expected), 2) if expected else None,
-        "error_samples": [r["error"] for r in results if r.get("error")][:5],\n        "raw_requests": [{"ok": r["ok"], "status": r["status"], "latency_ms": round(r["latency_ms"], 3), "answer": str(r["answer"])[:300], "error": r["error"]} for r in results],
+        "error_samples": [r["error"] for r in results if r.get("error")][:5],
+        "raw_requests": [{"ok": r["ok"], "status": r["status"], "latency_ms": round(r["latency_ms"], 3), "answer": str(r["answer"])[:300], "error": r["error"]} for r in results],
     }
 
 

@@ -1,0 +1,55 @@
+name: ARIES Native Docker HTTP Benchmark
+
+on:
+  pull_request:
+    paths:
+      - "Dockerfile"
+      - "software/**"
+      - "aries_math/**"
+      - "foundation/web/**"
+      - "tools/aries_native_http_bench.py"
+      - ".github/workflows/aries-native-http-benchmark.yml"
+  workflow_dispatch:
+    inputs:
+      requests:
+        description: "Requests per stage (100-5000)"
+        required: false
+        default: "1000"
+
+permissions:
+  contents: read
+
+jobs:
+  native-http-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production Docker image
+        run: docker build -t aries-native-http-bench .
+      - name: Start native API container
+        run: |
+          set -euo pipefail
+          docker run --detach --rm --memory=512m --name aries-native-http-bench --publish 18080:10000 aries-native-http-bench
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:18080/health; then exit 0; fi
+            sleep 2
+          done
+          docker logs aries-native-http-bench
+          exit 1
+      - name: Benchmark real native Docker HTTP gateway
+        env:
+          REQUEST_COUNT: ${{ github.event.inputs.requests || '1000' }}
+        run: |
+          python tools/aries_native_http_bench.py --requests "${REQUEST_COUNT}" --concurrency 1,4,8,16 --output reports/aries-native-http-benchmark.json
+      - name: Upload raw benchmark report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-native-docker-http-benchmark
+          path: reports/aries-native-http-benchmark.json
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Stop native API container
+        if: always()
+        run: docker stop aries-native-http-bench 2>/dev/null || true

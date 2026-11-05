@@ -58,9 +58,9 @@ power policy, and service launch commands together.
 
 ## Acceptance rules
 
-- The harness alternates baseline/candidate order between repeats.
-- Both variants receive the same six deterministic prompts in the same mix.
-- It checks HTTP success and exact output counts before accepting a comparison; every request must produce its expected result.
+- The harness alternates baseline/candidate order between repeats. Both containers remain resident on the same host; only one receives the measured request batch at a time. This controls hardware differences but leaves both services resident, so repeat on a dedicated host and document that limitation.
+- Both variants receive the same five deterministic arithmetic prompts in the same mix. The `2+2` known-question shortcut is excluded because it bypasses the FastPathEngine ablation being evaluated.
+- It requires every request in both variants to succeed and match its expected numeric answer exactly. Equal counts alone are insufficient.
 - It reports gross joules and a matched-duration no-request idle sample for
   each active phase, then reports idle-adjusted joules per successful request.
   The idle sample runs immediately after the active phase for the same wall

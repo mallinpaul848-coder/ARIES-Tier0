@@ -41,13 +41,13 @@ jobs:
         env:
           REQUEST_COUNT: ${{ github.event.inputs.requests || '1000' }}
         run: |
-          python tools/aries_native_http_bench.py --requests "${REQUEST_COUNT}" --concurrency 1,4,8 --output aries-native-http-benchmark.json
+          python tools/aries_native_http_bench.py --requests "${REQUEST_COUNT}" --concurrency 1,4,8,16 --output reports/aries-native-http-benchmark.json
       - name: Upload raw benchmark report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: aries-native-docker-http-benchmark
-          path: aries-native-http-benchmark.json
+          path: reports/aries-native-http-benchmark.json
           if-no-files-found: warn
           retention-days: 90
       - name: Stop native API container

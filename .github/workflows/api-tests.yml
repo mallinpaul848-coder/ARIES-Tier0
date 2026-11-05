@@ -25,3 +25,14 @@ jobs:
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: python -m pytest -q
+
+      - name: Run ARIES fast-path microbenchmark
+        run: |
+          python tools/aries_fastpath_microbench.py --iterations 20000 --warmup 1000 --concurrency 1 --output aries-fastpath-1w.json
+          python tools/aries_fastpath_microbench.py --iterations 20000 --warmup 1000 --concurrency 8 --output aries-fastpath-8w.json
+      - name: Upload fast-path raw reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-fastpath-microbenchmark
+          path: aries-fastpath-*.json
+          if-no-files-found: error

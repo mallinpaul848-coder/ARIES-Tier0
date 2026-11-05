@@ -7,6 +7,7 @@ production HFT or energy evidence.
 """
 from __future__ import annotations
 
+import argparse
 import concurrent.futures
 import json
 import os
@@ -111,7 +112,24 @@ def run_stage(prompts: list[str], model: str, concurrency: int, max_tokens: int,
 
 
 def main() -> int:
-    os.makedirs(OUT.parent, exist_ok=True)
+    parser = argparse.ArgumentParser(description="Benchmark the ARIES native HTTP gateway")
+    parser.add_argument("--requests", type=int, default=1000,
+                        help="requests per deterministic workload and concurrency stage (100-5000)")
+    parser.add_argument("--concurrency", default="1,4,8,16",
+                        help="comma-separated concurrency stages")
+    parser.add_argument("--output", default=str(OUT),
+                        help="path for the raw JSON report")
+    args = parser.parse_args()
+    if not 100 <= args.requests <= 5000:
+        parser.error("--requests must be between 100 and 5000")
+    try:
+        stages = [int(x.strip()) for x in args.concurrency.split(",")]
+    except ValueError:
+        parser.error("--concurrency must be comma-separated integers")
+    if not stages or any(x < 1 or x > 64 for x in stages):
+        parser.error("--concurrency values must be between 1 and 64")
+    output_path = Path(args.output)
+    os.makedirs(output_path.parent, exist_ok=True)
     with urllib.request.urlopen(BASE_URL + "/v1/models", timeout=15) as response:
         models = json.loads(response.read().decode("utf-8"))
     model_rows = models.get("data", [])
@@ -120,13 +138,13 @@ def main() -> int:
     model = model_rows[0]["id"]
 
     workloads = {}
-    for concurrency in STAGES:
+    for concurrency in stages:
         # Same prompt each time exercises the repeated-prompt cache-hit route.
-        repeated = ["What is 17 times 19?"] * 100
+        repeated = ["What is 17 times 19?"] * args.requests
         # Distinct arithmetic inputs force cache misses; the native reasoner is
         # expected to answer simple multiplication exactly.
-        unique = [f"What is {31 + i} times 7? Reply with the number only." for i in range(100)]
-        unique_expected = [str((31 + i) * 7) for i in range(100)]
+        unique = [f"What is {31 + i} times 7? Reply with the number only." for i in range(args.requests)]
+        unique_expected = [str((31 + i) * 7) for i in range(args.requests)]
         # General questions intentionally route through local model generation.
         general = [
             f"Explain in one short sentence why reliable software gateways matter, variation {i}."
@@ -147,7 +165,8 @@ def main() -> int:
             "python": platform.python_version(),
             "base_url": BASE_URL,
             "model_id": model,
-            "concurrency_stages": STAGES,
+            "concurrency_stages": stages,
+            "requests_per_deterministic_workload": args.requests,
             "timeout_seconds": TIMEOUT,
         },
         "workloads": workloads,
@@ -159,8 +178,9 @@ def main() -> int:
             "CI runner hardware and scheduling vary; compare repeated runs on matched hardware before claiming a regression or gain.",
         ],
     }
-    OUT.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    output_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
+    print(f"Raw report: {output_path}")
     failures = [
         (workload, stage, result["failures"])
         for workload, stages in workloads.items()

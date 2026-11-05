@@ -75,3 +75,24 @@ jobs:
               "general_question":"capital of France","general_answer":qa_answer},indent=2))
           print("PASS: container build, local general chat, and HTTP inference.")
           PY
+
+      - name: Run bounded current-gateway HTTP latency benchmark
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          docker run --detach --rm --memory=512m --name aries-native-bench --publish 18081:10000 aries-native:test
+          trap 'docker stop aries-native-bench >/dev/null 2>&1 || true' EXIT
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent http://127.0.0.1:18081/health >/dev/null; then break; fi
+            sleep 2
+          done
+          python tools/aries_native_http_bench.py
+      - name: Upload native gateway latency report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-native-gateway-http-latency
+          path: reports/aries-native-http-latency.json
+          if-no-files-found: warn
+          retention-days: 90

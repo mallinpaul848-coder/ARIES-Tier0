@@ -121,15 +121,15 @@ def main() -> int:
     workloads = {}
     for concurrency in STAGES:
         # Same prompt each time exercises the repeated-prompt cache-hit route.
-        repeated = ["What is 17 times 19?"] * 12
+        repeated = ["What is 17 times 19?"] * 100
         # Distinct arithmetic inputs force cache misses; the native reasoner is
         # expected to answer simple multiplication exactly.
-        unique = [f"What is {31 + i} times 7? Reply with the number only." for i in range(12)]
-        unique_expected = [str((31 + i) * 7) for i in range(12)]
+        unique = [f"What is {31 + i} times 7? Reply with the number only." for i in range(100)]
+        unique_expected = [str((31 + i) * 7) for i in range(100)]
         # General questions intentionally route through local model generation.
         general = [
             f"Explain in one short sentence why reliable software gateways matter, variation {i}."
-            for i in range(3)
+            for i in range(12)
         ]
         workloads.setdefault("repeated_deterministic_prompt", {})[str(concurrency)] = run_stage(
             repeated, model, concurrency, 16, ["323"] * len(repeated))

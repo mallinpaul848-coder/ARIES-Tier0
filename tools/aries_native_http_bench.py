@@ -87,7 +87,7 @@ def summarize(results: list[dict], concurrency: int, wall_seconds: float, expect
             "mean": round(statistics.mean(latencies), 3) if latencies else None,
             "p50": percentile(latencies, .50),
             "p95": percentile(latencies, .95),
-            "p99": percentile(latencies, .99),
+            "p99": percentile(latencies, .99),\n            "p99_9": percentile(latencies, .999),
             "max": round(max(latencies), 3) if latencies else None,
         },
         "exact_matches": sum(" ".join(str(r["answer"]).strip().lower().split()).strip(" .!?") == " ".join(x.strip().lower().split()).strip(" .!?" ) for r, x in zip(results, expected)) if expected else None,\n        "exact_match_rate_percent": round(100 * sum(" ".join(str(r["answer"]).strip().lower().split()).strip(" .!?") == " ".join(x.strip().lower().split()).strip(" .!?" ) for r, x in zip(results, expected)) / len(expected), 2) if expected else None,\n        "error_samples": [r["error"] for r in results if r.get("error")][:5],

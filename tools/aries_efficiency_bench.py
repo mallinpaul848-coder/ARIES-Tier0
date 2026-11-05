@@ -10,11 +10,9 @@ import argparse
 import concurrent.futures
 import datetime as dt
 import json
-import math
 import os
 from pathlib import Path
 import platform
-import random
 import statistics
 import time
 import urllib.error
@@ -138,8 +136,6 @@ def post_chat(base_url, prompt, timeout):
         }
 
 def run_phase(label, url, cases, requests_count, concurrency, timeout, warmup):
-    for i in range(warmup):
-        post_chat(url, cases[i % len(cases)][1], timeout)
     tasks = [cases[i % len(cases)] for i in range(requests_count)]
     started_wall = time.perf_counter()
     started_utc = dt.datetime.now(dt.timezone.utc).isoformat()
@@ -233,9 +229,16 @@ def main():
     if args.baseline_url:
         targets.append(("baseline", args.baseline_url))
     targets.append(("candidate", args.candidate_url))
+    # Warm both endpoints before the measured interval; randomize order to reduce fixed-order drift bias.
+    for label, url in targets:
+        for i in range(args.warmup):
+            post_chat(url, cases[i % len(cases)][1], args.timeout)
+    import random
+    random.shuffle(targets)
     for label, url in targets:
         before = read_energy(domains)
-        phase = run_phase(label, url, cases, args.requests, args.concurrency, args.timeout, args.warmup)
+        phase = run_phase(label, url, cases, args.requests, args.concurrency, args.timeout, 0)
+        phase["warmup_requests"] = args.warmup
         after = read_energy(domains)
         phase["rapl_energy_joules"] = energy_delta(before, after, domains) if domains else None
         phase["energy_joules_per_successful_request"] = {}
@@ -246,7 +249,8 @@ def main():
             }
         report["phases"].append(phase)
     if args.baseline_url:
-        base, cand = report["phases"]
+        base = next(p for p in report["phases"] if p["label"] == "baseline")
+        cand = next(p for p in report["phases"] if p["label"] == "candidate")
         report["comparison"] = {
             "baseline_label": base["label"],
             "candidate_label": cand["label"],

@@ -21,6 +21,8 @@ jobs:
           python-version: "3.12"
       - name: Compile energy proof harness
         run: python -m py_compile tools/aries_power_proof.py
+      - name: Test energy accounting and exact-answer gates
+        run: python -m unittest discover -s tests -p "test_aries_power_proof.py" -v
       - name: Verify CLI help
         run: python tools/aries_power_proof.py --help
       - name: Verify harness refuses missing same-host endpoints

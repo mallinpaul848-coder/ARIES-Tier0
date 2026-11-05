@@ -1,0 +1,32 @@
+name: ARIES Energy Harness Validation
+
+on:
+  pull_request:
+    paths:
+      - "tools/aries_power_proof.py"
+      - "docs/ARIES_PAIRED_ENERGY_PROOF.md"
+      - ".github/workflows/aries-energy-harness-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-harness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile energy proof harness
+        run: python -m py_compile tools/aries_power_proof.py
+      - name: Verify CLI help
+        run: python tools/aries_power_proof.py --help
+      - name: Verify harness refuses missing same-host endpoints
+        run: |
+          if python tools/aries_power_proof.py --baseline-url http://example.com --candidate-url http://127.0.0.1:10000 2>error.txt; then
+            echo "Expected non-loopback target rejection"
+            exit 1
+          fi
+          grep -q "Both endpoints must be loopback" error.txt

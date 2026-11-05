@@ -61,9 +61,14 @@ power policy, and service launch commands together.
 - The harness alternates baseline/candidate order between repeats.
 - Both variants receive the same six deterministic prompts in the same mix.
 - It checks HTTP success and exact output counts before accepting a comparison; every request must produce its expected result.
-- It reports joules per successful request for each available RAPL domain.
-- It refuses to call savings proven if RAPL is unavailable or successful/exact
-  work differs.
+- It reports gross joules and a matched-duration no-request idle sample for
+  each active phase, then reports idle-adjusted joules per successful request.
+  The idle sample runs immediately after the active phase for the same wall
+  duration, while both containers remain running.
+- Negative idle-adjusted energy is preserved as measurement noise and cannot
+  support a savings claim.
+- It refuses to call savings proven if RAPL is unavailable, idle-adjusted
+  energy is non-positive, or successful/exact work differs.
 
 ## Interpretation
 
@@ -77,9 +82,11 @@ direction, or higher energy must be reported as such.
 ## What this does not prove
 
 RAPL covers only the reported on-chip energy domains; it is not whole-system
-wall power. For a data-center electricity claim, repeat with a calibrated
-external wall-power meter and report meter accuracy, idle-adjusted and total
-joules, throughput, latency, and quality. For HFT, additionally measure
+wall power. The adjacent idle-window subtraction is an estimate: thermal,
+frequency, and background-load drift can affect it. Treat gross and adjusted
+readings as separate evidence, repeat the experiment, and use a calibrated
+external wall-power meter for a data-center electricity claim. Report meter
+accuracy, idle-adjusted and total joules, throughput, latency, and quality. For HFT, additionally measure
 production-path tail latency and CPU/NIC/kernel counters. A CI run that merely
 compiles this tool is not energy evidence.
 

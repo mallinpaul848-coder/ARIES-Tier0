@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Paired same-host ARIES energy comparison. No energy claim without a meter."""
 from __future__ import annotations
-import argparse, concurrent.futures, datetime as dt, json, platform, random, statistics, time
+import argparse, concurrent.futures, datetime as dt, json, platform, re, statistics, time
 from pathlib import Path
 from urllib.parse import urlparse
 import urllib.request, urllib.error
@@ -44,7 +44,10 @@ def delta(a,b,ds):
             out[d["name"]]=z/1e6
     return out
 
-def norm(s): return " ".join(str(s).lower().strip().split()).strip(" .!?")
+def exact_numeric_answer(answer, expected):
+    # Accept a short explanatory wrapper, but require exactly the expected numeric result.
+    tokens = re.findall(r"(?<![\\w.])-?\\d+(?:\\.\\d+)?(?![\\w.])", str(answer))
+    return tokens == [str(expected)]
 
 def call(url,prompt,expected,timeout):
     base=url.rstrip("/")
@@ -60,7 +63,7 @@ def call(url,prompt,expected,timeout):
             choices=obj.get("choices") or []
             answer=choices[0].get("message",{}).get("content","") if choices else ""
             return {"ok":r.status==200 and bool(str(answer).strip()),
-                    "exact":norm(answer)==norm(expected),"status":r.status,
+                    "exact":exact_numeric_answer(answer, expected),"status":r.status,
                     "latency_ms":(time.perf_counter_ns()-t)/1e6,"answer":str(answer)[:200],"error":None}
     except Exception as e:
         return {"ok":False,"exact":False,"status":None,
@@ -138,7 +141,7 @@ def main():
     same=(b["requests"]==c["requests"] and b["successful"]==c["successful"] and
           b["exact_matches"]==c["exact_matches"])
     measured=bool(ds) and all(v is not None for v in changes.values())
-    savings=any(v<0 for v in changes.values()) if measured else False
+    savings=all(v<0 for v in changes.values()) if measured and changes else False
     report={"suite":"ARIES paired same-host power proof","created_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
       "host":{"platform":platform.platform(),"processor":platform.processor(),"cpu_count":__import__("os").cpu_count()},
       "method":{"requests_per_phase":a.requests,"repeats_per_variant":a.repeats,
@@ -148,7 +151,7 @@ def main():
         "limits":"RAPL covers only reported CPU/package/DRAM domains; not whole-system wall power. Hosted/cloud remote targets prohibited."},
       "aggregate":aggregate,"energy_change_candidate_vs_baseline_pct":changes,
       "equal_work_gate_passed":same,"energy_savings_observed":bool(same and measured and savings),
-      "claim_status":"Measured domain-level reduction observed; repeat and independent validation still required" if same and measured and savings
+      "claim_status":"All reported RAPL domains decreased per exact successful request; repeat and independent validation still required" if same and measured and savings
         else "NOT PROVEN: require RAPL readings, equal successful/exact work, and lower joules per successful request",
       "phases":phases}
     Path(a.output).write_text(json.dumps(report,indent=2)+"\n")

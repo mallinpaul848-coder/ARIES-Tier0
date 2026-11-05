@@ -33,7 +33,7 @@ class EnergyAccountingTests(unittest.TestCase):
         self.assertTrue(POWER.exact_numeric_answer("323", "323"))
         self.assertTrue(POWER.exact_numeric_answer("Answer: 323", "323"))
         self.assertFalse(POWER.exact_numeric_answer("The answer is 323, not 324", "323"))
-        self.assertFalse(POWER.exact_numeric_answer("I think 323", "323") is False)
+        self.assertTrue(POWER.exact_numeric_answer("I think 323", "323"))
 
 
 if __name__ == "__main__":

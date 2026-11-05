@@ -44,6 +44,9 @@ MODEL_ID = (
     else NATIVE_MODEL_ID
 )
 FAST_PATH = FastPathEngine(solve, max_entries=int(os.getenv("ARIES_FAST_CACHE_SIZE", "2048")))
+# Controlled ablation switch: disables only the FastPathEngine stage for paired
+# baseline runs; known-question routing, PRISE math routing, and model fallback remain.
+FAST_PATH_ENABLED = os.getenv("ARIES_DISABLE_FAST_PATH", "0").strip().lower() not in {"1", "true", "yes", "on"}
 LATENCY_MONITOR = LatencyMonitor(window_size=int(os.getenv("ARIES_LATENCY_WINDOW_SIZE", "2048")))
 PORT = int(os.getenv("PORT", "10000"))
 HOST = "0.0.0.0"
@@ -123,6 +126,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/performance":
             return self.send_json(200, {
                 "service": "ARIES AI API",
+                "fast_path_enabled": FAST_PATH_ENABLED,
                 "fast_path_cache": FAST_PATH.snapshot(),
                 "latency": LATENCY_MONITOR.snapshot(),
                 "notice": "In-process measured elapsed times only; no sub-nanosecond guarantee."
@@ -229,7 +233,7 @@ class Handler(BaseHTTPRequestHandler):
             # Resolve bounded deterministic tasks before invoking a neural model.
             # This keeps arithmetic, supported reasoning, and cache hits off the
             # expensive CPU inference path while preserving model fallback for unknown prompts.
-            if answer is None:
+            if answer is None and FAST_PATH_ENABLED:
                 answer, fast_path_cache_hit, fast_path_elapsed_ns = FAST_PATH.solve_with_metadata(prompt)
             if answer is None:
                 math_result = route_math_prompt(prompt)
@@ -276,6 +280,7 @@ class Handler(BaseHTTPRequestHandler):
                     "inference_seconds":round(elapsed_ns / 1000000000, 9),
                     "inference_ns":elapsed_ns,
                     "fast_path_elapsed_ns":fast_path_elapsed_ns,
+                    "fast_path_enabled":FAST_PATH_ENABLED,
                     "fast_path_cache_hit":fast_path_cache_hit,
                     "upstream_used":upstream_used,
                     "upstream_inference_ns":upstream_elapsed_ns,

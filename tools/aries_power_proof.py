@@ -46,7 +46,7 @@ def delta(a,b,ds):
 
 def exact_numeric_answer(answer, expected):
     # Accept a short explanatory wrapper, but require exactly the expected numeric result.
-    tokens = re.findall(r"(?<![\\w.])-?\\d+(?:\\.\\d+)?(?![\\w.])", str(answer))
+    tokens = re.findall(r"(?<![\w.])-?\d+(?:\.\d+)?(?![\w.])", str(answer))
     return tokens == [str(expected)]
 
 def call(url,prompt,expected,timeout):

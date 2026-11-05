@@ -87,10 +87,13 @@ def summarize(results: list[dict], concurrency: int, wall_seconds: float, expect
             "mean": round(statistics.mean(latencies), 3) if latencies else None,
             "p50": percentile(latencies, .50),
             "p95": percentile(latencies, .95),
-            "p99": percentile(latencies, .99),\n            "p99_9": percentile(latencies, .999),
+            "p99": percentile(latencies, .99),
+            "p99_9": percentile(latencies, .999),
             "max": round(max(latencies), 3) if latencies else None,
         },
-        "exact_matches": sum(" ".join(str(r["answer"]).strip().lower().split()).strip(" .!?") == " ".join(x.strip().lower().split()).strip(" .!?" ) for r, x in zip(results, expected)) if expected else None,\n        "exact_match_rate_percent": round(100 * sum(" ".join(str(r["answer"]).strip().lower().split()).strip(" .!?") == " ".join(x.strip().lower().split()).strip(" .!?" ) for r, x in zip(results, expected)) / len(expected), 2) if expected else None,\n        "error_samples": [r["error"] for r in results if r.get("error")][:5],
+        "exact_matches": sum(" ".join(str(r["answer"]).strip().lower().split()).strip(" .!?") == " ".join(x.strip().lower().split()).strip(" .!?" ) for r, x in zip(results, expected)) if expected else None,
+        "exact_match_rate_percent": round(100 * sum(" ".join(str(r["answer"]).strip().lower().split()).strip(" .!?") == " ".join(x.strip().lower().split()).strip(" .!?" ) for r, x in zip(results, expected)) / len(expected), 2) if expected else None,
+        "error_samples": [r["error"] for r in results if r.get("error")][:5],
     }
 
 
@@ -121,7 +124,8 @@ def main() -> int:
         repeated = ["What is 17 times 19?"] * 12
         # Distinct arithmetic inputs force cache misses; the native reasoner is
         # expected to answer simple multiplication exactly.
-        unique = [f"What is {31 + i} times 7? Reply with the number only." for i in range(12)]\n        unique_expected = [str((31 + i) * 7) for i in range(12)]
+        unique = [f"What is {31 + i} times 7? Reply with the number only." for i in range(12)]
+        unique_expected = [str((31 + i) * 7) for i in range(12)]
         # General questions intentionally route through local model generation.
         general = [
             f"Explain in one short sentence why reliable software gateways matter, variation {i}."
@@ -154,7 +158,8 @@ def main() -> int:
             "CI runner hardware and scheduling vary; compare repeated runs on matched hardware before claiming a regression or gain.",
         ],
     }
-    OUT.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    OUT.write_text(json.dumps(report, indent=2) + "
+", encoding="utf-8")
     print(json.dumps(report, indent=2))
     failures = [
         (workload, stage, result["failures"])

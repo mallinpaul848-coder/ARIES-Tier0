@@ -159,7 +159,7 @@ def main() -> int:
             "CI runner hardware and scheduling vary; compare repeated runs on matched hardware before claiming a regression or gain.",
         ],
     }
-    OUT.write_text(json.dumps(report, indent=2) + "\\n", encoding="utf-8")
+    OUT.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
     failures = [
         (workload, stage, result["failures"])

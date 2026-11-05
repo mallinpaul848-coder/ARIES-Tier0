@@ -87,7 +87,7 @@ jobs:
             if curl --fail --silent http://127.0.0.1:18081/health >/dev/null; then break; fi
             sleep 2
           done
-          python tools/aries_native_http_bench.py
+          ARIES_BASE_URL=http://127.0.0.1:18081 python tools/aries_native_http_bench.py
       - name: Upload native gateway latency report
         if: always()
         uses: actions/upload-artifact@v4

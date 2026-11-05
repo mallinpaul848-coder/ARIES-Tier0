@@ -44,6 +44,24 @@ def delta(a,b,ds):
             out[d["name"]]=z/1e6
     return out
 
+def subtract_idle(gross, idle):
+    """Return idle-adjusted joules by domain; preserve negative noise values."""
+    if gross is None or idle is None:
+        return None
+    return {key: (gross.get(key) - idle.get(key)) if gross.get(key) is not None
+            and idle.get(key) is not None else None for key in gross}
+
+
+def measure_idle(ds, seconds):
+    """Measure host/service idle energy over a duration matching an active phase."""
+    before = read_energy(ds)
+    start = time.perf_counter()
+    time.sleep(max(0.0, seconds))
+    elapsed = time.perf_counter() - start
+    after = read_energy(ds)
+    return delta(before, after, ds), elapsed
+
+
 def exact_numeric_answer(answer, expected):
     # Accept a short explanatory wrapper, but require exactly the expected numeric result.
     tokens = re.findall(r"(?<![\w.])-?\d+(?:\.\d+)?(?![\w.])", str(answer))
@@ -84,15 +102,22 @@ def run_phase(label,url,tasks,concurrency,timeout,ds):
     lat=sorted(x["latency_ms"] for x in rows)
     def p(q): return round(lat[min(len(lat)-1,int((len(lat)-1)*q+0.5))],4) if lat else None
     joules=delta(before,after,ds) if ds else None
+    idle_joules, idle_seconds = measure_idle(ds, seconds) if ds and seconds > 0 else (None, 0.0)
+    net_joules = subtract_idle(joules, idle_joules)
     return {"label":label,"start_utc":wall0,"end_utc":wall1,"requests":len(rows),
       "successful":good,"exact_matches":exact,"exact_match_rate_pct":round(100*exact/len(rows),3),
       "errors":len(rows)-good,"wall_seconds":round(seconds,6),
       "throughput_successful_rps":round(good/seconds,4) if seconds else None,
       "latency_ms":{"p50":p(.5),"p95":p(.95),"p99":p(.99),"p99_9":p(.999),
                     "mean":round(statistics.mean(lat),4) if lat else None},
-      "rapl_joules":joules,
-      "joules_per_success":{k:(round(v/good,9) if v is not None and good else None)
-                             for k,v in (joules or {}).items()},
+      "rapl_joules_gross":joules,
+      "rapl_idle_baseline_joules":idle_joules,
+      "idle_baseline_seconds":round(idle_seconds,6),
+      "rapl_joules_idle_adjusted":net_joules,
+      "gross_joules_per_success":{k:(round(v/good,9) if v is not None and good else None)
+                                  for k,v in (joules or {}).items()},
+      "idle_adjusted_joules_per_success":{k:(round(v/good,9) if v is not None and good else None)
+                                          for k,v in (net_joules or {}).items()},
       "raw":rows}
 
 def main():
@@ -127,17 +152,27 @@ def main():
         joules={}
         if ds:
             for d in ds:
-                vals=[x["rapl_joules"].get(d["name"]) for x in ps]
+                vals=[x["rapl_joules_gross"].get(d["name"]) for x in ps]
                 joules[d["name"]]=round(sum(v for v in vals if v is not None),6) if all(v is not None for v in vals) else None
+        idle_joules={}
+        net_joules={}
+        if ds:
+            for d in ds:
+                ivals=[x["rapl_idle_baseline_joules"].get(d["name"]) for x in ps]
+                nvals=[x["rapl_joules_idle_adjusted"].get(d["name"]) for x in ps]
+                idle_joules[d["name"]]=round(sum(v for v in ivals if v is not None),6) if all(v is not None for v in ivals) else None
+                net_joules[d["name"]]=round(sum(v for v in nvals if v is not None),6) if all(v is not None for v in nvals) else None
         aggregate[label]={"phases":len(ps),"requests":sum(x["requests"] for x in ps),
           "successful":good,"exact_matches":exact,
           "exact_match_rate_pct":round(100*exact/sum(x["requests"] for x in ps),3),
-          "rapl_joules":joules,
-          "joules_per_success":{k:(round(v/good,9) if v is not None and good else None) for k,v in joules.items()}}
+          "rapl_joules_gross":joules,"rapl_idle_baseline_joules":idle_joules,
+          "rapl_joules_idle_adjusted":net_joules,
+          "gross_joules_per_success":{k:(round(v/good,9) if v is not None and good else None) for k,v in joules.items()},
+          "idle_adjusted_joules_per_success":{k:(round(v/good,9) if v is not None and good else None) for k,v in net_joules.items()}}
     b,c=aggregate["baseline"],aggregate["candidate"]; changes={}
-    for k,bv in b["joules_per_success"].items():
-        cv=c["joules_per_success"].get(k)
-        changes[k]=round(100*(cv-bv)/bv,3) if bv not in (None,0) and cv is not None else None
+    for k,bv in b["idle_adjusted_joules_per_success"].items():
+        cv=c["idle_adjusted_joules_per_success"].get(k)
+        changes[k]=round(100*(cv-bv)/bv,3) if bv not in (None,0) and cv is not None and bv > 0 and cv > 0 else None
     same=(b["requests"]==c["requests"] and b["successful"]==c["successful"] and
           b["exact_matches"]==c["exact_matches"])
     measured=bool(ds) and all(v is not None for v in changes.values())
@@ -146,13 +181,14 @@ def main():
       "host":{"platform":platform.platform(),"processor":platform.processor(),"cpu_count":__import__("os").cpu_count()},
       "method":{"requests_per_phase":a.requests,"repeats_per_variant":a.repeats,
         "concurrency":a.concurrency,"warmup_per_endpoint":a.warmup,"alternating_order":True,
+        "idle_adjustment":"For each active phase, measure a no-request idle window of equal wall duration immediately after it; report gross and idle-adjusted energy separately.",
         "energy_meter":"Linux powercap/RAPL" if ds else "UNAVAILABLE",
         "domains":[d["name"] for d in ds],"workload":"fixed six-case deterministic request mix",
-        "limits":"RAPL covers only reported CPU/package/DRAM domains; not whole-system wall power. Hosted/cloud remote targets prohibited."},
+        "limits":"Idle subtraction is a local adjacent-window estimate and can be affected by host drift; RAPL covers only reported CPU/package/DRAM domains, not whole-system wall power. Hosted/cloud remote targets prohibited."},
       "aggregate":aggregate,"energy_change_candidate_vs_baseline_pct":changes,
       "equal_work_gate_passed":same,"energy_savings_observed":bool(same and measured and savings),
-      "claim_status":"All reported RAPL domains decreased per exact successful request; repeat and independent validation still required" if same and measured and savings
-        else "NOT PROVEN: require RAPL readings, equal successful/exact work, and lower joules per successful request",
+      "claim_status":"All reported idle-adjusted RAPL domains decreased per exact successful request; repeat and independent wall-meter validation still required" if same and measured and savings
+        else "NOT PROVEN: require RAPL readings, equal successful/exact work, positive idle-adjusted energy, and lower joules per successful request",
       "phases":phases}
     Path(a.output).write_text(json.dumps(report,indent=2)+"\n")
     print(json.dumps({k:v for k,v in report.items() if k!="phases"},indent=2))

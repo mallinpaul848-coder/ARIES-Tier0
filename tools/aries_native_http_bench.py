@@ -19,7 +19,7 @@ from pathlib import Path
 
 BASE_URL = os.getenv("ARIES_BASE_URL", "http://127.0.0.1:18080").rstrip("/")
 OUT = Path(os.getenv("ARIES_NATIVE_HTTP_REPORT", "reports/aries-native-http-latency.json"))
-STAGES = [1, 2, 4]
+STAGES = [1, 4, 8, 16]
 TIMEOUT = 90
 
 
@@ -73,7 +73,7 @@ def call_chat(prompt: str, model: str, max_tokens: int) -> dict:
                 "answer": "", "error": f"{type(exc).__name__}: {exc}"[:300]}
 
 
-def summarize(results: list[dict], concurrency: int, wall_seconds: float) -> dict:
+def summarize(results: list[dict], concurrency: int, wall_seconds: float, expected: list[str] | None = None) -> dict:
     latencies = [r["latency_ms"] for r in results]
     return {
         "concurrency": concurrency,
@@ -90,11 +90,11 @@ def summarize(results: list[dict], concurrency: int, wall_seconds: float) -> dic
             "p99": percentile(latencies, .99),
             "max": round(max(latencies), 3) if latencies else None,
         },
-        "error_samples": [r["error"] for r in results if r.get("error")][:5],
+        "exact_matches": sum(" ".join(str(r["answer"]).strip().lower().split()).strip(" .!?") == " ".join(x.strip().lower().split()).strip(" .!?" ) for r, x in zip(results, expected)) if expected else None,\n        "exact_match_rate_percent": round(100 * sum(" ".join(str(r["answer"]).strip().lower().split()).strip(" .!?") == " ".join(x.strip().lower().split()).strip(" .!?" ) for r, x in zip(results, expected)) / len(expected), 2) if expected else None,\n        "error_samples": [r["error"] for r in results if r.get("error")][:5],
     }
 
 
-def run_stage(prompts: list[str], model: str, concurrency: int, max_tokens: int) -> dict:
+def run_stage(prompts: list[str], model: str, concurrency: int, max_tokens: int, expected: list[str] | None = None) -> dict:
     # Warm-up is intentionally outside the measured batch.
     warm = call_chat(prompts[0], model, max_tokens)
     if not warm["ok"]:
@@ -103,7 +103,7 @@ def run_stage(prompts: list[str], model: str, concurrency: int, max_tokens: int)
     with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as pool:
         results = list(pool.map(lambda p: call_chat(p, model, max_tokens), prompts))
     elapsed = time.perf_counter() - started
-    return summarize(results, concurrency, elapsed)
+    return summarize(results, concurrency, elapsed, expected)
 
 
 def main() -> int:
@@ -121,16 +121,16 @@ def main() -> int:
         repeated = ["What is 17 times 19?"] * 12
         # Distinct arithmetic inputs force cache misses; the native reasoner is
         # expected to answer simple multiplication exactly.
-        unique = [f"What is {31 + i} times 7?" for i in range(12)]
+        unique = [f"What is {31 + i} times 7? Reply with the number only." for i in range(12)]\n        unique_expected = [str((31 + i) * 7) for i in range(12)]
         # General questions intentionally route through local model generation.
         general = [
             f"Explain in one short sentence why reliable software gateways matter, variation {i}."
             for i in range(3)
         ]
         workloads.setdefault("repeated_deterministic_prompt", {})[str(concurrency)] = run_stage(
-            repeated, model, concurrency, 16)
+            repeated, model, concurrency, 16, ["323"] * len(repeated))
         workloads.setdefault("unique_deterministic_prompts", {})[str(concurrency)] = run_stage(
-            unique, model, concurrency, 16)
+            unique, model, concurrency, 16, unique_expected)
         workloads.setdefault("general_local_model_chat", {})[str(concurrency)] = run_stage(
             general, model, concurrency, 24)
 

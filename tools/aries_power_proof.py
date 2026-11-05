@@ -16,6 +16,24 @@ CASES = [
 ]
 ROOT = Path("/sys/class/powercap")
 
+def host_metadata():
+    info={"platform":platform.platform(),"processor":platform.processor(),
+          "cpu_count":__import__("os").cpu_count(),"python":platform.python_version(),
+          "kernel":platform.release(),"cpu_model":None,"cpu_governor":None}
+    try:
+        for line in Path("/proc/cpuinfo").read_text().splitlines():
+            if line.lower().startswith("model name"):
+                info["cpu_model"]=line.split(":",1)[1].strip()
+                break
+    except OSError:
+        pass
+    try:
+        info["cpu_governor"]=Path("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor").read_text().strip()
+    except OSError:
+        pass
+    return info
+
+
 def domains():
     found=[]
     if ROOT.exists():
@@ -178,7 +196,7 @@ def main():
     measured=bool(ds) and all(v is not None for v in changes.values())
     savings=all(v<0 for v in changes.values()) if measured and changes else False
     report={"suite":"ARIES paired same-host power proof","created_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
-      "host":{"platform":platform.platform(),"processor":platform.processor(),"cpu_count":__import__("os").cpu_count()},
+      "host":host_metadata(),
       "method":{"requests_per_phase":a.requests,"repeats_per_variant":a.repeats,
         "concurrency":a.concurrency,"warmup_per_endpoint":a.warmup,"alternating_order":True,
         "idle_adjustment":"For each active phase, measure a no-request idle window of equal wall duration immediately after it; report gross and idle-adjusted energy separately.",

@@ -1,0 +1,48 @@
+name: ARIES PRISE Cross-Domain Performance Evidence
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "aries_math/prise_projection.py"
+      - "tools/prise_projection_bench.py"
+      - "benchmarks/cpp/aries_power_trade_bench.cpp"
+      - "include/aries_fast_kernel.hpp"
+      - "CMakeLists.txt"
+      - ".github/workflows/aries-prise-cross-domain-benchmarks.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  cross-domain-benchmarks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact PRISE projection regression tests
+        run: python -m unittest tests.test_prise_projection -v
+      - name: Benchmark exact affine projection
+        run: python tools/prise_projection_bench.py --iterations 1000 --output reports/prise-projection-benchmark.json
+      - name: Configure native C++20 benchmarks
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+      - name: Build native gateway and market-event benchmark
+        run: cmake --build build --config Release --parallel 2
+      - name: Run native correctness regression tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Benchmark synthetic HFT decision path and package energy
+        run: |
+          mkdir -p reports
+          ./build/aries_power_trade_bench 500000 | tee reports/aries-native-power-trading.json
+      - name: Upload cross-domain evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aries-prise-cross-domain-${{ github.run_number }}
+          path: reports/*.json
+          if-no-files-found: error
+          retention-days: 90

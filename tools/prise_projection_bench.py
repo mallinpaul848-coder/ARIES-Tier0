@@ -17,6 +17,9 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Support direct execution as: python tools/prise_projection_bench.py
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from aries_math.prise_projection import (
     eliminate_affine_variables,
     project_affine_interface,

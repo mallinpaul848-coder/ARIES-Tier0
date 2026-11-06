@@ -238,9 +238,17 @@ def induced_width(
     """Compute induced width for a supplied variable-elimination order."""
     if not isinstance(adjacency, dict):
         raise ValueError("adjacency must be a dictionary")
+    if len(adjacency) > 4096:
+        raise ValueError("graph exceeds the 4,096-vertex diagnostic limit")
     vertices = set(adjacency)
     graph: dict[Hashable, set[Hashable]] = {v: set() for v in vertices}
+    edge_entries = 0
     for vertex, neighbors in adjacency.items():
+        if not isinstance(neighbors, (list, tuple, set)):
+            raise ValueError("each adjacency entry must be a list, tuple, or set")
+        edge_entries += len(neighbors)
+        if edge_entries > 1_000_000:
+            raise ValueError("graph exceeds the 1,000,000-edge-entry diagnostic limit")
         for neighbor in neighbors:
             if neighbor not in vertices or neighbor == vertex:
                 raise ValueError("neighbors must be distinct vertices in adjacency")

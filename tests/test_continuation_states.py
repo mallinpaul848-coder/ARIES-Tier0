@@ -6,6 +6,8 @@ from aries_math.continuation_states import (
     ORAccumulator,
     ParityAccumulator,
     analyze_continuation_matrix,
+    induced_width,
+    solve_gf2,
     verify_signature_soundness,
 )
 
@@ -89,3 +91,44 @@ def test_matrix_validation_and_empty_suffix_domain():
     quotient = analyze_continuation_matrix([[], []])
     assert quotient.state_count == 1
     assert quotient.suffix_count == 0
+
+
+
+def _gf2_matvec(matrix, vector):
+    return [sum(a * b for a, b in zip(row, vector)) % 2 for row in matrix]
+
+
+def test_gf2_solver_returns_particular_solution_and_nullspace():
+    matrix = [[1, 1, 0], [0, 1, 1]]
+    rhs = [1, 0]
+    result = solve_gf2(matrix, rhs)
+    assert result["consistent"] is True
+    assert result["rank"] == 2
+    particular = result["particular_solution"]
+    assert _gf2_matvec(matrix, particular) == rhs
+    for basis_vector in result["nullspace_basis"]:
+        assert _gf2_matvec(matrix, basis_vector) == [0, 0]
+
+
+def test_gf2_solver_detects_inconsistency():
+    result = solve_gf2([[1, 1], [1, 1]], [0, 1])
+    assert result["consistent"] is False
+    assert result["particular_solution"] is None
+
+
+def test_gf2_solver_reports_free_dimension():
+    result = solve_gf2([[1, 1, 1]], [1])
+    assert result["free_variable_count"] == 2
+    assert len(result["nullspace_basis"]) == 2
+
+
+def test_induced_width_adds_fill_edges():
+    # Path a-b-c has width 1 in order a,b,c; eliminating b first creates a-c.
+    graph = {"a": ["b"], "b": ["a", "c"], "c": ["b"]}
+    assert induced_width(graph, ["a", "b", "c"])["induced_width"] == 1
+    assert induced_width(graph, ["b", "a", "c"])["induced_width"] == 2
+
+
+def test_induced_width_requires_a_complete_order():
+    with pytest.raises(ValueError):
+        induced_width({"a": ["b"], "b": ["a"]}, ["a"])

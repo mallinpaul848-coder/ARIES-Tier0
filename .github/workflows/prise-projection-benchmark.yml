@@ -1,0 +1,41 @@
+name: ARIES PRISE Exact Projection Tests and Benchmark
+
+on:
+  push:
+    branches: ["feature/prise-exact-projection-benchmark", main]
+    paths:
+      - "aries_math/prise_projection.py"
+      - "tests/test_prise_projection.py"
+      - "tools/prise_projection_bench.py"
+      - ".github/workflows/prise-projection-benchmark.yml"
+  pull_request:
+    paths:
+      - "aries_math/prise_projection.py"
+      - "tests/test_prise_projection.py"
+      - "tools/prise_projection_bench.py"
+      - ".github/workflows/prise-projection-benchmark.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-projection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run exact projection tests
+        run: python -m unittest tests.test_prise_projection -v
+      - name: Run reproducible projection microbenchmark
+        run: python tools/prise_projection_bench.py --iterations 1000 --output reports/prise-projection-benchmark.json
+      - name: Upload benchmark report
+        uses: actions/upload-artifact@v4
+        with:
+          name: prise-projection-benchmark-${{ github.run_number }}
+          path: reports/prise-projection-benchmark.json
+          if-no-files-found: error
+          retention-days: 90

@@ -14,6 +14,10 @@ from aries_math.chat_router import route_math_prompt
 from software.native_reasoner import solve as solve_native_prompt
 from aries_math.prise_research_engine import ARIESPRISEResearchEngine, PRISEProfile, PRIZE_PROBLEM_ROUTES
 from aries_math.mallin_universal import audit_sat_projection
+from aries_math.continuation_states import (
+    analyze_continuation_matrix,
+    verify_signature_soundness,
+)
 from aries_math.tool_agent import run_tool_loop
 
 @asynccontextmanager
@@ -39,10 +43,10 @@ UPSTREAM_BASE_URL = os.getenv("ARIES_UPSTREAM_BASE_URL", "").strip().rstrip("/")
 UPSTREAM_API_KEY = os.getenv("ARIES_UPSTREAM_API_KEY", "").strip()
 try:
     UPSTREAM_TIMEOUT_SECONDS = max(
-        1.0, min(float(os.getenv("ARIES_UPSTREAM_TIMEOUT_SECONDS", "90")), 300.0)
+        1.0, min(float(os.getenv("ARIES_UPSTREAM_TIMEOUT_SECONDS", "30")), 300.0)
     )
 except ValueError:
-    UPSTREAM_TIMEOUT_SECONDS = 90.0
+    UPSTREAM_TIMEOUT_SECONDS = 30.0
 
 
 def chat_completions_url(base_url: str) -> str:
@@ -81,6 +85,12 @@ class ResearchAnalysisRequest(BaseModel):
 class SATProjectionAuditRequest(BaseModel):
     formulas: list[dict[str, Any]] = Field(min_length=1, max_length=500)
     max_variables: int = Field(default=20, ge=0, le=20)
+
+
+class ContinuationQuotientRequest(BaseModel):
+    # Rows are processed prefixes; columns enumerate suffix/outside assignments.
+    matrix: list[list[int]] = Field(min_length=1, max_length=4096)
+    signatures: list[str] | None = None
 
 
 class CalculationRequest(BaseModel):
@@ -243,6 +253,23 @@ def v8_sat_projection_audit(payload: SATProjectionAuditRequest) -> dict[str, Any
         return audit_sat_projection(payload.formulas, payload.max_variables)
     except (ValueError, TypeError, OverflowError) as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+@app.post("/v8/research/continuation-quotient")
+def v8_continuation_quotient(payload: ContinuationQuotientRequest) -> dict[str, Any]:
+    """Measure exact continuation classes in an explicitly supplied Boolean table."""
+    try:
+        quotient = analyze_continuation_matrix(payload.matrix)
+        soundness = None
+        if payload.signatures is not None:
+            soundness = verify_signature_soundness(payload.matrix, payload.signatures)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    return {
+        "quotient": quotient.as_dict(),
+        "proposed_signature_soundness": soundness,
+        "scope": "explicit finite continuation matrix only; not an implicit SAT solver",
+    }
+}
 
 
 @app.get("/v8/execute/operations")
@@ -426,6 +453,11 @@ async def chat_completions(request: ChatRequest) -> dict[str, Any]:
         except httpx.RequestError:
             raise HTTPException(status_code=502, detail="Could not connect to the configured model backend.")
         if response.status_code >= 400:
+            if "tools" in body and response.status_code in (400, 404, 422):
+                raise HTTPException(
+                    status_code=501,
+                    detail="The configured model provider rejected tool calling.",
+                )
             raise HTTPException(
                 status_code=502,
                 detail=(
@@ -446,7 +478,10 @@ async def chat_completions(request: ChatRequest) -> dict[str, Any]:
             return await run_tool_loop(
                 payload, post_json, execute_aries_operation, max_rounds=3
             )
-        except HTTPException:
-            # Provider may not support function calling. Preserve standard chat as fallback.
-            return await post_json(payload)
+        except HTTPException as exc:
+            # Retry without tools only for an explicit provider tool-schema rejection.
+            # Timeouts and connectivity failures must not trigger a second expensive request.
+            if exc.status_code == 501:
+                return await post_json(payload)
+            raise
     return await post_json(payload)

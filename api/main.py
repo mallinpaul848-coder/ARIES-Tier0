@@ -16,6 +16,8 @@ from aries_math.prise_research_engine import ARIESPRISEResearchEngine, PRISEProf
 from aries_math.mallin_universal import audit_sat_projection
 from aries_math.continuation_states import (
     analyze_continuation_matrix,
+    induced_width,
+    solve_gf2,
     verify_signature_soundness,
 )
 from aries_math.tool_agent import run_tool_loop
@@ -91,6 +93,16 @@ class ContinuationQuotientRequest(BaseModel):
     # Rows are processed prefixes; columns enumerate suffix/outside assignments.
     matrix: list[list[int]] = Field(min_length=1, max_length=4096)
     signatures: list[str] | None = None
+
+
+class GF2SolveRequest(BaseModel):
+    matrix: list[list[int]] = Field(min_length=1, max_length=256)
+    rhs: list[int] = Field(min_length=1, max_length=256)
+
+
+class InducedWidthRequest(BaseModel):
+    adjacency: dict[str, list[str]]
+    order: list[str] = Field(min_length=1, max_length=4096)
 
 
 class CalculationRequest(BaseModel):
@@ -269,6 +281,24 @@ def v8_continuation_quotient(payload: ContinuationQuotientRequest) -> dict[str, 
         "proposed_signature_soundness": soundness,
         "scope": "explicit finite continuation matrix only; not an implicit SAT solver",
     }
+
+
+@app.post("/v8/research/gf2-solve")
+def v8_gf2_solve(payload: GF2SolveRequest) -> dict[str, Any]:
+    """Solve a bounded linear system over GF(2) and return a nullspace basis."""
+    try:
+        return solve_gf2(payload.matrix, payload.rhs)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
+@app.post("/v8/research/induced-width")
+def v8_induced_width(payload: InducedWidthRequest) -> dict[str, Any]:
+    """Measure induced width for an explicitly supplied graph and elimination order."""
+    try:
+        return induced_width(payload.adjacency, payload.order)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
 
 
 @app.get("/v8/execute/operations")

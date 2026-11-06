@@ -269,7 +269,6 @@ def v8_continuation_quotient(payload: ContinuationQuotientRequest) -> dict[str, 
         "proposed_signature_soundness": soundness,
         "scope": "explicit finite continuation matrix only; not an implicit SAT solver",
     }
-}
 
 
 @app.get("/v8/execute/operations")

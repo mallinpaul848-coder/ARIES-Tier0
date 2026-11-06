@@ -285,3 +285,14 @@ python tools/aries_alternative_benchmark.py --target aries=https://aries-tier0-a
 ```
 
 These tests are finite diagnostics and project-authored smoke checks. They do not establish P = NP, global Navier–Stokes regularity, a Yang–Mills mass gap, independent certification, or an official leaderboard ranking. For a credible buyer evaluation, preserve raw reports, pinned revisions, model identifiers, licensing/provenance, and the actual test environment.
+
+## Mallin–PRISE mathematical highlights
+
+The consolidated research note records exact Boolean existential-elimination identities, the Boolean-ring notation distinction, residual-function versus representation-size results, exact affine GF(2) projection, restricted separator/treewidth cases, witness reconstruction, and the open universal polynomial-growth theorem.
+
+- [Mallin–PRISE mathematical highlights and proof ledger](docs/MALLIN_PRISE_MATH_HIGHLIGHTS.md)
+- [Exact affine projection implementation](aries_math/prise_projection.py)
+- [Affine projection tests](tests/test_prise_projection.py)
+- [Exact projection scope and reproduction](benchmarks/PRISE_EXACT_PROJECTION.md)
+
+The universal polynomial-time solution of arbitrary 3-SAT remains unproved; the research note explicitly separates established results from open obligations.

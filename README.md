@@ -285,3 +285,24 @@ python tools/aries_alternative_benchmark.py --target aries=https://aries-tier0-a
 ```
 
 These tests are finite diagnostics and project-authored smoke checks. They do not establish P = NP, global Navier–Stokes regularity, a Yang–Mills mass gap, independent certification, or an official leaderboard ranking. For a credible buyer evaluation, preserve raw reports, pinned revisions, model identifiers, licensing/provenance, and the actual test environment.
+
+
+## Mallin–PRISE continuation-state engine
+
+The continuation-equivalence mathematics now has an executable diagnostic in `aries_math/continuation_states.py`:
+
+- `analyze_continuation_matrix(matrix)` counts exact residual/continuation classes in an explicitly supplied Boolean table.
+- `verify_signature_soundness(matrix, signatures)` reports pairs of prefixes that a proposed compressed signature incorrectly merges.
+- `ParityAccumulator` and `ORAccumulator` implement exact one-bit accumulators for XOR and OR parent constraints.
+- `solve_gf2(A,b)` performs exact binary Gaussian elimination and returns a particular solution plus a nullspace basis for witness reconstruction.
+- `induced_width(adjacency, order)` computes fill-in and induced width for an explicit variable order.
+- API diagnostics: `POST /v8/research/continuation-quotient`, `POST /v8/research/gf2-solve`, and `POST /v8/research/induced-width`. The continuation route accepts rows for processed prefixes and columns for enumerated suffix/outside assignments; optional string `signatures` are checked for soundness.
+
+Example PowerShell request:
+
+```powershell
+$body = @{ matrix = @(@(1,0),@(0,1),@(0,1),@(1,0)); signatures = @("even","odd","odd","even") } | ConvertTo-Json -Depth 5
+Invoke-RestMethod "http://127.0.0.1:8000/v8/research/continuation-quotient" -Method Post -ContentType "application/json" -Body $body
+```
+
+Run `python -m pytest -q tests/test_continuation_states.py`. The explicit matrix analyzer has a 1,000,000-cell bound. It measures exact finite continuation quotients; it does not construct implicit SAT truth tables efficiently or prove a universal polynomial-time 3-SAT compression. See [the mathematical and engineering scope](docs/MALLIN_PRISE_CONTINUATION_ENGINE.md).

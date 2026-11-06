@@ -294,7 +294,9 @@ The continuation-equivalence mathematics now has an executable diagnostic in `ar
 - `analyze_continuation_matrix(matrix)` counts exact residual/continuation classes in an explicitly supplied Boolean table.
 - `verify_signature_soundness(matrix, signatures)` reports pairs of prefixes that a proposed compressed signature incorrectly merges.
 - `ParityAccumulator` and `ORAccumulator` implement exact one-bit accumulators for XOR and OR parent constraints.
-- `POST /v8/research/continuation-quotient` exposes the diagnostic through the API. Supply `matrix` as rows for processed prefixes and columns for enumerated suffix/outside assignments; optional string `signatures` are checked for soundness.
+- `solve_gf2(A,b)` performs exact binary Gaussian elimination and returns a particular solution plus a nullspace basis for witness reconstruction.
+- `induced_width(adjacency, order)` computes fill-in and induced width for an explicit variable order.
+- API diagnostics: `POST /v8/research/continuation-quotient`, `POST /v8/research/gf2-solve`, and `POST /v8/research/induced-width`. The continuation route accepts rows for processed prefixes and columns for enumerated suffix/outside assignments; optional string `signatures` are checked for soundness.
 
 Example PowerShell request:
 

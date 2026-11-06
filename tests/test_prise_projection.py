@@ -1,4 +1,3 @@
-import itertools
 import unittest
 
 from aries_math.prise_projection import (
@@ -50,10 +49,6 @@ class TestExactAffineProjection(unittest.TestCase):
         offset = 0b100
         predicate = lambda value: value in (0b001, 0b111)
         result = project_affine_interface(matrix, offset, 3, predicate)
-        brute = any(predicate(
-            offset ^ sum((((row >> col) & 1) << r)
-                         for r, row in enumerate(matrix) if (row >> col) & 1)
-        ) for _ in [])  # explicit exhaustive check follows
         brute = False
         for t in range(1 << 3):
             image = sum((parity(row, t) << r) for r, row in enumerate(matrix))

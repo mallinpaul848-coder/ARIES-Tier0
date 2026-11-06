@@ -165,3 +165,104 @@ class ORAccumulator:
     def update(self, bit: int | bool) -> int:
         self._state |= ParityAccumulator._bit(bit, "bit")
         return self._state
+
+
+
+def solve_gf2(
+    matrix: Sequence[Sequence[int | bool]],
+    rhs: Sequence[int | bool],
+) -> dict[str, object]:
+    """Solve A*x=b over GF(2), returning rank, one solution, and nullspace basis."""
+    if not isinstance(matrix, (list, tuple)) or not matrix:
+        raise ValueError("matrix must contain at least one row")
+    if not isinstance(rhs, (list, tuple)) or len(rhs) != len(matrix):
+        raise ValueError("rhs must contain one bit per matrix row")
+    width = len(matrix[0]) if isinstance(matrix[0], (list, tuple)) else -1
+    if width < 1 or width > 256:
+        raise ValueError("GF(2) matrix must have between 1 and 256 columns")
+    rows: list[list[int]] = []
+    for i, row in enumerate(matrix):
+        if not isinstance(row, (list, tuple)) or len(row) != width:
+            raise ValueError("GF(2) matrix must be rectangular")
+        rows.append([ParityAccumulator._bit(v, f"matrix[{i}]") for v in row]
+                    + [ParityAccumulator._bit(rhs[i], f"rhs[{i}]")])
+    pivot_columns: list[int] = []
+    pivot_row = 0
+    for col in range(width):
+        pivot = next((r for r in range(pivot_row, len(rows)) if rows[r][col]), None)
+        if pivot is None:
+            continue
+        rows[pivot_row], rows[pivot] = rows[pivot], rows[pivot_row]
+        for r in range(len(rows)):
+            if r != pivot_row and rows[r][col]:
+                rows[r] = [a ^ b for a, b in zip(rows[r], rows[pivot_row])]
+        pivot_columns.append(col)
+        pivot_row += 1
+        if pivot_row == len(rows):
+            break
+    for row in rows:
+        if not any(row[:width]) and row[width]:
+            return {
+                "consistent": False,
+                "rank": len(pivot_columns),
+                "variable_count": width,
+                "particular_solution": None,
+                "nullspace_basis": [],
+            }
+    particular = [0] * width
+    for r, col in enumerate(pivot_columns):
+        particular[col] = rows[r][width]
+    free_columns = [c for c in range(width) if c not in pivot_columns]
+    basis: list[list[int]] = []
+    for free in free_columns:
+        vector = [0] * width
+        vector[free] = 1
+        for r, pivot_col in enumerate(pivot_columns):
+            vector[pivot_col] = rows[r][free]
+        basis.append(vector)
+    return {
+        "consistent": True,
+        "rank": len(pivot_columns),
+        "variable_count": width,
+        "free_variable_count": len(free_columns),
+        "particular_solution": particular,
+        "nullspace_basis": basis,
+        "solution_form": "x = particular_solution XOR any linear combination of nullspace_basis",
+    }
+
+
+def induced_width(
+    adjacency: dict[Hashable, Sequence[Hashable]],
+    order: Sequence[Hashable],
+) -> dict[str, object]:
+    """Compute induced width for a supplied variable-elimination order."""
+    if not isinstance(adjacency, dict):
+        raise ValueError("adjacency must be a dictionary")
+    vertices = set(adjacency)
+    graph: dict[Hashable, set[Hashable]] = {v: set() for v in vertices}
+    for vertex, neighbors in adjacency.items():
+        for neighbor in neighbors:
+            if neighbor not in vertices or neighbor == vertex:
+                raise ValueError("neighbors must be distinct vertices in adjacency")
+            graph[vertex].add(neighbor)
+            graph[neighbor].add(vertex)
+    if len(order) != len(vertices) or set(order) != vertices:
+        raise ValueError("order must contain every graph vertex exactly once")
+    steps: list[dict[str, object]] = []
+    width = 0
+    for vertex in order:
+        remaining = sorted(graph[vertex], key=repr)
+        width = max(width, len(remaining))
+        steps.append({"variable": repr(vertex), "remaining_neighbors": len(remaining)})
+        for i, left in enumerate(remaining):
+            for right in remaining[i + 1:]:
+                graph[left].add(right)
+                graph[right].add(left)
+        for neighbor in remaining:
+            graph[neighbor].discard(vertex)
+        graph[vertex].clear()
+    return {
+        "induced_width": width,
+        "elimination_steps": steps,
+        "interpretation": "exact variable-elimination width for the supplied graph and order",
+    }

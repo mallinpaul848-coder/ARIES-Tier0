@@ -15,8 +15,10 @@ from typing import Callable, Any
 
 
 def normalize_prompt(prompt: str) -> str:
-    """Normalize whitespace only; preserve case so exact-output answers remain safe."""
-    return " ".join(str(prompt).strip().split())
+    """Collapse whitespace without a redundant strip pass; preserve case."""
+    if isinstance(prompt, str):
+        return " ".join(prompt.split())
+    return " ".join(str(prompt).split())
 
 
 class FastPathEngine:
@@ -28,7 +30,9 @@ class FastPathEngine:
         self._solver = solver
         self.max_entries = max_entries
         self._cache: OrderedDict[str, Any] = OrderedDict()
-        self._lock = threading.RLock()
+        # No method recursively acquires this lock; Lock avoids RLock's owner/
+        # recursion bookkeeping on the latency-critical cache-hit path.
+        self._lock = threading.Lock()
         self._calls = 0
         self._cache_hits = 0
         self._cache_misses = 0
@@ -95,7 +99,7 @@ class LatencyMonitor:
             raise ValueError("window_size must be a positive integer")
         self.window_size = window_size
         self._samples: dict[str, deque[int]] = {}
-        self._lock = threading.RLock()
+        self._lock = threading.Lock()
 
     def record(self, operation: str, duration_ns: int) -> None:
         if not isinstance(operation, str) or not operation.strip():
